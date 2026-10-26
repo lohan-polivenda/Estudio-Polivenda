@@ -1,0 +1,10 @@
+// Cloudflare Workers Builds: publica o app (pasta _sistema) como site estático, igual ao Cloudflare Pages
+{
+  "name": "estudio-polivenda",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./_sistema"
+  },
+  // o build dos PRs roda `wrangler preview`, que exige este bloco (pode ficar vazio)
+  "previews": {}
+}
