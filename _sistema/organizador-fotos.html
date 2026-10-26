@@ -4039,8 +4039,8 @@ async function buildJobs(p, onProg){
   });
   return { us, jobs };
 }
-// no Drive as pastas levam o nome SEO atual (no computador a pasta mantém o nome do cadastro)
-const driveDir = p => p.pasta || folderName(p);
+// no Drive a categoria já é a pasta de cima: a pasta do produto leva o nome sem ela (mantém o "(2)" de um nome repetido)
+const driveDir = p => folderName({ ...p, categoria: '' }) + (p.pasta?.match(/ \(\d+\)$/)?.[0] || '');
 const driveVarDir = u => u.pasta ? slug(u.nome) || u.pasta : '';
 function manifestFor(p, jobs){
   const line = r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';');
