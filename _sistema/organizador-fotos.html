@@ -662,12 +662,13 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
       <details class="sec">
         <summary style="cursor:pointer;font-weight:600">Ver como as pastas ficam organizadas</summary>
       <pre class="log" style="background:var(--soft);padding:10px;border-radius:8px">Estudio Polivenda/                 ← só produtos
-├─ Vestidos - Vestido Midi Floral - 20.10.2026/   ← categoria - produto - data das fotos
-│  ├─ azul-marinho/                ← uma variação (só imagens)
-│  │  ├─ vestido-midi-floral-azul-marinho-capa-fundo-branco-01.jpg
-│  │  └─ vestido-midi-floral-azul-marinho-clip-01.mp4
+├─ Vestidos - Vestido Midi Floral/ ← categoria - produto
+│  ├─ azul-marinho/                ← uma variação
+│  │  ├─ 20.10.2026/               ← um envio de fotos (a data fica só aqui)
+│  │  │  ├─ vestido-midi-floral-azul-marinho-capa-fundo-branco-01.jpg
+│  │  │  └─ Arquivo/               ← fotos que já eram usadas
+│  │  └─ 26.10.2026/               ← o envio seguinte
 │  └─ descritivo.txt               ← ficha e descrição do produto
-├─ Vestidos - Vestido Midi Floral - 26.10.2026/   ← nova coleção de fotos = pasta nova
 _sistema/                          ← tudo que não é produto
 ├─ dados/                          ← cadastro, configurações e manifesto
 ├─ backup/cadastro/                ← cópia diária do cadastro (15 dias)
@@ -815,7 +816,7 @@ _sistema/                          ← tudo que não é produto
         <input id="tplProd">
         <label class="f">Pastas dos produtos</label>
         <input id="tplFolder">
-        <div class="muted ajuda" style="margin-top:6px">Pastas: {categoria} {produto} {marca} {modelo} {sku} {data} (data da coleção, ex.: 20.10.2026), separados por " - ".<br>Arquivos: {palavra} {produto} {tipo} {material} {cor} {variacao} {medida} {foto} {estilo} {marca} {modelo} {sku} {extra} {loja} {n}</div>
+        <div class="muted ajuda" style="margin-top:6px">Pastas: {categoria} {produto} {marca} {modelo} {sku}, separados por " - ". A data de cada envio vira uma subpasta.<br>Arquivos: {palavra} {produto} {tipo} {material} {cor} {variacao} {medida} {foto} {estilo} {marca} {modelo} {sku} {extra} {loja} {n}</div>
       </details>
     </div>
 
@@ -1154,8 +1155,8 @@ const DEFAULT_LISTAS = {
   cor: ['Branco', 'Preto', 'Dourado', 'Prata', 'Transparente', 'Bege', 'Caramelo', 'Marrom', 'Cinza', 'Azul', 'Verde', 'Rosa', 'Vermelho', 'Amarelo', 'Violeta', 'Colorido'],
 };
 // cadastro, configurações e manifesto ficam em _sistema (veja o bloco "_sistema" mais abaixo)
-// pastas de fotos: uma por coleção, com a data em que as fotos entraram (ex.: Flores - Flores Azuis - 20.10.2026)
-const PASTA_TPL = '{categoria} - {produto} - {data}';
+// pastas: Categoria - Produto / variação / data do envio (ex.: Flores - Flores Azuis\azul\20.10.2026). A data fica só na pasta das fotos.
+const PASTA_TPL = '{categoria} - {produto}';
 const CFG_FILE = 'dados/configuracoes.json', PLAN_FILE = 'dados/organizador.json', MANIFEST_FILE = 'dados/manifesto-seo.csv';
 // em um endereço novo (ex.: o atalho com localhost) as configurações começam vazias: dá para trazê-las da pasta principal
 let settingsFresh = !store.get('settings');
@@ -1199,6 +1200,8 @@ function normSettings(raw){
   s.categorias ||= []; s.equipe ||= [];
   // v7: pasta legível com categoria e data da coleção (antes era o nome SEO, ex.: vaso-marca-modelo)
   if (!s.v7){ s.tplFolder = PASTA_TPL; s.v7 = true; }
+  // v8: a data sai do nome do produto e vira uma subpasta por envio
+  if (!s.v8){ s.tplFolder = PASTA_TPL; s.v8 = true; }
   return s;
 }
 let settings = normSettings(store.get('settings', {}));
@@ -1329,7 +1332,7 @@ const dataPasta = iso => { const [a, m, d] = (iso || hojeIso()).split('-'); retu
 const hojeIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 // nome legível (com maiúsculas e acentos); só sai o que o Windows e o Drive não aceitam
 function folderName(p){
-  const map = { categoria: p.categoria, produto: p.nome, marca: p.marca, modelo: p.modelo, sku: p.sku, data: dataPasta(p.dataColecao) };
+  const map = { categoria: p.categoria, produto: p.nome, marca: p.marca, modelo: p.modelo, sku: p.sku };
   const limpa = v => String(v || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim();
   const s = (settings.tplFolder || PASTA_TPL).replace(/\{(\w+)\}/g, (_, k) => limpa(map[k]))
     .split(' - ').map(x => x.trim()).filter(Boolean).join(' - ').slice(0, 150).replace(/[\s.]+$/, '');
@@ -1849,7 +1852,7 @@ async function writeManifest(){
   const line = r => r.map(c => `"${String(c ?? '').replace(/"/g,'""')}"`).join(';');
   const rows = [line(MANIFEST_HEAD)];
   for (const p of plan.produtos) for (const u of units(p)) for (const it of p.checklist) filesOf(u, it).forEach((f, i) => {
-    rows.push(line([[p.pasta, u.pasta].filter(Boolean).join('/'), f, isVideo(it) ? 'vídeo' : 'foto', altFor(p, u, it, i), p.nome, u.nome, it.nome, u.sku || p.sku, p.palavra, p.titulo]));
+    rows.push(line([ud(p, u).join('/'), f, isVideo(it) ? 'vídeo' : 'foto', altFor(p, u, it, i), p.nome, u.nome, it.nome, u.sku || p.sku, p.palavra, p.titulo]));
   });
   await sisGravar(MANIFEST_FILE, '﻿' + rows.join('\r\n') + '\r\n');
 }
@@ -1934,7 +1937,7 @@ function promptFor(p, u, item){
   if (!video && propAtual()) parts.push(`Formato ${propAtual().nome}, ${minDims()} px ou maior`);
   return parts.map(s => s.replace(/[.\s]+$/, '')).join('. ') + '.';
 }
-function pathOf(p, u){ return [ws?.name, p.pasta, u.pasta].filter(Boolean).join('\\'); }
+function pathOf(p, u){ return [ws?.name, ...ud(p, u)].filter(Boolean).join('\\'); }
 
 function renderDetail(){
   const p = curP();
@@ -2003,8 +2006,8 @@ function renderDetail(){
     </div>
     ${acvHtml(p, u)}
 
-    ${ws ? `<div class="folder compacta">${ic('folder')} <b>Pasta ${u.nome ? 'da variação' : 'do produto'}</b><span class="ajuda">${p.pasta ? `Coleção de ${dataPasta(p.dataColecao)}. Os arquivos desta ${u.nome ? 'variação' : 'produto'} ficam em: <code>${esc(pathOf(p, u))}</code>` : `A pasta é criada quando as fotos entram, com a data do dia (ex.: <code>${esc(folderName({ ...p, dataColecao: hojeIso() }))}</code>).`}${p.colecoes?.length ? ` · ${p.colecoes.length} coleção(ões) anterior(es)` : ''}</span>
-      ${p.pasta ? `<button class="sm" data-act="novacolecao" style="margin-left:8px" title="As próximas fotos vão para uma pasta nova, com a data delas">Nova coleção de fotos</button>` : ''}</div>`
+    ${ws ? `<div class="folder compacta">${ic('folder')} <b>Pasta ${u.nome ? 'da variação' : 'do produto'}</b><span class="ajuda">${p.pasta ? `Envio de ${dataPasta(p.dataColecao)}. Os arquivos desta ${u.nome ? 'variação' : 'produto'} ficam em: <code>${esc(pathOf(p, u))}</code>` : `A pasta é criada quando as fotos entram; cada envio fica numa subpasta com a data dele (ex.: <code>${esc([folderName(p), dataPasta()].join('\\'))}</code>).`}${p.colecoes?.length ? ` · ${p.colecoes.length} envio(s) anterior(es)` : ''}</span>
+      ${p.pasta ? `<button class="sm" data-act="novacolecao" style="margin-left:8px" title="As próximas fotos vão para uma subpasta nova, com a data delas">Novo envio de fotos</button>` : ''}</div>`
       : `<div class="folder warn">${ic('folder')} Conecte a pasta de trabalho para poder enviar os arquivos.
         <button class="sm" data-act="connect" style="margin-left:8px">Conectar pasta</button></div>`}
     ${p.anexos?.length ? `<div class="danexos"><span class="muted">${ic('clip')} Arquivos do fornecedor:</span>${p.anexos.map((a, i) => `<button class="sm" data-act="veranexo" data-i="${i}" title="Abrir">${esc(a.nome)}</button>`).join('')}</div>` : ''}
@@ -2065,7 +2068,7 @@ async function acvUpload(p, u, files){
   try {
     await comTrava(async () => {
       ensureFolders(p);
-      const dir = await sub(ws, p.pasta, u.pasta, ACV_DIR), lista = acvDe(p, u);
+      const dir = await sub(ws, ...ud(p, u), ACV_DIR), lista = acvDe(p, u);
       for (const f of ok){
         let nome = f.name, k = 2;
         while (await exists(dir, nome)) nome = f.name.replace(/(\.[^.]+)?$/, m => `-${k++}${m}`);
@@ -2079,9 +2082,9 @@ async function acvUpload(p, u, files){
 }
 async function acvThumbs(p, u){
   const imgs = [...document.querySelectorAll('#detail img[data-af]')]; if (!ws || !imgs.length) return;
-  const dir = await subIfExists(ws, p.pasta, u.pasta, ACV_DIR); if (!dir) return;
+  const dir = await subIfExists(ws, ...ud(p, u), ACV_DIR); if (!dir) return;
   await emParalelo(imgs, 4, async img => {
-    const key = `${p.pasta}/${u.pasta}/${ACV_DIR}/${img.dataset.af}`;
+    const key = `${ud(p, u).join('/')}/${ACV_DIR}/${img.dataset.af}`;
     let t = thumbCache.get(key);
     if (!t){ try { const f = await (await dir.getFileHandle(img.dataset.af)).getFile(); t = { ...(await lerFoto(f)), size: f.size }; thumbCache.set(key, t); } catch { return; } }
     if (img.isConnected){ img.src = t.mini; img.closest('.fthumb').querySelector('.dim').textContent = `${t.w}×${t.h}`; }
@@ -2089,7 +2092,7 @@ async function acvThumbs(p, u){
 }
 function acvVer(p, u, f){
   const lista = acvDe(p, u).map(nome => ({ titulo: 'Arquivo' + (u.nome ? ' · ' + u.nome : ''), nome, arquivo: async () =>
-    (await (await subIfExists(ws, p.pasta, u.pasta, ACV_DIR)).getFileHandle(nome)).getFile() }));
+    (await (await subIfExists(ws, ...ud(p, u), ACV_DIR)).getFileHandle(nome)).getFile() }));
   abrirVisor(lista, Math.max(0, lista.findIndex(x => x.nome === f)));
 }
 // checklist fechado (vale para todos os produtos)
@@ -2176,10 +2179,10 @@ let rolarFoco = false;
 async function loadThumbs(p, u){
   if (rolarFoco){ rolarFoco = false; document.querySelector('#detail .clrow.foco')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
   if (!ws) return;
-  const dir = await subIfExists(ws, p.pasta, u.pasta); if (!dir) return;
+  const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) return;
   // 4 fotos lidas ao mesmo tempo; as que já foram lidas aparecem na hora
   await emParalelo([...document.querySelectorAll('#detail img[data-f]')], 4, async img => {
-    const key = `${p.pasta}/${u.pasta}/${img.dataset.f}`;
+    const key = `${ud(p, u).join('/')}/${img.dataset.f}`;
     let t = thumbCache.get(key);
     if (!t){
       try {
@@ -2265,7 +2268,7 @@ function verFotos(p, u, f){
   const lista = [];
   for (const it of p.checklist) for (const nome of filesOf(u, it)) if (IMG_EXT.test(nome))
     lista.push({ titulo: it.nome + (u.nome ? ' · ' + u.nome : ''), nome, arquivo: async () => {
-      const dir = await subIfExists(ws, p.pasta, u.pasta); if (!dir) throw new Error('pasta');
+      const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) throw new Error('pasta');
       return (await dir.getFileHandle(nome)).getFile(); } });
   const i = lista.findIndex(x => x.nome === f);
   if (i >= 0) abrirVisor(lista, i);
@@ -2278,15 +2281,15 @@ async function uploadFiles(p, u, item, files){
   const video = isVideo(item);
   const ok = files.filter(f => video ? VID_EXT.test(f.name) || IMG_EXT.test(f.name) : IMG_EXT.test(f.name));
   if (!ok.length) return toast(video ? 'Envie um vídeo (.mp4, .mov, .webm).' : 'Envie uma imagem (.jpg, .png, .webp).');
-  if (p.pasta && p.drive?.em && p.dataColecao !== hojeIso() && confirm(`A coleção de ${dataPasta(p.dataColecao)} já foi enviada ao Drive.\n\nOK: começar uma NOVA coleção (pasta nova com a data de hoje, ${dataPasta()}).\nCancelar: juntar estas fotos à coleção atual.`)){
-    novaColecao(p); registrar('Checklist', 'Começou uma nova coleção de fotos', p, `pasta ${folderName({ ...p, dataColecao: hojeIso() })}`);
+  if (p.dataColecao && prog(p).done && p.dataColecao !== hojeIso() && confirm(`As fotos atuais são do envio de ${dataPasta(p.dataColecao)}.\n\nOK: começar um NOVO envio (subpasta ${dataPasta()}; o checklist recomeça).\nCancelar: juntar estas fotos ao envio de ${dataPasta(p.dataColecao)}.`)){
+    novaColecao(p); registrar('Checklist', 'Começou um novo envio de fotos', p, `subpasta ${dataPasta()}`);
   }
   // primeira foto de uma coleção criada em outro dia (pasta ainda vazia): a data passa a ser a de hoje
-  if (p.pasta && !prog(p).done && p.dataColecao !== hojeIso()){ p.dataColecao = hojeIso(); await alinharPasta(p); }
+  if (p.dataColecao && !prog(p).done && !acvDe(p, u).length && p.dataColecao !== hojeIso()) p.dataColecao = hojeIso();
   try {
     await comTrava(async () => {
       ensureFolders(p);
-      const dir = await sub(ws, p.pasta, u.pasta);
+      const dir = await sub(ws, ...ud(p, u));
       u.arquivos[item.id] ||= [];
       for (const f of ok){ const tmp = `tmp-novo-${uid()}${extOf(f.name) || '.jpg'}`; await writeFile(dir, tmp, f); u.arquivos[item.id].push(tmp); }
       await syncNames(p);
@@ -2312,7 +2315,7 @@ async function syncNames(p){
 async function syncNamesJa(p){
   let changed = 0;
   for (const u of units(p)){
-    const dir = await sub(ws, p.pasta, u.pasta), info = seoInfo(p, u), jobs = [];
+    const dir = await sub(ws, ...ud(p, u)), info = seoInfo(p, u), jobs = [];
     for (const it of p.checklist) filesOf(u, it).forEach((from, i) =>
       jobs.push({ it, i, from, to: prodBase({...info, foto: it.nome}, i + 1) + extOf(from) }));
     const todo = jobs.filter(j => j.from !== j.to);
@@ -2329,7 +2332,7 @@ async function syncNamesJa(p){
       await renameFile(dir, j.tmp, to);
       u.arquivos[j.it.id][j.i] = to; changed++;
       // a miniatura guardada com esses nomes não vale mais (ex.: a foto 02 virou 01)
-      thumbCache.delete(`${p.pasta}/${u.pasta}/${j.from}`); thumbCache.delete(`${p.pasta}/${u.pasta}/${to}`);
+      thumbCache.delete(`${ud(p, u).join('/')}/${j.from}`); thumbCache.delete(`${ud(p, u).join('/')}/${to}`);
     }
     for (const j of todo) if (j.missing) u.arquivos[j.it.id] = u.arquivos[j.it.id].filter(f => f !== j.from);
   }
@@ -2350,7 +2353,7 @@ async function verifyFiles(force = false){
     for (const p of plan.produtos){
       if (!p.pasta) continue;
       for (const u of units(p)){
-        const dir = await subIfExists(ws, p.pasta, u.pasta), nomes = new Set();
+        const dir = await subIfExists(ws, ...ud(p, u)), nomes = new Set();
         if (dir) for await (const k of dir.keys()) nomes.add(k);
         for (const id in u.arquivos){
           const keep = u.arquivos[id].filter(f => nomes.has(f));
@@ -2445,10 +2448,10 @@ $('detail').addEventListener('click', async e => {
   const u = curU(p);
   const item = p.checklist.find(c => c.id === b.closest('.clrow')?.dataset.iid);
   if (act === 'novacolecao'){
-    if (!confirm(`Começar uma nova coleção de fotos?\n\nA coleção atual (${p.pasta}) fica guardada na pasta e no Drive, e o checklist recomeça vazio. As próximas fotos vão para uma pasta nova, com a data do dia em que entrarem.`)) return;
-    const antiga = p.pasta; novaColecao(p); mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail();
-    registrar('Checklist', 'Começou uma nova coleção de fotos', p, `a anterior fica em ${antiga}`);
-    return toast('Nova coleção iniciada. Envie as fotos: a pasta nova é criada com a data de hoje.', 4500);
+    if (!confirm(`Começar um novo envio de fotos?\n\nO envio atual (${dataPasta(p.dataColecao)}) fica guardado na pasta e no Drive, e o checklist recomeça vazio. As próximas fotos vão para uma subpasta nova, com a data do dia em que entrarem.`)) return;
+    const antiga = dataPasta(p.dataColecao); novaColecao(p); mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail();
+    registrar('Checklist', 'Começou um novo envio de fotos', p, `o anterior fica em ${antiga}`);
+    return toast('Novo envio iniciado. As fotos vão para uma subpasta com a data de hoje.', 4500);
   }
   if (act === 'edit') openForm(p);
   if (act === 'editia'){ openForm(p); return iaSeo($('fIaSeo')); }
@@ -2471,7 +2474,7 @@ $('detail').addEventListener('click', async e => {
   }
   if (act === 'acvrm' && confirm(`Tirar "${b.dataset.f}" do arquivo?\n\nEla vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
     await comTrava(async () => {
-      try { await paraLixeira(await sub(ws, p.pasta, u.pasta, ACV_DIR), b.dataset.f, p.pasta, u.pasta, ACV_DIR); }
+      try { await paraLixeira(await sub(ws, ...ud(p, u), ACV_DIR), b.dataset.f, ...ud(p, u), ACV_DIR); }
       catch (e) { if (e.name !== 'NotFoundError') return toast('Não consegui mover para a lixeira: ' + e.message, 6000); }
       const l = acvDe(p, u); l.splice(l.indexOf(b.dataset.f), 1);
     });
@@ -2486,7 +2489,7 @@ $('detail').addEventListener('click', async e => {
   if (act === 'rmfile' && confirm(`Tirar o arquivo "${b.dataset.f}" deste item?\n\nEle vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
     let falhou = false;
     await comTrava(async () => {
-      try { await paraLixeira(await sub(ws, p.pasta, u.pasta), b.dataset.f, p.pasta, u.pasta); }
+      try { await paraLixeira(await sub(ws, ...ud(p, u)), b.dataset.f, ...ud(p, u)); }
       catch (e) { falhou = true; toast('Não consegui mover o arquivo para a lixeira: ' + e.message, 6000); return; } // o arquivo continua onde estava
       u.arquivos[item.id] = filesOf(u, item).filter(f => f !== b.dataset.f);
       await syncNames(p);
@@ -2720,7 +2723,7 @@ async function capaDoProduto(p){
   if (!ws || !p?.pasta) return null;
   const itens = [...p.checklist].sort((a, b) => isCapa(b) - isCapa(a));
   for (const u of units(p)){
-    const dir = await subIfExists(ws, p.pasta, u.pasta); if (!dir) continue;
+    const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) continue;
     for (const it of itens) for (const f of filesOf(u, it)) if (IMG_EXT.test(f)){ try { return await (await dir.getFileHandle(f)).getFile(); } catch {} }
   }
   return null;
@@ -3167,16 +3170,19 @@ async function connectWs(pickNew = false){
 $('wsChip').onclick = () => ws ? goCfg('conexoes', 'cfgWs') : connectWs();
 $('cfgWsChange').onclick = () => connectWs(true);
 
+// pasta das fotos de uma variação: produto / variação / data do envio
+const ud = (p, u) => [p.pasta, u.pasta, dataPasta(p.dataColecao)].filter(Boolean);
 // nome livre para a pasta (sem repetir a de outro produto ou de uma coleção antiga)
 function pastaLivre(p){
-  const used = new Set(plan.produtos.flatMap(x => [x !== p && x.pasta, ...(x.colecoes || []).map(c => c.pasta)]).filter(Boolean));
+  const used = new Set(plan.produtos.map(x => x !== p && x.pasta).filter(Boolean));
   let base = folderName(p), name = base, i = 2;
   while (used.has(name)) name = `${base} (${i++})`;
   return name;
 }
 // a pasta nasce quando as fotos entram: a data dela é a do envio das fotos
 function ensureFolders(p){
-  if (!p.pasta){ p.dataColecao ||= hojeIso(); p.pasta = pastaLivre(p); }
+  p.dataColecao ||= hojeIso();
+  if (!p.pasta){ p.pasta = pastaLivre(p); p.v8 = true; }
   p.variacoes.forEach((v, i) => { if (!v.pasta) v.pasta = slug(v.nome) || `variacao-${i + 1}`; });
 }
 // renomeia a pasta do computador quando o padrão, a categoria ou o nome mudam (também traz as pastas antigas para o padrão novo)
@@ -3190,8 +3196,8 @@ async function alinharPasta(p){
   if (!ws || !p.pasta) return false;
   if (!p.dataColecao) p.dataColecao = await dataDasFotos(p);
   const novo = pastaLivre(p);
-  if (novo === p.pasta) return false;
-  return comTrava(async () => {
+  if (novo === p.pasta) return p.v8 ? false : reorganizar(p);
+  const ok = await comTrava(async () => {
     const velha = await subIfExists(ws, p.pasta);
     if (velha){
       if (await subIfExists(ws, novo)) return false; // já existe uma pasta com esse nome: não mistura
@@ -3203,13 +3209,55 @@ async function alinharPasta(p){
     p.pasta = novo; descCache.delete(p.id);
     return true;
   });
+  if (ok && !p.v8) await reorganizar(p);
+  return ok;
+}
+// layout antigo (fotos direto na pasta do produto/variação, uma pasta por coleção com a data no nome):
+// leva as fotos para a subpasta da data e junta as coleções antigas na pasta do produto
+async function moverArq(de, nome, para){
+  if (!(await exists(para, nome))) await writeFile(para, nome, await (await de.getFileHandle(nome)).getFile());
+  await de.removeEntry(nome);
+}
+async function reorganizar(p){
+  await comTrava(async () => {
+    const pd = await sub(ws, p.pasta), data = dataPasta(p.dataColecao);
+    for (const u of units(p)){
+      const de = await subIfExists(pd, u.pasta); if (!de) continue;
+      const para = await sub(pd, u.pasta, data);
+      for (const it of p.checklist) for (const f of filesOf(u, it)){ try { await moverArq(de, f, para); } catch {} }
+      const acv = await subIfExists(de, ACV_DIR);
+      if (acv){ await moverPasta(acv, await sub(para, ACV_DIR)); await de.removeEntry(ACV_DIR, { recursive: true }); }
+    }
+    for (const c of p.colecoes || []){
+      if (!c.pasta || c.pasta === p.pasta) continue;
+      const velha = await subIfExists(ws, c.pasta); if (!velha){ delete c.pasta; continue; }
+      const cd = dataPasta(c.data);
+      for await (const [nome, h] of velha.entries()){
+        if (nome === 'descritivo.txt') continue;
+        if (h.kind === 'file') await moverArq(velha, nome, await sub(pd, cd));
+        else if (nome === ACV_DIR) await moverPasta(h, await sub(pd, cd, ACV_DIR));
+        else {
+          // variação: as fotos vão para variação/data; o Arquivo dela, para variação/data/Arquivo
+          for await (const [n2, h2] of h.entries()){
+            if (h2.kind === 'file') await moverArq(h, n2, await sub(pd, nome, cd));
+            else await moverPasta(h2, await sub(pd, nome, cd, n2));
+          }
+        }
+      }
+      await ws.removeEntry(c.pasta, { recursive: true });
+      delete c.pasta;
+    }
+    thumbCache.clear();
+    p.v8 = true;
+  });
+  return true;
 }
 // pasta antiga sem data guardada: usa o dia da foto mais antiga dela (senão, o do último envio ao Drive)
 async function dataDasFotos(p){
   let menor = Infinity;
   try {
     for (const u of units(p)){
-      const dir = await subIfExists(ws, p.pasta, u.pasta); if (!dir) continue;
+      const dir = await subIfExists(ws, p.pasta, u.pasta); if (!dir) continue; // layout antigo, sem a data
       for (const it of p.checklist) for (const f of filesOf(u, it)){ try { menor = Math.min(menor, (await (await dir.getFileHandle(f)).getFile()).lastModified); } catch {} }
     }
   } catch {}
@@ -3219,8 +3267,9 @@ async function dataDasFotos(p){
 // nova coleção de fotos: a atual fica guardada (pasta e Drive) e as próximas fotos vão para uma pasta nova, com a data delas
 function novaColecao(p){
   p.colecoes ||= [];
-  if (p.pasta) p.colecoes.push({ pasta: p.pasta, data: p.dataColecao || '', drive: p.drive || null, fim: new Date().toISOString() });
-  p.pasta = ''; p.dataColecao = ''; p.drive = null;
+  if (p.dataColecao) p.colecoes.push({ data: p.dataColecao, drive: p.drive?.em ? { em: p.drive.em } : null, fim: new Date().toISOString() });
+  // a pasta do produto (e a do Drive) continua a mesma: o próximo envio ganha só uma subpasta com a data dele
+  p.dataColecao = ''; p.drive = p.drive?.pastaId ? { pastaId: p.drive.pastaId, vars: p.drive.vars } : null;
   p.arquivos = {}; p.variacoes.forEach(v => v.arquivos = {}); p.acervo = {};
   descCache.delete(p.id);
 }
@@ -3975,7 +4024,7 @@ function nameIssues(base){
 async function buildJobs(p, onProg){
   const us = units(p), jobs = [], dirs = new Map();
   for (const u of us){
-    dirs.set(u, await subIfExists(ws, p.pasta, u.pasta));
+    dirs.set(u, await subIfExists(ws, ...ud(p, u)));
     for (const it of p.checklist) for (const f of filesOf(u, it)) jobs.push({ u, it, local: f, name: f.replace(/\.[^.]+$/, '') + extOf(f) });
   }
   // 3 arquivos conferidos ao mesmo tempo (a ordem da lista não muda)
@@ -3991,11 +4040,11 @@ async function buildJobs(p, onProg){
   return { us, jobs };
 }
 // no Drive as pastas levam o nome SEO atual (no computador a pasta mantém o nome do cadastro)
-const driveDir = p => p.pasta || folderName({ ...p, dataColecao: p.dataColecao || hojeIso() });
+const driveDir = p => p.pasta || folderName(p);
 const driveVarDir = u => u.pasta ? slug(u.nome) || u.pasta : '';
 function manifestFor(p, jobs){
   const line = r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';');
-  return [line(MANIFEST_HEAD), ...jobs.map(j => line([[driveDir(p), driveVarDir(j.u)].filter(Boolean).join('/'), j.name, isVideo(j.it) ? 'vídeo' : 'foto',
+  return [line(MANIFEST_HEAD), ...jobs.map(j => line([[driveDir(p), driveVarDir(j.u), dataPasta(p.dataColecao)].filter(Boolean).join('/'), j.name, isVideo(j.it) ? 'vídeo' : 'foto',
     altFor(p, j.u, j.it, filesOf(j.u, j.it).indexOf(j.local)), p.nome, j.u.nome, j.it.nome, j.u.sku || p.sku, p.palavra, p.titulo]))].join('\r\n') + '\r\n';
 }
 
@@ -4183,7 +4232,7 @@ function rvStep3(){
   let h = '';
   if (isFileUrl) h += '<div class="alert block">Este arquivo foi aberto direto do disco. Feche e abra pelo atalho <b>Estúdio Polivenda</b> na Área de Trabalho para enviar.</div>';
   else if (!d.clientId) h += '<div class="alert block">O Google Drive ainda não foi configurado. <button class="sm" data-act="cfgdrive" style="margin-left:6px">Configurar agora</button></div>';
-  h += `<div class="alert info">Destino: <b>${[d.pastaNome || DRIVE_ROOT, p.categoria, driveDir(p)].filter(Boolean).map(esc).join(' / ')}</b>${p.temVariacao ? ' / uma pasta por variação' : ''}<br>
+  h += `<div class="alert info">Destino: <b>${[d.pastaNome || DRIVE_ROOT, p.categoria, driveDir(p)].filter(Boolean).map(esc).join(' / ')}</b>${p.temVariacao ? ' / uma pasta por variação' : ''} / ${dataPasta(p.dataColecao)}<br>
     ${rv.jobs.length} arquivo(s)${conv ? `, ${conv} convertido(s) para JPG` : ''} + ${MANIFEST} (nomes e textos alternativos).<br>
     Arquivo com o mesmo nome é substituído. Arquivo antigo dessas pastas com nome desatualizado vai para a lixeira do Drive (recuperável por 30 dias).</div>`;
   if (!gOk() && d.clientId && !isFileUrl) h += `<div class="muted" style="margin-top:8px">Ao clicar em Enviar, o Google pode abrir uma janela para você entrar${d.email ? ' com ' + esc(d.email) : ''}.</div>`;
@@ -4204,10 +4253,15 @@ async function sendToDrive(){
     let done = 0, trashed = 0;
     for (const u of us){
       const uj = jobs.filter(j => j.u === u); if (!uj.length) continue;
-      const dir = u.pasta ? vars[u.id] = await dFolderFor(driveVarDir(u), pf, p.drive?.vars?.[u.id]) : pf;
-      if (u.pasta) log(`Pasta ${driveVarDir(u)}/`);
+      const vdir = u.pasta ? vars[u.id] = await dFolderFor(driveVarDir(u), pf, p.drive?.vars?.[u.id]) : pf;
+      // as fotos ficam numa subpasta com a data do envio (produto / variação / data)
+      const dir = await dFolder(dataPasta(p.dataColecao), vdir);
+      log(`Pasta ${[driveVarDir(u), dataPasta(p.dataColecao)].filter(Boolean).join('/')}/`);
+      // fotos soltas do jeito antigo (direto na pasta do produto/variação): o envio novo já leva todas para a subpasta da data
+      for (const f of await dList(`'${vdir}' in parents and trashed=false and mimeType!='${FOLDER}'`))
+        if (![MANIFEST, DESC_FILE].includes(f.name)){ await dTrash(f.id); trashed++; log(`   para a lixeira (fora da pasta da data): ${f.name}`); }
       const have = await dList(`'${dir}' in parents and trashed=false and mimeType!='${FOLDER}'`);
-      const keep = new Set(u.pasta ? [] : [MANIFEST, DESC_FILE]);
+      const keep = new Set();
       // 3 arquivos ao mesmo tempo: bem mais rápido que um por um
       await emParalelo(uj, 3, async j => {
         const ex = have.find(f => f.name === j.name);
@@ -4305,13 +4359,13 @@ $('rvIn').onchange = async () => {
     const p = rv.p;
     rv.ajustes.delete(jobKey(j));
     await comTrava(async () => {
-      const dir = await sub(ws, p.pasta, j.u.pasta), tmp = `tmp-novo-${uid()}${extOf(f.name) || '.jpg'}`;
+      const dir = await sub(ws, ...ud(p, j.u)), tmp = `tmp-novo-${uid()}${extOf(f.name) || '.jpg'}`;
       await writeFile(dir, tmp, f);
       const arr = j.u.arquivos[j.it.id], i = arr.indexOf(j.local);
       if (i >= 0) arr[i] = tmp; else arr.push(tmp);
       // a versão antiga vai para a lixeira em _sistema (não some de vez)
-      try { await paraLixeira(dir, j.local, p.pasta, j.u.pasta); } catch {}
-      thumbCache.delete(`${p.pasta}/${j.u.pasta}/${j.local}`);
+      try { await paraLixeira(dir, j.local, ...ud(p, j.u)); } catch {}
+      thumbCache.delete(`${ud(p, j.u).join('/')}/${j.local}`);
       await syncNames(p);
     });
     mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail();
