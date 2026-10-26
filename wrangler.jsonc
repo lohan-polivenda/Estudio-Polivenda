@@ -4,5 +4,7 @@
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./_sistema"
-  }
+  },
+  // o build dos PRs roda `wrangler preview`, que exige este bloco (pode ficar vazio)
+  "previews": {}
 }
