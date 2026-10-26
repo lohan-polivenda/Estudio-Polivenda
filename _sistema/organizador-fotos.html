@@ -815,6 +815,29 @@ _sistema/                          ← tudo que não é produto
       </details>
     </div>
 
+    <div class="panel" id="cfgOlist">
+      <h3><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg>Olist ERP</h3>
+      <div class="muted">No cadastro, o botão <b>Olist</b> ao lado do SKU traz os dados do produto. Depois da aprovação, as fotos que sobem ao Drive vão também para o produto no Olist (o SKU precisa ser igual nos dois).</div>
+      <div id="olStatus" class="alert info"></div>
+      <label class="f">Senha da equipe para o Olist</label>
+      <div class="inrow"><input id="olChave" type="password" autocomplete="off"><button id="olSalvar" type="button">Salvar</button></div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:400"><input type="checkbox" id="olFotos" style="width:auto;margin:0">Mandar as fotos aprovadas para o Olist junto com o envio ao Drive</label>
+      <div class="muted ajuda" data-em="#olFotos">O Olist baixa cada foto pelo link: as fotos enviadas a ele ficam no Drive com acesso "qualquer pessoa com o link". O Estúdio só troca as imagens que ele mesmo pôs no produto; as outras ficam.</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="primary" id="olEntrar" type="button">Entrar no Olist</button><button id="olSair" type="button" class="hidden">Desligar o Olist</button></div>
+      <details class="sec">
+        <summary style="cursor:pointer;font-weight:600">Passo a passo da ligação (uma vez só)</summary>
+        <ol class="steps">
+          <li>No Olist ERP, como administrador, abra a área de <b>aplicativos / integrações</b> e crie um aplicativo novo. Nas permissões, marque <b>Produtos</b> com leitura e alteração (inclui anexos e imagens).</li>
+          <li>No endereço de retorno (redirect URI) do aplicativo, cole: <code id="olRetorno"></code></li>
+          <li>Copie o <b>Client ID</b> e o <b>Client Secret</b> que o Olist gerar.</li>
+          <li>Na Cloudflare: <b>Workers e Pages</b> → projeto do Estúdio → <b>Configurações → Variáveis e segredos</b>. Crie, do tipo segredo: <code>OLIST_CLIENT_ID</code>, <code>OLIST_CLIENT_SECRET</code> e <code>ESTUDIO_CHAVE</code> (uma senha que você inventa para a equipe).</li>
+          <li>Na Cloudflare: <b>Armazenamento → KV</b> → crie um espaço (ex.: estudio-olist). No projeto → <b>Configurações → Ligações</b>, adicione uma ligação de KV chamada <code>OLIST</code> apontando para ele.</li>
+          <li>No projeto → <b>Implantações</b>, implante de novo a última versão, para a configuração valer.</li>
+          <li>Aqui: digite a senha da equipe, clique em <b>Salvar</b> e depois em <b>Entrar no Olist</b>.</li>
+        </ol>
+      </details>
+    </div>
+
     <div class="panel" id="cfgAI">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg>Inteligência artificial · Gemini</h3>
       <div class="muted ajuda">Preenche e melhora o SEO, lê os arquivos do fornecedor, escreve as descrições dos anúncios e pesquisa novidades.</div>
@@ -1010,7 +1033,7 @@ _sistema/                          ← tudo que não é produto
     <label class="f">Nome interno (controle) * <span style="font-weight:400">· como a equipe chama o produto; o cliente não vê</span></label>
     <input id="fNome" placeholder="Ex.: VS LIZ">
     <div class="g3">
-      <div><label class="f">SKU</label><input id="fSku" placeholder="Ex.: VMF-001"></div>
+      <div><label class="f">SKU</label><div class="inrow"><input id="fSku" placeholder="Ex.: VMF-001"><button type="button" class="sm hidden" id="fOlist" title="Trazer do Olist ERP os dados deste SKU (só preenche o que está vazio)"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg>Olist</button></div></div>
       <div><label class="f">Marca</label><input id="fMarca"></div>
       <div><label class="f">Modelo</label><input id="fModelo"></div>
     </div>
@@ -4421,7 +4444,7 @@ async function sendToDrive(){
       // 3 arquivos ao mesmo tempo: bem mais rápido que um por um
       await emParalelo(uj, 3, async j => {
         const ex = have.find(f => f.name === j.name);
-        await dUpload(j.name, j.a.out, dir, ex?.id);
+        j.driveId = (await dUpload(j.name, j.a.out, dir, ex?.id))?.id || ex?.id;
         keep.add(j.name);
         log(`   ${ex ? 'substituído' : 'enviado'}: ${j.name}${j.a.ajustada ? '  (ajustado)' : j.a.converted ? '  (convertido para JPG)' : ''}`);
         bar(++done / total * 100);
@@ -4452,6 +4475,10 @@ async function sendToDrive(){
       const dx = (await dList(`name='${DESC_FILE}' and '${pf}' in parents and trashed=false`))[0];
       await dUpload(DESC_FILE, new Blob([p.descricao.trim() + '\r\n'], { type: 'text/plain' }), pf, dx?.id);
       log(`arquivo ${DESC_FILE}`);
+    }
+    if (olistAtivo()){
+      try { log(await olistEnviarFotos(p, jobs)); }
+      catch (e) { log('Olist: não consegui mandar as fotos (' + e.message + ')'); registrar('Olist ERP', 'Falhou o envio das fotos ao Olist', p, e.message); }
     }
     bar(100);
     p.drive = { em: new Date().toISOString(), pastaId: pf, vars, arquivos: jobs.length };
@@ -5890,6 +5917,127 @@ $('btnLista').onclick = () => { store.set('listaOculta', !store.get('listaOculta
 aplicarLista();
 
 // =====================================================================
+// OLIST ERP: traz o produto pelo SKU para o cadastro e manda as fotos aprovadas para o produto no Olist
+// =====================================================================
+// O site fala com o Olist pela ponte da Cloudflare (functions/olist): a chave secreta e o login ficam lá.
+// Neste computador fica só a senha da equipe (localStorage 'olistChave').
+// p.olist = { produtoId, sku, em, anexos: [{ id (no Olist), drive, chave }] } — as fotos que o Estúdio pôs no produto
+const olistChave = () => store.get('olistChave', '');
+const olistAtivo = () => WEB && !!olistChave() && store.get('olistFotos', true);
+// endereço de onde o Olist baixa cada foto (o arquivo do Drive fica visível para quem tem o link)
+const olistImg = id => `https://lh3.googleusercontent.com/d/${id}`;
+async function olistPedir(rota, opt = {}){
+  if (!WEB) throw new Error('A ligação com o Olist funciona no site do Estúdio.');
+  if (!olistChave()) throw new Error('Falta a senha da equipe para o Olist (Configurações → Conexões → Olist ERP).');
+  let r;
+  try { r = await fetch('/olist/' + rota, { ...opt, headers: { 'X-Estudio-Chave': olistChave(), ...(opt.body ? { 'Content-Type': 'application/json' } : {}) } }); }
+  catch { throw new Error('Não consegui falar com o Olist. Confira a internet.'); }
+  let d = {}; try { d = await r.json(); } catch {}
+  if (r.ok) return d;
+  const e = new Error(d.erro === 'configuracao' ? `A ligação com o Olist ainda não foi configurada na Cloudflare (falta: ${(d.falta || []).join(', ')}).`
+    : !d.erro ? 'A ligação com o Olist ainda não está publicada no site.' : d.mensagem || `Erro do Olist (${r.status}).`);
+  e.status = r.status; e.erro = d.erro; throw e;
+}
+const olistApi = async (metodo, caminho, corpo) => (await olistPedir('api', { method: 'POST', body: JSON.stringify({ metodo, caminho, corpo }) })).dados;
+// produto do Olist com esse SKU (pode ser uma variação: aí o produto "pai" guarda as imagens)
+async function olistProduto(sku){
+  const l = await olistApi('GET', '/produtos?codigo=' + encodeURIComponent(sku));
+  const it = (l?.itens || []).find(x => sameTxt(x.sku, sku));
+  return it ? olistApi('GET', '/produtos/' + it.id) : null;
+}
+const semHtml = s => new DOMParser().parseFromString(String(s || '').replace(/<br\s*\/?>|<\/p>/gi, '\n'), 'text/html').body.textContent.replace(/\n{3,}/g, '\n\n').trim();
+// cadastro: preenche só o que está vazio (o que já tinha algo fica como está)
+function olistPreencher(o){
+  const desc = $('fDesc').value, nome = $('fNome').value;
+  aplicarIaSeo({ marca: $('fMarca').value.trim() ? '' : o.marca?.nome || '', titulo: $('fTitulo').value.trim() ? '' : o.seo?.titulo || '',
+    categoria: fSeo.categoria ? '' : o.categoria?.nome || '' });
+  fIaAntes.desc = desc;
+  if (!nome.trim() && o.descricao){ $('fNome').value = o.descricao; $('fNome').classList.add('ia-on'); }
+  const d = o.dimensoes || {}, num = v => String(v).replace('.', ',');
+  const med = [['altura', d.altura], ['largura', d.largura], ['comprimento', d.comprimento], ['diâmetro', d.diametro]].filter(x => x[1] > 0).map(([k, v]) => `${k} ${num(v)} cm`);
+  const texto = [o.descricao, semHtml(o.descricaoComplementar), med.length ? 'Medidas no Olist: ' + med.join(', ') : '',
+    d.pesoLiquido > 0 ? `Peso: ${num(d.pesoLiquido)} kg` : '', o.gtin ? 'GTIN: ' + o.gtin : ''].filter(Boolean).join('\n');
+  if (!desc.trim() && texto){ $('fDesc').value = texto; $('fDesc').classList.add('ia-on'); }
+  const n = document.querySelectorAll('#dlgProd .ia-on').length;
+  $('fIaResumo').innerHTML = `<div class="ia-box">${ic('link')} <b>Trouxe do Olist ERP o produto ${esc(o.sku || '')}${n ? ' e preenchi os campos destacados' : ''}.</b> O que já estava preenchido não mudou. Confira antes de salvar.
+    <button type="button" class="sm" id="fOlDesfazer" style="margin-left:6px">${ic('undo')}Desfazer</button></div>`;
+  $('fOlDesfazer').onclick = () => { const a = fIaAntes; desfazerIaSeo(); if (a) $('fDesc').value = a.desc; $('fIaResumo').innerHTML = ''; };
+}
+$('fOlist').onclick = async () => {
+  const sku = $('fSku').value.trim(), b = $('fOlist');
+  if (!sku){ $('fSku').focus(); return toast('Digite o SKU do produto primeiro.'); }
+  const antes = b.innerHTML; b.disabled = true; b.innerHTML = ic('loader', 'spin') + 'Buscando…';
+  try {
+    const o = await olistProduto(sku);
+    if (o) olistPreencher(o); else toast(`Não achei o SKU ${sku} no Olist.`, 5000);
+  } catch (e) { toast(e.message, 6000); }
+  b.disabled = false; b.innerHTML = antes;
+};
+// depois do envio ao Drive: as fotos do produto (na ordem do checklist) viram as imagens do produto no Olist.
+// Só mexe nas imagens que o próprio Estúdio pôs lá; as outras ficam.
+async function olistEnviarFotos(p, jobs){
+  const sku = (p.sku || '').trim();
+  if (!sku) return 'Olist: o produto não tem SKU, as fotos não foram para o Olist.';
+  const o = await olistProduto(sku);
+  if (!o) return `Olist: não achei o SKU ${sku} no Olist, as fotos não foram para lá.`;
+  const pid = o.tipoVariacao === 'V' && o.produtoPai?.id ? o.produtoPai.id : o.id;
+  const fotos = jobs.filter(j => j.driveId && !isVideo(j.it));
+  const quer = fotos.map(j => ({ drive: j.driveId, chave: `${j.driveId}:${j.a.out?.size || j.a.size || 0}:${j.file?.lastModified || 0}` }));
+  const ant = p.olist?.produtoId === pid ? p.olist.anexos || [] : [];
+  if (ant.length === quer.length && ant.every((a, i) => a.chave === quer[i].chave)) return `Olist: as fotos do produto ${sku} já estavam atualizadas.`;
+  // o Olist baixa a foto pelo link: o arquivo do Drive passa a abrir para quem tem o link
+  for (const j of fotos) await gFetch(`${DAPI}/files/${j.driveId}/permissions?fields=id`, { method: 'POST', headers: jsonH, body: JSON.stringify({ role: 'reader', type: 'anyone' }) });
+  const velhas = ant.filter(a => a.id);
+  if (velhas.length) try { await olistApi('DELETE', `/produtos/${pid}/anexos`, velhas.map(a => ({ id: a.id, externo: false }))); } catch {} // alguém já tirou à mão
+  const r = quer.length ? await olistApi('POST', `/produtos/${pid}/anexos`, quer.map(q => ({ url: olistImg(q.drive), externo: false }))) : [];
+  p.olist = { produtoId: pid, sku, em: new Date().toISOString(), anexos: quer.map((q, i) => ({ ...q, id: r?.[i]?.id })) };
+  registrar('Olist ERP', 'Mandou as fotos ao Olist', p, `${quer.length} foto(s) no produto ${sku} do Olist${velhas.length ? `, ${velhas.length} antiga(s) trocadas` : ''}`);
+  return `Olist: ${quer.length} foto(s) no produto ${sku}.`;
+}
+// ---------- Configurações → Conexões → Olist ERP ----------
+let olistEstado = null; // { conectado, desde, retorno } ou { erro }
+async function renderOlist(checar = true){
+  const tem = !!olistChave();
+  $('fOlist').classList.toggle('hidden', !tem || !WEB);
+  $('olChave').placeholder = tem ? 'guardada neste computador (digite outra só se mudar)' : 'a mesma ESTUDIO_CHAVE da Cloudflare';
+  $('olFotos').checked = store.get('olistFotos', true);
+  $('olRetorno').textContent = location.origin + '/olist/retorno';
+  if (checar && tem && WEB){ try { olistEstado = await olistPedir('status'); } catch (e) { olistEstado = { erro: e.message }; } }
+  const ok = !!olistEstado?.conectado && tem;
+  $('olStatus').className = 'alert ' + (!WEB ? 'info' : !tem ? '' : olistEstado?.erro ? 'block' : ok ? 'ok' : 'info');
+  $('olStatus').innerHTML = !WEB ? 'A ligação com o Olist funciona no site do Estúdio.'
+    : !tem ? 'Digite a senha da equipe para o Olist e clique em Salvar.'
+    : olistEstado?.erro ? esc(olistEstado.erro)
+    : ok ? `Conectado ao Olist ERP${olistEstado.desde ? ` desde ${esc(dtBR(new Date(olistEstado.desde).toISOString()))}` : ''}.`
+    : 'Senha certa. Falta entrar no Olist: clique em Entrar no Olist.';
+  $('olEntrar').classList.toggle('hidden', ok); $('olSair').classList.toggle('hidden', !ok);
+  $('olEntrar').disabled = !tem || !WEB || !!olistEstado?.erro;
+}
+$('olSalvar').onclick = () => {
+  const v = $('olChave').value.trim(); if (!v) return toast('Digite a senha da equipe.');
+  store.set('olistChave', v); $('olChave').value = ''; olistEstado = null; renderOlist(); toast('Senha guardada neste computador.');
+};
+$('olFotos').onchange = () => store.set('olistFotos', $('olFotos').checked);
+$('olEntrar').onclick = async () => {
+  const w = window.open('', 'olist', 'width=520,height=720'); // abre já no clique, senão o navegador bloqueia
+  try {
+    const { url } = await olistPedir('entrar', { method: 'POST' });
+    if (w) w.location = url; else toast('O navegador bloqueou a janela do Olist. Permita janelas deste site e tente de novo.', 6000);
+  } catch (e) { w?.close(); toast(e.message, 6000); }
+};
+$('olSair').onclick = async () => {
+  if (!confirm('Desligar o Olist ERP para toda a equipe? Depois é preciso entrar de novo.')) return;
+  try { await olistPedir('sair', { method: 'POST' }); registrar('Olist ERP', 'Desligou o Olist ERP'); } catch (e) { toast(e.message, 5000); }
+  renderOlist();
+};
+// a janelinha do login avisa quando termina
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data?.olist) return;
+  if (e.data.olist === 'ok'){ registrar('Olist ERP', 'Conectou o Olist ERP'); toast('Olist ERP conectado.', 4000); }
+  renderOlist();
+});
+
+// =====================================================================
 // RESUMO: painel da equipe (até 5 números escolhidos por quem usa) e aprovação dos produtos antes do Drive
 // =====================================================================
 // p.aprovacao = { status: 'pendente' | 'aprovado' | 'reprovado', em, por, av, alterado (aprovado), motivo e fotos (reprovado) }
@@ -6308,6 +6456,10 @@ const ATUALIZACOES = [
     'Clique no card para ver todas as fotos e aprovar ou reprovar uma a uma',
     'Botão "Selecionar": marque várias fotos e aprove ou reprove todas juntas, com uma justificativa só',
     'Todas as fotos aprovadas: o produto sobe sozinho para o Drive. Alguma reprovada: volta para a equipe, e as aprovadas continuam aprovadas'] },
+  { id: '2026-10-26-olist-erp', em: '2026-10-26 13:59', titulo: 'Ligação com o Olist ERP', itens: [
+    'No cadastro, o botão "Olist" ao lado do SKU traz nome, marca, categoria, título e descrição do produto do Olist (só preenche o que está vazio)',
+    'Depois da aprovação, as fotos que sobem ao Drive vão também como imagens do produto no Olist (pelo mesmo SKU)',
+    'Configuração em Configurações → Conexões → Olist ERP; a chave do Olist fica guardada na Cloudflare, não no app'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -6361,7 +6513,7 @@ try {
   addEventListener('pagehide', () => canal.postMessage('tchau'));
 } catch {}
 current = plan.produtos[0]?.id || null;
-renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); renderResumoCont();
+renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); renderResumoCont(); renderOlist();
 // primeira vez neste computador: pergunta quem está usando (vai para o registro de alterações)
 if (!quemUsa()) setTimeout(() => { if (!quemUsa() && !document.querySelector('dialog[open]')){ renderQuem(); $('dlgQuem').showModal(); } }, 1500);
 // entra no Google sozinho se já tiver login guardado neste computador
