@@ -52,13 +52,12 @@ header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 20px
 .tabs button{border:0;background:transparent;border-radius:8px;padding:6px 14px}
 .tabs button.on{background:var(--panel);box-shadow:0 1px 3px #0002;font-weight:600}
 #wsChip.ok{border-color:var(--ok);color:var(--ok)}
-main{padding:20px;max-width:1400px;margin:0 auto}
+main{padding:20px;max-width:1680px;margin:0 auto}
 
 /* produtos */
 .pbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
 .pbar input{max-width:260px}.pbar select{max-width:200px}
-.split{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
-@media (max-width:900px){.split{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:270px 330px minmax(0,1fr);gap:18px;align-items:start}
 .plist{display:flex;flex-direction:column;gap:8px;position:sticky;top:72px;max-height:calc(100vh - 92px);overflow:auto;padding:3px}
 @media (max-width:900px){.plist{position:static;max-height:none}}
 .prow{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
@@ -506,12 +505,71 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 #ajudaPop{position:fixed;inset:auto;margin:0;z-index:80;width:max-content;max-width:min(360px,calc(100vw - 24px));padding:10px 12px;border-radius:10px;background:var(--panel);color:var(--text);border:1px solid var(--border);box-shadow:0 10px 30px #0004;font-size:13px;line-height:1.5;font-weight:400;font-family:inherit;overflow:visible}
 #ajudaPop code{font-size:12px}
 /* lista de produtos que se esconde */
-#tab-produtos.lista-oculta .split{grid-template-columns:1fr}
 #tab-produtos.lista-oculta #plist,#tab-produtos.lista-oculta #pSearch,#tab-produtos.lista-oculta #pCat,#tab-produtos.lista-oculta #pStatus,#tab-produtos.lista-oculta #pOrdem{display:none}
 #btnLista .ic{transition:transform .15s}
 #tab-produtos.lista-oculta #btnLista .ic{transform:scaleX(-1)}
 .folder.compacta{padding:7px 12px;margin-top:12px}
 .etapa .info-i{margin-left:0}
+/* RESUMO (à esquerda da lista de produtos) e aprovação de materiais */
+#tab-produtos.lista-oculta .split{grid-template-columns:270px minmax(0,1fr)}
+#tab-produtos.resumo-oculto .split{grid-template-columns:330px minmax(0,1fr)}
+#tab-produtos.resumo-oculto.lista-oculta .split{grid-template-columns:minmax(0,1fr)}
+#tab-produtos.resumo-oculto #resumo{display:none}
+#btnResumo .ic{transition:transform .15s}
+#tab-produtos.resumo-oculto #btnResumo .ic{transform:scaleX(-1)}
+.resumo{display:flex;flex-direction:column;gap:12px;position:sticky;top:72px;max-height:calc(100vh - 92px);overflow:auto;padding:3px}
+.resumo .panel{padding:14px}
+.resumo h3{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.resumo h3 .ic{width:17px;height:17px;color:var(--accent)}
+.resumo h3 .n{margin-left:auto;font-size:12px;font-weight:700;color:#fff;background:#0891b2;border-radius:20px;padding:1px 8px;font-family:var(--fonte)}
+.rsgrande{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rsgrande button{white-space:normal;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border-radius:10px;text-align:left;background:var(--soft)}
+.rsgrande button b{font-size:24px;line-height:1.1;color:var(--c,var(--text))}
+.rsgrande button span{font-size:12px;color:var(--muted)}
+.rsgrande button.on,.rslin button.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.rslin{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.rslin button{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;border-color:transparent;background:none;font-size:13px;text-align:left}
+.rslin button:hover{background:var(--soft)}
+.rslin button i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.rslin button b{margin-left:auto;color:var(--c,var(--text))}
+.rslin button.zero{opacity:.55}
+.rsprog{margin-top:10px;font-size:12px;color:var(--muted)}
+.rsprog .bar{margin-top:4px}
+.apcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.apcard{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0;border-radius:10px;overflow:hidden;text-align:left;background:var(--panel);position:relative}
+.apcard:hover{border-color:var(--accent)}
+.apcard .capa{aspect-ratio:3/4;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.apcard .capa img{width:100%;height:100%;object-fit:cover;display:block}
+.apcard .capa .ic{width:28px;height:28px}
+.apcard .t{padding:6px 8px 8px;font-size:12px;line-height:1.3}
+.apcard .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.apcard .t span{color:var(--muted)}
+.apcard .mud{position:absolute;top:6px;left:6px;margin:0}
+.apvazio{font-size:13px;color:var(--muted);padding:6px 2px}
+.apult{display:flex;flex-direction:column;gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.apult button{display:flex;align-items:flex-start;gap:6px;padding:4px 6px;border-radius:8px;border-color:transparent;background:none;font-size:12px;text-align:left}
+.apult button:hover{background:var(--soft)}
+.apult .lbl{margin:0;flex:none}
+.apult span.m{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+dialog.aprov{width:min(1180px,calc(100vw - 32px))}
+.apgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:10px}
+.apgal figure{margin:0;display:flex;flex-direction:column;gap:4px}
+.apgal .img{aspect-ratio:3/4;border-radius:10px;border:1px solid var(--border);background:var(--soft);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.apgal .img img{width:100%;height:100%;object-fit:contain;cursor:zoom-in;display:block}
+.apgal .img .ic{width:30px;height:30px}
+.apgal figcaption{font-size:12px;line-height:1.35}
+.apgal figcaption span{color:var(--muted)}
+.apgrupo{margin-top:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.apgrupo .muted{font-weight:400;font-size:13px}
+.apdec{margin-top:20px;padding:14px;border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);background:color-mix(in srgb,var(--danger) 6%,transparent);border-radius:10px}
+.apdec label{font-weight:600;display:block;margin-bottom:6px}
+button.aprovar{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+@media (max-width:1240px){
+  .split,#tab-produtos.resumo-oculto .split{grid-template-columns:330px minmax(0,1fr)}
+  #tab-produtos.lista-oculta .split{grid-template-columns:minmax(0,1fr)}
+  .resumo{grid-column:1/-1;position:static;max-height:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-items:start}
+}
+@media (max-width:900px){.split,#tab-produtos.lista-oculta .split,#tab-produtos.resumo-oculto .split{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -583,6 +641,7 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 <!-- ======================= PRODUTOS ======================= -->
 <section id="tab-produtos">
   <div class="pbar">
+    <button id="btnResumo" type="button" aria-pressed="false" title="Esconder o resumo"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg><span>Esconder resumo</span></button>
     <button id="btnLista" type="button" aria-pressed="false" title="Esconder a lista de produtos"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><span>Esconder lista</span></button>
     <button class="primary" id="btnNovo">+ Novo produto</button>
     <input id="pSearch" placeholder="Buscar por nome ou SKU…">
@@ -591,6 +650,7 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
     <select id="pOrdem" title="Ordem da lista"><option value="fila">Fila: prioridade primeiro</option><option value="demanda">Só os que estão na fila</option><option value="cadastro">Ordem de cadastro</option></select>
   </div>
   <div class="split">
+    <aside class="resumo" id="resumo"></aside>
     <div class="plist" id="plist"></div>
     <div class="panel" id="detail"></div>
   </div>
@@ -1014,6 +1074,12 @@ _sistema/                          ← tudo que não é produto
   <div class="dlg-body" id="dvBody"></div>
   <div class="dlg-foot" id="dvFoot"></div>
   <input type="file" id="rvIn" class="hidden">
+</dialog>
+
+<!-- ======================= APROVAÇÃO DE MATERIAIS ======================= -->
+<dialog id="dlgAprov" class="aprov">
+  <div class="dlg-body" id="apBody"></div>
+  <div class="dlg-foot" id="apFoot"></div>
 </dialog>
 
 <!-- ======================= VISOR DE FOTOS ======================= -->
@@ -1720,8 +1786,15 @@ function autoStatus(p){
 // (p.status continua sendo gravado como antes, para a versão anterior do app ler o mesmo cadastro)
 const ETAPAS = [
   ['produzir', 'A produzir', '#64748b'], ['gerando', 'Em produção', '#ea580c'], ['seo', 'Falta o SEO', '#b45309'],
-  ['pronto', 'Pronto para enviar', '#5d6ec8'], ['drive', 'No Drive', '#16a34a'], ['publicado', 'Publicado', '#7c3aed'],
+  ['pronto', 'Pronto para enviar', '#5d6ec8'], ['aprovacao', 'Aguardando aprovação', '#0891b2'], ['recusado', 'Recusado', '#dc2626'],
+  ['drive', 'No Drive', '#16a34a'], ['publicado', 'Publicado', '#7c3aed'],
 ];
+// o envio ao Drive passa pela aprovação: p.aprovacao = { status: pendente | aprovado | recusado, pedidoEm, pedidoPor, em, por, motivo, enviadoEm, hist }
+const aprovStatus = p => p.aprovacao?.status || '';
+// mudou algo do produto depois do pedido de aprovação?
+const mudouDepoisDoPedido = p => !!(p.aprovacao?.pedidoEm && p.alterado && new Date(p.alterado) > new Date(p.aprovacao.pedidoEm));
+// aprovado, mas o envio não terminou (ex.: falhou a internet): dá para enviar de novo sem pedir outra aprovação
+const aprovadoSemEnvio = p => aprovStatus(p) === 'aprovado' && !p.aprovacao.enviadoEm && !(p.alterado && new Date(p.alterado) > new Date(p.aprovacao.em));
 const etapaInfo = k => ETAPAS.find(x => x[0] === k) || ETAPAS[0];
 // mudou algo que vai para o Drive (arquivos, nomes, SEO, descrição) depois do último envio?
 const mudouDepoisDoEnvio = p => !!(p.drive?.em && p.alterado && new Date(p.alterado) > new Date(p.drive.em));
@@ -1731,6 +1804,8 @@ function etapa(p){
   if (!done) return 'produzir';
   if (done < total) return 'gerando';
   if (seoFaltando(p).length) return 'seo';
+  if (aprovStatus(p) === 'pendente') return 'aprovacao';
+  if (aprovStatus(p) === 'recusado') return 'recusado';
   return p.drive?.em && !mudouDepoisDoEnvio(p) ? 'drive' : 'pronto';
 }
 // frase curta do que falta (ou de quando foi enviado)
@@ -1739,6 +1814,9 @@ function etapaDica(p){
   if (e === 'gerando') return `faltam ${total - done} foto(s)`;
   if (e === 'seo') return `complete o cadastro para enviar (falta ${seoFaltando(p).join(', ')})`;
   if (e === 'drive') return `enviado em ${dia(p.drive.em)}`;
+  if (e === 'aprovacao') return `aguardando aprovação desde ${dia(p.aprovacao.pedidoEm)}` + (mudouDepoisDoPedido(p) ? ' · mudou depois do pedido' : '');
+  if (e === 'recusado') return 'recusado: ' + (p.aprovacao.motivo || 'sem justificativa');
+  if (e === 'pronto' && aprovadoSemEnvio(p)) return 'aprovado: falta concluir o envio ao Drive';
   if (e === 'pronto') return mudouDepoisDoEnvio(p) ? `mudou depois do envio de ${dia(p.drive.em)}: envie de novo` : 'tudo certo para o Drive';
   if (e === 'publicado') return p.drive?.em ? `enviado ao Drive em ${dia(p.drive.em)}` : '';
   return '';
@@ -1858,7 +1936,10 @@ async function writeManifest(){
 }
 
 // ---------- lista ----------
-$('pStatus').innerHTML = '<option value="">Todas as etapas</option>' + ETAPAS.map(([k,l]) => `<option value="${k}">${l}</option>`).join('');
+$('pStatus').innerHTML = '<option value="">Todas as etapas</option><option value="_pend">Pendentes (até o Drive)</option><option value="_conc">Concluídos (no Drive ou publicados)</option>'
+  + ETAPAS.map(([k,l]) => `<option value="${k}">${l}</option>`).join('');
+const ETAPAS_CONC = ['drive', 'publicado'];
+const naEtapa = (p, st) => !st || (st === '_pend' ? !ETAPAS_CONC.includes(etapa(p)) : st === '_conc' ? ETAPAS_CONC.includes(etapa(p)) : etapa(p) === st);
 $('pStatus').onchange = renderList;
 $('pOrdem').value = store.get('pOrdem', 'fila');
 $('pOrdem').onchange = () => { store.set('pOrdem', $('pOrdem').value); renderList(); };
@@ -1874,16 +1955,16 @@ function renderCatFiltro(){
 }
 
 function renderList(){
-  renderCatFiltro();
+  renderCatFiltro(); renderResumo();
   const q = slug($('pSearch').value), st = $('pStatus').value, cat = $('pCat').value;
-  let list = plan.produtos.filter(p => (!st || etapa(p) === st) && (!cat || (cat === '-' ? !p.categoria : p.categoria === cat))
+  let list = plan.produtos.filter(p => naEtapa(p, st) && (!cat || (cat === '-' ? !p.categoria : p.categoria === cat))
     && (!q || slug(p.nome + ' ' + p.titulo + ' ' + p.sku + ' ' + p.marca + ' ' + p.categoria).includes(q)));
   // fila: produto citado em demanda aberta sobe, na ordem da prioridade (Urgente, Alta, Média, Baixa)
   const ordem = $('pOrdem').value, pri = new Map(plan.produtos.map(p => [p.id, prioProduto(p)]));
   if (ordem === 'demanda') list = list.filter(p => pri.get(p.id));
   if (ordem !== 'cadastro') list = list.map((p, i) => [p, i]).sort((a, b) => prioIdx(pri.get(a[0].id)) - prioIdx(pri.get(b[0].id)) || (pri.get(a[0].id) ? filaChave(a[0]) - filaChave(b[0]) : 0) || a[1] - b[1]).map(x => x[0]);
   if (!plan.produtos.length){ $('plist').innerHTML = '<div class="muted" style="padding:8px">Nenhum produto cadastrado ainda.</div>'; return; }
-  if (!list.length){ $('plist').innerHTML = `<div class="muted" style="padding:8px">${$('pOrdem').value === 'demanda' ? 'Nenhum produto na fila.' : 'Nenhum produto com esse filtro.'}</div>`; return; }
+  if (!list.length){ $('plist').innerHTML = `<div class="muted" style="padding:8px">${$('pOrdem').value === 'demanda' ? 'Nenhum produto na fila.' : 'Nenhum produto com esse filtro.'}</div>`; return loadCovers(); }
   $('plist').innerHTML = list.map(p => {
     const e = etapa(p), [, lab, col] = etapaInfo(e), {done, total} = prog(p);
     const nv = p.temVariacao ? p.variacoes.length : 0;
@@ -1904,7 +1985,7 @@ function renderList(){
 // miniatura da capa de cada produto na lista (lida uma vez e guardada)
 const coverCache = new Map();
 async function loadCovers(){
-  for (const img of document.querySelectorAll('#plist img[data-cv]')){
+  for (const img of document.querySelectorAll('#plist img[data-cv], #resumo img[data-cv]')){
     const p = plan.produtos.find(x => x.id === img.dataset.cv); if (!p) continue;
     // só o produto aberto pode ter trocado de capa agora; os outros usam a guardada
     let c = coverCache.get(p.id);
@@ -1913,7 +1994,7 @@ async function loadCovers(){
       const f = await capaDoProduto(p); if (!f) continue;
       if (!c || c.nome !== f.name || c.mod !== f.lastModified){
         if (c) URL.revokeObjectURL(c.url);
-        c = { nome: f.name, mod: f.lastModified, url: (await lerFoto(f, 96)).mini }; coverCache.set(p.id, c);
+        c = { nome: f.name, mod: f.lastModified, url: (await lerFoto(f, 160)).mini }; coverCache.set(p.id, c);
       }
       if (img.isConnected && img.src !== c.url) img.src = c.url;
     } catch {}
@@ -1966,8 +2047,14 @@ function renderDetail(){
         <div class="titanu">${p.titulo ? `${ic('tag')} <b>${esc(p.titulo)}</b> <span class="muted">· título do anúncio</span>` : `<span class="lbl warn">${ic('alert')}Sem título do anúncio</span>`}</div>
         ${meta ? `<div class="muted">${esc(meta)}</div>` : ''}</div>
       <button data-act="edit">${ic('pencil')}Editar</button>
-      <button class="primary" data-act="drive">${ic('upload')}${etapa(p) === 'drive' || etapa(p) === 'publicado' ? 'Enviar de novo' : 'Enviar ao Drive'}</button>
+      ${etapa(p) === 'aprovacao' ? `<button class="primary" data-act="veraprov">${ic('shield')}Ver na aprovação</button>`
+        : `<button class="primary" data-act="drive">${ic('upload')}${aprovadoSemEnvio(p) ? 'Concluir envio ao Drive' : etapa(p) === 'recusado' ? 'Corrigir e pedir aprovação' : etapa(p) === 'drive' || etapa(p) === 'publicado' ? 'Enviar de novo' : 'Enviar ao Drive'}</button>`}
     </div>
+    ${aprovStatus(p) === 'recusado' ? `<div class="alert block" style="margin-top:10px"><b>Recusado na aprovação</b> por ${esc(p.aprovacao.por || 'alguém da equipe')} em ${esc(new Date(p.aprovacao.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}.<br>
+      <b>Justificativa:</b> ${esc(p.aprovacao.motivo)}<br><span class="muted">Corrija o que foi pedido e clique em <b>Corrigir e pedir aprovação</b>.</span></div>` : ''}
+    ${etapa(p) === 'aprovacao' ? `<div class="alert info" style="margin-top:10px"><b>Aguardando aprovação</b> desde ${esc(new Date(p.aprovacao.pedidoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}${p.aprovacao.pedidoPor ? ' (pedido por ' + esc(p.aprovacao.pedidoPor) + ')' : ''}. Quando for aprovado, o envio ao Drive acontece sozinho.
+      ${mudouDepoisDoPedido(p) ? '<br><span style="color:var(--warn)">O produto mudou depois do pedido: quem aprovar vê as fotos como estão agora.</span>' : ''}
+      <button class="sm" data-act="drive" style="margin-left:6px">Pedir de novo</button></div>` : ''}
     <div class="etapa" ${p.drive?.em ? `title="Último envio ao Drive: ${new Date(p.drive.em).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})}"` : ''}>
       <span class="st" style="--c:${etapaInfo(etapa(p))[2]}">${etapaInfo(etapa(p))[1]}</span>
       ${etapaDica(p) ? `<span class="muted ajuda">${esc(etapaDica(p))}</span>` : ''}
@@ -2466,7 +2553,8 @@ $('detail').addEventListener('click', async e => {
   if (act === 'dicaok') return salvarDica(p, item, $('dicaIn').value);
   if (act === 'dicapadrao') return salvarDica(p, item, dicaPadrao(item).dica);
   if (act === 'dicacancel'){ editDica = null; return renderDetail(); }
-  if (act === 'drive') openReview(p);
+  if (act === 'drive') openReview(p, aprovadoSemEnvio(p));
+  if (act === 'veraprov') abrirAprov(p);
   if (act === 'acvup'){
     if (!ws) return toast('Conecte a pasta de trabalho primeiro (botão no topo).');
     upTarget = { p, u, acv: true }; $('upIn').accept = 'image/*';
@@ -4069,13 +4157,30 @@ let rv = null; // revisão aberta: { p, step, us, jobs, sugs, … }
 const jobBlocked = j => j.a.issues.some(x => x.lvl === 'block');
 const rvBlocks = () => rv.jobs.filter(jobBlocked).length + (seoFaltando(rv.p).length ? 1 : 0) + (rv.jobs.length ? 0 : 1);
 function freeJobs(){ rv?.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url)); }
-async function openReview(p){
+// aprovado = true: o produto já foi aprovado. Volta com os ajustes escolhidos no pedido e, sem bloqueio, envia sozinho.
+async function openReview(p, aprovado = false){
   if (!ws) return toast('Conecte a pasta principal primeiro (botão no topo).');
-  rv = { p, step: 1, us: [], jobs: [], log: '', ajustes: new Set(), modos: new Map() };
+  const a = aprovado ? p.aprovacao : null;
+  rv = { p, step: 1, us: [], jobs: [], log: '', ajustes: new Set(a?.ajustes || []), modos: new Map(a?.modos || []), aprovado };
   $('dlgDrive').showModal();
   rv.loading = 'Atualizando os nomes SEO…'; renderRv();
   try { await syncNames(p); savePlan(); renderDetail(); } catch {}
-  await loadJobs();
+  const r = rv;
+  await loadJobs(aprovado ? `Aprovado por ${p.aprovacao.por || 'alguém da equipe'}. Preparando o envio ao Drive…` : undefined);
+  if (rv !== r || !aprovado) return;
+  if (rvBlocks()) return toast('Aprovado, mas a conferência achou bloqueio(s). Resolva para concluir o envio.', 6000);
+  rv.step = 3; renderRv();
+  if (!isFileUrl && settings.drive.clientId) sendToDrive();
+}
+// pede a aprovação: o envio ao Drive só acontece depois que alguém aprovar (Produtos → Resumo → Aprovação de materiais)
+function pedirAprovacao(){
+  const p = rv.p, agora = new Date().toISOString(), ant = p.aprovacao;
+  p.aprovacao = { status: 'pendente', pedidoEm: agora, pedidoPor: quem(), arquivos: rv.jobs.length,
+    ajustes: [...rv.ajustes], modos: [...rv.modos], hist: [...(ant?.hist || []), { acao: 'pedido', em: agora, quem: quem() }].slice(-20) };
+  savePlan(); renderList(); renderDetail();
+  registrar('Aprovação', ant?.status === 'pendente' ? 'Pediu a aprovação de novo' : 'Pediu aprovação do envio ao Drive', p, `${rv.jobs.length} arquivo(s)` + (rv.ajustes.size ? `; ${rv.ajustes.size} ajuste(s) no envio` : ''));
+  rv.pedido = true; renderRv();
+  toast('Enviado para aprovação. O envio ao Drive acontece quando alguém aprovar.', 4500);
 }
 async function loadJobs(msg){
   const base = msg || 'Conferindo formato, tamanho, proporção e nome de cada arquivo…';
@@ -4090,11 +4195,12 @@ async function loadJobs(msg){
   if (rv !== r) return;
   rv.loading = false; renderRv();
 }
-const RV_STEPS = ['Conferência', 'Sugestões da IA', 'Envio'];
+const RV_STEPS = ['Conferência', 'Sugestões da IA', 'Aprovação'];
 function renderRv(){
   if (!rv) return;
+  const passos = rv.aprovado ? ['Conferência', 'Sugestões da IA', 'Envio'] : RV_STEPS;
   $('dvBody').innerHTML = `<h2 style="display:flex;align-items:center;gap:8px">${ic('upload', 'lg')}Enviar ao Google Drive</h2><div class="muted">${esc(rv.p.nome)}</div>
-    <div class="steps3">${RV_STEPS.map((s, i) => `<span class="${i + 1 === rv.step ? 'on' : i + 1 < rv.step ? 'done' : ''}">${i + 1 < rv.step ? ic('check') : i + 1 + '.'} ${s}</span>`).join('')}</div>`
+    <div class="steps3">${passos.map((s, i) => `<span class="${i + 1 === rv.step ? 'on' : i + 1 < rv.step ? 'done' : ''}">${i + 1 < rv.step ? ic('check') : i + 1 + '.'} ${s}</span>`).join('')}</div>`
     + (rv.loading ? `<div class="alert info">${esc(rv.loading)}</div>` : rv.step === 1 ? rvStep1() : rv.step === 2 ? rvStep2() : rvStep3());
   renderRvFoot();
 }
@@ -4104,12 +4210,12 @@ function renderRvFoot(){
   if (rv.loading) h = btn('close', 'Cancelar');
   else if (rv.step === 1){
     const n = rvBlocks();
-    h = btn('close', 'Cancelar') + btn('recheck', ic('refresh') + 'Conferir de novo') + btn('next', n ? ic('ban') + `Resolva ${n} bloqueio(s) para continuar` : 'Próximo: sugestões da IA →', 'primary', n > 0);
+    h = btn('close', 'Cancelar') + btn('recheck', ic('refresh') + 'Conferir de novo') + btn('next', n ? ic('ban') + `Resolva ${n} bloqueio(s) para continuar` : rv.aprovado ? ic('upload') + 'Enviar ao Drive →' : 'Próximo: sugestões da IA →', 'primary', n > 0);
   } else if (rv.step === 2){
     if (rv.iaLoading) h = btn('back', '← Voltar', '', true) + btn('wait', ic('loader', 'spin') + 'Revisando…', 'primary', true);
     else if (rv.iaErr) h = btn('back', '← Voltar') + btn('iaretry', ic('refresh') + 'Tentar de novo') + btn('skip', 'Pular →', 'primary');
     else if (rv.sugs === null) h = btn('back', '← Voltar') + btn('cfgai', 'Configurar a IA') + btn('skip', 'Pular →', 'primary');
-    else if (!rv.sugs?.length || rv.iaDone) h = btn('back', '← Voltar') + btn('skip', 'Próximo: envio →', 'primary');
+    else if (!rv.sugs?.length || rv.iaDone) h = btn('back', '← Voltar') + btn('skip', 'Próximo: aprovação →', 'primary');
     else {
       const pend = rv.sugs.filter(s => s.ok === undefined).length;
       h = btn('back', '← Voltar') + btn('sugnone', 'Recusar todas') + btn('sugapply', pend ? `Decida ${pend} sugestão(ões)` : 'Aplicar e continuar →', 'primary', pend > 0);
@@ -4117,7 +4223,9 @@ function renderRvFoot(){
   } else {
     if (rv.sending) h = btn('wait', ic('loader', 'spin') + 'Enviando…', 'primary', true);
     else if (rv.result?.ok) h = btn('opendrive', ic('external') + 'Abrir no Drive') + btn('close', 'Concluir', 'primary');
-    else h = btn('back', '← Voltar') + btn('send', rv.result ? ic('refresh') + 'Tentar de novo' : ic('upload') + 'Enviar agora', 'primary', isFileUrl || !settings.drive.clientId);
+    else if (rv.pedido) h = btn('close', 'Concluir', 'primary');
+    else if (rv.aprovado) h = btn('close', 'Fechar') + btn('send', rv.result ? ic('refresh') + 'Tentar de novo' : ic('upload') + 'Enviar agora', 'primary', isFileUrl || !settings.drive.clientId);
+    else h = btn('back', '← Voltar') + btn('pedir', ic('shield') + 'Enviar para aprovação', 'primary', isFileUrl || !settings.drive.clientId);
   }
   $('dvFoot').innerHTML = h;
 }
@@ -4253,6 +4361,12 @@ function rvStep3(){
     ${rv.jobs.length} arquivo(s)${conv ? `, ${conv} convertido(s) para JPG` : ''} + ${MANIFEST} (nomes e textos alternativos).<br>
     ${(() => { const n = rv.us.reduce((t, u) => t + acvDe(p, u).length, 0); return n ? `${n} foto(s) do Arquivo, na subpasta ${ACV_DIR} da data.<br>` : ''; })()}
     Arquivo com o mesmo nome é substituído. Arquivo antigo dessas pastas com nome desatualizado vai para a lixeira do Drive (recuperável por 30 dias).</div>`;
+  if (!rv.aprovado){
+    if (rv.pedido) return h + `<div class="alert ok"><b>Enviado para aprovação.</b> O produto aparece em <b>Produtos → Resumo → Aprovação de materiais</b>. Quando alguém aprovar, as fotos sobem para o Drive sozinhas; se recusar, a justificativa aparece na tela do produto.</div>`;
+    return h + `<div class="alert"><b>Nada sobe para o Drive agora.</b> O produto vai para a fila de <b>Aprovação de materiais</b> (aba Produtos, no Resumo). O envio acontece sozinho quando alguém aprovar.`
+      + (aprovStatus(p) === 'pendente' ? `<br>Este produto já está aguardando aprovação desde ${esc(new Date(p.aprovacao.pedidoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))}: o pedido é renovado.` : '') + '</div>';
+  }
+  h = `<div class="alert ok"><b>Aprovado</b> por ${esc(p.aprovacao?.por || 'alguém da equipe')}.</div>` + h;
   if (!gOk() && d.clientId && !isFileUrl) h += `<div class="muted" style="margin-top:8px">Ao clicar em Enviar, o Google pode abrir uma janela para você entrar${d.email ? ' com ' + esc(d.email) : ''}.</div>`;
   return h + `<div class="progress"><div id="dvBar" style="width:${rv.result?.ok ? 100 : 0}%"></div></div><div id="dvLog" class="log">${esc(rv.log)}</div>`;
 }
@@ -4328,6 +4442,7 @@ async function sendToDrive(){
     }
     bar(100);
     p.drive = { em: new Date().toISOString(), pastaId: pf, vars, arquivos: jobs.length };
+    if (rv.aprovado && p.aprovacao) p.aprovacao.enviadoEm = p.drive.em;
     savePlan(); renderDetail();
     rv.result = { ok: true, url: 'https://drive.google.com/drive/folders/' + pf };
     log(`\nConcluído: ${jobs.length} arquivo(s) no Drive${acvEnv ? ` + ${acvEnv} do ${ACV_DIR}` : ''}${trashed ? `, ${trashed} antigo(s) na lixeira` : ''}.`);
@@ -4374,6 +4489,7 @@ $('dlgDrive').addEventListener('click', async e => {
   }
   if (act === 'completaria'){ const p = rv.p; reopenReview = p.id; $('dlgDrive').close(); openForm(p); return iaSeo($('fIaSeo')); }
   if (act === 'recheck') return loadJobs();
+  if (act === 'next' && rv.aprovado){ rv.step = 3; renderRv(); if (!isFileUrl && settings.drive.clientId) sendToDrive(); return; }
   if (act === 'next'){ rv.step = 2; renderRv(); if (rv.sugs === undefined) runIA(); return; }
   if (act === 'back'){ rv.step--; rv.result = null; return renderRv(); }
   if (act === 'skip'){ rv.step = 3; return renderRv(); }
@@ -4390,6 +4506,7 @@ $('dlgDrive').addEventListener('click', async e => {
     return $('rvIn').click();
   }
   if (act === 'send') return sendToDrive();
+  if (act === 'pedir') return pedirAprovacao();
   if (act === 'opendrive') return window.open(rv.result.url, '_blank', 'noopener');
 });
 $('dlgDrive').addEventListener('cancel', e => { if (rv?.sending) e.preventDefault(); });
@@ -5762,6 +5879,188 @@ $('btnLista').onclick = () => { store.set('listaOculta', !store.get('listaOculta
 aplicarLista();
 
 // =====================================================================
+// RESUMO (à esquerda da lista de produtos): demandas, produtos por etapa e a fila de aprovação de materiais
+// =====================================================================
+var resumoPronto = false; // o resumo usa as demandas, lidas mais abaixo: só desenha depois do início do app
+const dataHora = d => new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+const filaAprov = () => plan.produtos.filter(p => aprovStatus(p) === 'pendente').sort((a, b) => new Date(a.aprovacao.pedidoEm) - new Date(b.aprovacao.pedidoEm));
+function renderResumo(){
+  if (!resumoPronto) return;
+  const ps = plan.produtos, por = Object.fromEntries(ETAPAS.map(([k]) => [k, 0])), st = $('pStatus').value;
+  for (const p of ps) por[etapa(p)]++;
+  const conc = ETAPAS_CONC.reduce((t, k) => t + por[k], 0), pend = ps.length - conc;
+  const abertas = dem.demandas.filter(d => d.status !== 'feita');
+  const urg = abertas.filter(d => prioridadeDe(d) === 'urgente').length, atr = abertas.filter(atrasada).length;
+  const naFila = ps.filter(p => prioProduto(p) && !ETAPAS_CONC.includes(etapa(p))).length;
+  const semana = ps.filter(p => p.drive?.em && Date.now() - new Date(p.drive.em) < 7 * 864e5).length;
+  const fotos = ps.reduce((a, p) => { const x = prog(p); return { done: a.done + x.done, total: a.total + x.total }; }, { done: 0, total: 0 });
+  const fila = filaAprov();
+  const ult = ps.filter(p => ['aprovado', 'recusado'].includes(aprovStatus(p)) && p.aprovacao.em).sort((a, b) => new Date(b.aprovacao.em) - new Date(a.aprovacao.em)).slice(0, 4);
+  const extra = [urg && `${urg} demanda(s) urgente(s)`, atr && `${atr} atrasada(s)`, naFila && `${naFila} produto(s) na fila de prioridade`, semana && `${semana} enviado(s) ao Drive nos últimos 7 dias`].filter(Boolean);
+  $('resumo').innerHTML = `<div class="panel">
+      <h3>${ic('grid')}Resumo</h3>
+      <span class="muted ajuda">Clique num número para filtrar a lista de produtos (clique de novo para tirar o filtro). Pendentes = tudo o que ainda não chegou ao Drive.</span>
+      <div class="rsgrande">
+        <button data-rs="_pend" class="${st === '_pend' ? 'on' : ''}" style="--c:var(--warn)"><b>${pend}</b><span>Produtos pendentes</span></button>
+        <button data-rs="_conc" class="${st === '_conc' ? 'on' : ''}" style="--c:var(--ok)"><b>${conc}</b><span>Produtos concluídos</span></button>
+        <button data-rs="dem" title="Abrir a aba Demandas" style="--c:${urg ? 'var(--danger)' : 'var(--text)'}"><b>${abertas.length}</b><span>Demandas pendentes</span></button>
+        <button data-rs="aprovacao" class="${st === 'aprovacao' ? 'on' : ''}" style="--c:#0891b2"><b>${fila.length}</b><span>Aguardando aprovação</span></button>
+      </div>
+      <div class="rslin">${ETAPAS.map(([k, l, c]) => `<button data-rs="${k}" class="${por[k] ? '' : 'zero'} ${st === k ? 'on' : ''}" style="--c:${c}"><i></i>${l}<b>${por[k]}</b></button>`).join('')}</div>
+      <div class="rsprog">${fotos.done} de ${fotos.total} fotos do checklist feitas<div class="bar"><div style="width:${fotos.total ? fotos.done / fotos.total * 100 : 0}%"></div></div></div>
+      ${extra.length ? `<div class="muted" style="font-size:12px;margin-top:8px">${esc(extra.join(' · '))}</div>` : ''}
+    </div>
+    <div class="panel" id="apPainel">
+      <h3>${ic('shield')}Aprovação de materiais${fila.length ? `<span class="n" title="${fila.length} aguardando aprovação">${fila.length}</span>` : ''}</h3>
+      <span class="muted ajuda">Nada sobe para o Drive sem aprovação. Clique no card para ver todas as fotos grandes e aprovar ou recusar. Aprovado, o envio ao Drive acontece sozinho; recusado, a justificativa aparece na tela do produto.</span>
+      ${fila.length ? `<div class="apcards">${fila.map(p => { const cv = coverCache.get(p.id), n = prog(p).done, a = p.aprovacao;
+        return `<button class="apcard" data-ap="${p.id}" title="Ver as fotos e aprovar ou recusar">
+          <div class="capa">${ws ? `<img data-cv="${p.id}" alt="" ${cv ? `src="${cv.url}"` : ''}>` : ic('image')}</div>
+          <div class="t"><b>${esc(p.nome)}</b><span>${a.arquivos || n} arquivo(s)${p.temVariacao ? ` · ${units(p).length} var.` : ''}</span><br><span>${esc(a.pedidoPor || '')} · ${esc(dataCurta(new Date(a.pedidoEm).toLocaleDateString('sv')))}</span></div>
+          ${mudouDepoisDoPedido(p) ? `<span class="lbl warn mud" title="O produto mudou depois do pedido">mudou</span>` : ''}</button>`; }).join('')}</div>`
+        : `<div class="apvazio">${ic('check')} Nenhum material aguardando aprovação.</div>`}
+      ${ult.length ? `<div class="apult"><span class="muted" style="font-size:12px">Últimas decisões</span>${ult.map(p => { const a = p.aprovacao, ok = a.status === 'aprovado';
+        return `<button data-pid="${p.id}" title="${esc(ok ? 'Aprovado' : 'Recusado: ' + (a.motivo || ''))}"><span class="lbl ${ok ? 'ok' : 'block'}">${ok ? 'Aprovado' : 'Recusado'}</span><span class="m">${esc(p.nome)} · ${esc(a.por || '')} ${esc(dataCurta(new Date(a.em).toLocaleDateString('sv')))}</span></button>`; }).join('')}</div>` : ''}
+    </div>`;
+}
+$('resumo').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.ap) return abrirAprov(plan.produtos.find(p => p.id === b.dataset.ap));
+  if (b.dataset.pid){ current = b.dataset.pid; currentVar = null; focoIid = editDica = null; renderList(); return renderDetail(); }
+  const r = b.dataset.rs; if (!r) return;
+  if (r === 'dem') return showTab('demandas');
+  $('pStatus').value = $('pStatus').value === r ? '' : r;
+  if (store.get('listaOculta', false)){ store.set('listaOculta', false); aplicarLista(); }
+  renderList();
+};
+// botão para esconder / mostrar o resumo (a escolha fica guardada)
+function aplicarResumo(){
+  const oculto = !!store.get('resumoOculto', false);
+  $('tab-produtos').classList.toggle('resumo-oculto', oculto);
+  $('btnResumo').setAttribute('aria-pressed', String(oculto));
+  $('btnResumo').title = oculto ? 'Mostrar o resumo' : 'Esconder o resumo';
+  $('btnResumo').querySelector('span').textContent = oculto ? 'Mostrar resumo' : 'Esconder resumo';
+}
+$('btnResumo').onclick = () => { store.set('resumoOculto', !store.get('resumoOculto', false)); aplicarResumo(); };
+aplicarResumo();
+
+// ---------- aprovação: o leque grande com todas as fotos, aprovar ou recusar (com justificativa) ----------
+let ap = null; // { p, fotos: [{ titulo, nome, arquivo() }], minis: Map, recusando, motivo, tok }
+function abrirAprov(p){
+  if (!p) return;
+  liberarAprov();
+  ap = { p, fotos: [], minis: new Map(), recusando: false, motivo: '', tok: 0 };
+  renderAprov();
+  if (!$('dlgAprov').open) $('dlgAprov').showModal();
+  $('apBody').scrollTop = 0;
+}
+function liberarAprov(){ ap?.minis.forEach(u => URL.revokeObjectURL(u)); }
+function renderAprov(){
+  const p = ap.p, a = p.aprovacao || {}, us = units(p), pend = a.status === 'pendente', fila = filaAprov(), pos = fila.indexOf(p);
+  const fotos = ap.fotos = [];
+  const figura = (titulo, nome, video, arquivo) => {
+    if (video) return `<figure><div class="img">${ic('video')}</div><figcaption><b>${esc(titulo)}</b><br><span>${esc(nome)}</span></figcaption></figure>`;
+    fotos.push({ titulo, nome, arquivo });
+    return `<figure><div class="img"><img data-api="${fotos.length - 1}" alt="${esc(titulo)}" title="Clique para ver grande"></div><figcaption><b>${esc(titulo)}</b><br><span>${esc(nome)}</span></figcaption></figure>`;
+  };
+  const doDir = (u, sub = []) => async nome => (await (await subIfExists(ws, ...ud(p, u), ...sub)).getFileHandle(nome)).getFile();
+  let h = `<h2 style="display:flex;align-items:center;gap:8px">${ic('shield', 'lg')}Aprovação de materiais${fila.length > 1 && pos >= 0 ? ` <span class="muted" style="font-size:13px;font-weight:400">${pos + 1} de ${fila.length} na fila</span>` : ''}</h2>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:17px">${esc(p.nome)}</b><span class="st" style="--c:${etapaInfo(etapa(p))[2]}">${etapaInfo(etapa(p))[1]}</span></div>
+    ${p.titulo ? `<div style="margin-top:2px">${ic('tag')} ${esc(p.titulo)} <span class="muted">· título do anúncio</span></div>` : ''}
+    <div class="muted">${esc([p.categoria, p.sku && 'SKU ' + p.sku, p.temVariacao && `${us.length} ${us.length > 1 ? 'variações' : 'variação'}`].filter(Boolean).join(' · '))}</div>
+    ${a.pedidoEm ? `<div class="muted">Pedido por ${esc(a.pedidoPor || 'alguém da equipe')} em ${esc(dataHora(a.pedidoEm))}</div>` : ''}`;
+  if (a.status === 'aprovado') h += `<div class="alert ok">Aprovado por ${esc(a.por || 'alguém da equipe')} em ${esc(dataHora(a.em))}${a.enviadoEm ? ' e enviado ao Drive.' : '.'}</div>`;
+  if (a.status === 'recusado') h += `<div class="alert block">Recusado por ${esc(a.por || 'alguém da equipe')} em ${esc(dataHora(a.em))}.<br><b>Justificativa:</b> ${esc(a.motivo)}</div>`;
+  if (pend && mudouDepoisDoPedido(p)) h += '<div class="alert">O produto mudou depois do pedido. As fotos abaixo são as de agora: é isso que vai para o Drive se aprovar.</div>';
+  if (pend && seoFaltando(p).length) h += `<div class="alert block">Cadastro incompleto (falta ${esc(seoFaltando(p).join(', '))}): aprovado, o envio fica parado até completar.</div>`;
+  if (!ws) h += '<div class="alert">Conecte a pasta Estudio Polivenda (botão no topo) para ver as fotos.</div>';
+  for (const u of us){
+    const itens = p.checklist.flatMap(it => filesOf(u, it).map((f, i) => ({ it, f, i })));
+    const vazios = p.checklist.filter(it => !filesOf(u, it).length).length;
+    if (p.temVariacao) h += `<div class="apgrupo">${esc(p.tipoVariacao)}: ${esc(u.nome)} <span class="muted">${itens.length} arquivo(s)${vazios ? ` · ${vazios} item(ns) do checklist sem arquivo` : ''}</span></div>`;
+    else if (vazios) h += `<div class="muted" style="margin-top:12px">${vazios} item(ns) do checklist sem arquivo.</div>`;
+    h += itens.length ? `<div class="apgal">${itens.map(x => figura(x.it.nome + (x.i ? ' ' + (x.i + 1) : '') + (u.nome ? ' · ' + u.nome : ''), x.f, isVideo(x.it) || VID_EXT.test(x.f), () => doDir(u)(x.f))).join('')}</div>`
+      : '<div class="muted" style="margin-top:8px">Nenhum arquivo.</div>';
+    const acv = acvDe(p, u);
+    if (acv.length) h += `<div class="apgrupo">${ic('folder')}${ACV_DIR}${u.nome ? ' · ' + esc(u.nome) : ''} <span class="muted">${acv.length} foto(s) já usada(s), vão juntas para o Drive</span></div>
+      <div class="apgal">${acv.map(f => figura(ACV_DIR + (u.nome ? ' · ' + u.nome : ''), f, false, () => doDir(u, [ACV_DIR])(f))).join('')}</div>`;
+  }
+  if (p.descricao?.trim()) h += `<details style="margin-top:18px"><summary><b>Descrição do anúncio</b></summary><div style="white-space:pre-wrap;margin-top:8px;font-size:13px">${esc(p.descricao.trim())}</div></details>`;
+  if (pend && ap.recusando) h += `<div class="apdec" id="apDec"><label for="apMotivo">Justificativa da recusa *</label>
+    <textarea id="apMotivo" rows="3" placeholder="Ex.: a capa está com sombra; refazer a Ambientada com luz natural">${esc(ap.motivo)}</textarea>
+    <div class="muted" style="font-size:12px;margin-top:4px">A justificativa aparece na tela do produto e vai para o registro de alterações.</div></div>`;
+  $('apBody').innerHTML = h;
+  const nav = fila.length > 1 && pos >= 0 ? `<button data-act="apnav" data-d="-1" title="Anterior da fila">${ic('back')}</button><button data-act="apnav" data-d="1" title="Próximo da fila" style="margin-right:auto">${ic('arrow')}</button>` : '';
+  $('apFoot').innerHTML = !pend ? nav + '<button class="primary" data-act="apfechar">Fechar</button>'
+    : ap.recusando ? nav + `<button data-act="apvoltar">Voltar</button><button class="primary" style="background:var(--danger);border-color:var(--danger)" data-act="apconfirma" ${ap.motivo.trim() ? '' : 'disabled'}>${ic('ban')}Confirmar recusa</button>`
+    : nav + `<button data-act="apfechar">Fechar</button><button class="danger" data-act="aprecusar">${ic('x')}Recusar</button><button class="aprovar" data-act="apaprovar">${ic('check')}Aprovar e enviar ao Drive</button>`;
+  carregarAprov();
+}
+// miniaturas grandes (lidas uma vez por abertura)
+async function carregarAprov(){
+  if (!ws || !ap) return;
+  const r = ap, tok = ++r.tok;
+  await emParalelo([...$('apBody').querySelectorAll('img[data-api]')], 4, async img => {
+    if (ap !== r || r.tok !== tok) return;
+    const i = +img.dataset.api;
+    let url = r.minis.get(i);
+    if (!url){
+      try { url = (await lerFoto(await r.fotos[i].arquivo(), 420)).mini; } catch { img.closest('.img').innerHTML = ic('ban'); return; }
+      if (ap !== r){ URL.revokeObjectURL(url); return; }
+      r.minis.set(i, url);
+    }
+    if (img.isConnected) img.src = url;
+  }).catch(() => {});
+}
+function aprovar(){
+  const p = ap.p, a = p.aprovacao;
+  if (!ws) return toast('Conecte a pasta principal primeiro (botão no topo).');
+  if (aprovStatus(p) !== 'pendente') return toast('Este produto não está mais aguardando aprovação.');
+  const agora = new Date().toISOString();
+  Object.assign(a, { status: 'aprovado', em: agora, por: quem(), motivo: '' }); delete a.enviadoEm;
+  a.hist = [...(a.hist || []), { acao: 'aprovado', em: agora, quem: quem() }].slice(-20);
+  savePlan();
+  registrar('Aprovação', 'Aprovou o envio ao Drive', p, `pedido por ${a.pedidoPor || 'alguém da equipe'} em ${dataHora(a.pedidoEm)}`);
+  $('dlgAprov').close(); renderList(); if (curP() === p) renderDetail();
+  openReview(p, true);
+}
+function recusarAprov(){
+  const p = ap.p, a = p.aprovacao, motivo = ap.motivo.trim();
+  if (!motivo){ toast('Escreva a justificativa da recusa.'); return $('apMotivo')?.focus(); }
+  if (aprovStatus(p) !== 'pendente') return toast('Este produto não está mais aguardando aprovação.');
+  const agora = new Date().toISOString();
+  Object.assign(a, { status: 'recusado', em: agora, por: quem(), motivo });
+  a.hist = [...(a.hist || []), { acao: 'recusado', em: agora, quem: quem(), motivo }].slice(-20);
+  savePlan();
+  registrar('Aprovação', 'Recusou o envio ao Drive', p, motivo);
+  // segue para o próximo da fila, se houver
+  const prox = filaAprov()[0];
+  renderList(); if (curP() === p) renderDetail();
+  toast('Recusado. A justificativa aparece na tela do produto.', 4000);
+  if (prox) abrirAprov(prox); else $('dlgAprov').close();
+}
+$('dlgAprov').addEventListener('click', e => {
+  if (!ap) return;
+  const img = e.target.closest('img[data-api]');
+  if (img) return abrirVisor(ap.fotos, +img.dataset.api);
+  const b = e.target.closest('button'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'apfechar') return $('dlgAprov').close();
+  if (act === 'aprecusar'){ ap.recusando = true; renderAprov(); $('apDec')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return $('apMotivo')?.focus(); }
+  if (act === 'apvoltar'){ ap.recusando = false; return renderAprov(); }
+  if (act === 'apconfirma') return recusarAprov();
+  if (act === 'apaprovar') return aprovar();
+  if (act === 'apnav'){ const f = filaAprov(), i = f.indexOf(ap.p); if (i >= 0) abrirAprov(f[(i + +b.dataset.d + f.length) % f.length]); }
+});
+$('dlgAprov').addEventListener('input', e => {
+  if (e.target.id !== 'apMotivo' || !ap) return;
+  ap.motivo = e.target.value;
+  const b = $('apFoot').querySelector('[data-act="apconfirma"]'); if (b) b.disabled = !ap.motivo.trim();
+});
+// o evento chega depois: se outro produto já foi aberto, não apaga
+$('dlgAprov').addEventListener('close', () => { if (!$('dlgAprov').open){ liberarAprov(); ap = null; } });
+
+// =====================================================================
 // ATUALIZAÇÕES DO APP: cada versão instalada entra uma vez no registro de alterações
 // =====================================================================
 // REGRA para quem editar este arquivo (pessoa ou IA): toda mudança instalada ganha uma entrada NO FIM desta lista,
@@ -5817,6 +6116,12 @@ const ATUALIZACOES = [
     'O app também abre como site, sem o atalho: escolha a pasta "Organizador de Fotos" do Google Drive e ele grava tudo nela (produtos e _sistema)',
     'Várias pessoas ao mesmo tempo: antes de salvar, o app junta o que cada um mudou no cadastro e nas demandas, produto por produto',
     'A cada 20 segundos o app traz o que a equipe mudou', 'No site o login do Google vale 1 hora; pelo atalho continua guardado'] },
+  { id: '2026-10-26-resumo-aprovacao', em: '2026-10-26 10:50', titulo: 'Resumo e aprovação de materiais', itens: [
+    'Seção Resumo à esquerda dos produtos: produtos pendentes e concluídos, demandas pendentes, produtos por etapa e fotos feitas (clique para filtrar a lista)',
+    'Nada sobe para o Drive sem aprovação: o botão do envio passa a "Enviar para aprovação"',
+    'Aprovação de materiais em cards com a capa: o card abre todas as fotos grandes, com Aprovar ou Recusar',
+    'Aprovado, o envio ao Drive acontece sozinho; recusar exige justificativa, que aparece na tela do produto',
+    'Novas etapas "Aguardando aprovação" e "Recusado"; pedidos, aprovações e recusas vão para o registro'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -5870,6 +6175,7 @@ try {
   addEventListener('pagehide', () => canal.postMessage('tchau'));
 } catch {}
 current = plan.produtos[0]?.id || null;
+resumoPronto = true;
 renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont();
 // primeira vez neste computador: pergunta quem está usando (vai para o registro de alterações)
 if (!quemUsa()) setTimeout(() => { if (!quemUsa() && !document.querySelector('dialog[open]')){ renderQuem(); $('dlgQuem').showModal(); } }, 1500);
