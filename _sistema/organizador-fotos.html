@@ -660,11 +660,12 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
       <details class="sec">
         <summary style="cursor:pointer;font-weight:600">Ver como as pastas ficam organizadas</summary>
       <pre class="log" style="background:var(--soft);padding:10px;border-radius:8px">Estudio Polivenda/                 ← só produtos
-├─ vestido-midi-floral/            ← um produto
+├─ Vestidos - Vestido Midi Floral - 20.10.2026/   ← categoria - produto - data das fotos
 │  ├─ azul-marinho/                ← uma variação (só imagens)
 │  │  ├─ vestido-midi-floral-azul-marinho-capa-fundo-branco-01.jpg
 │  │  └─ vestido-midi-floral-azul-marinho-clip-01.mp4
 │  └─ descritivo.txt               ← ficha e descrição do produto
+├─ Vestidos - Vestido Midi Floral - 26.10.2026/   ← nova coleção de fotos = pasta nova
 _sistema/                          ← tudo que não é produto
 ├─ dados/                          ← cadastro, configurações e manifesto
 ├─ backup/cadastro/                ← cópia diária do cadastro (15 dias)
@@ -812,7 +813,7 @@ _sistema/                          ← tudo que não é produto
         <input id="tplProd">
         <label class="f">Pastas dos produtos</label>
         <input id="tplFolder">
-        <div class="muted ajuda" style="margin-top:6px">Campos: {palavra} {produto} {tipo} {material} {cor} {variacao} {medida} {foto} {estilo} {marca} {modelo} {sku} {extra} {loja} {n}</div>
+        <div class="muted ajuda" style="margin-top:6px">Pastas: {categoria} {produto} {marca} {modelo} {sku} {data} (data da coleção, ex.: 20.10.2026), separados por " - ".<br>Arquivos: {palavra} {produto} {tipo} {material} {cor} {variacao} {medida} {foto} {estilo} {marca} {modelo} {sku} {extra} {loja} {n}</div>
       </details>
     </div>
 
@@ -1151,12 +1152,14 @@ const DEFAULT_LISTAS = {
   cor: ['Branco', 'Preto', 'Dourado', 'Prata', 'Transparente', 'Bege', 'Caramelo', 'Marrom', 'Cinza', 'Azul', 'Verde', 'Rosa', 'Vermelho', 'Amarelo', 'Violeta', 'Colorido'],
 };
 // cadastro, configurações e manifesto ficam em _sistema (veja o bloco "_sistema" mais abaixo)
+// pastas de fotos: uma por coleção, com a data em que as fotos entraram (ex.: Flores - Flores Azuis - 20.10.2026)
+const PASTA_TPL = '{categoria} - {produto} - {data}';
 const CFG_FILE = 'dados/configuracoes.json', PLAN_FILE = 'dados/organizador.json', MANIFEST_FILE = 'dados/manifesto-seo.csv';
 // em um endereço novo (ex.: o atalho com localhost) as configurações começam vazias: dá para trazê-las da pasta principal
 let settingsFresh = !store.get('settings');
 function normSettings(raw){
   const s = Object.assign({
-    tplFolder: '{produto}-{marca}-{modelo}',
+    tplFolder: PASTA_TPL,
     tplFile: '{produto}-{marca}-{modelo}-{cor}-{extra}-{n}',
     tplProd: DEFAULT_TPL_PROD,
     maxLen: 90, stop: true,
@@ -1192,6 +1195,8 @@ function normSettings(raw){
   if (!s.v6){ if ([OLD_TPL_PROD, V3_TPL_PROD, V4_TPL_PROD].includes(s.tplProd)) s.tplProd = DEFAULT_TPL_PROD; s.v6 = true; }
   // categorias da loja (Configurações → Categorias) e nomes da equipe (registro de alterações)
   s.categorias ||= []; s.equipe ||= [];
+  // v7: pasta legível com categoria e data da coleção (antes era o nome SEO, ex.: vaso-marca-modelo)
+  if (!s.v7){ s.tplFolder = PASTA_TPL; s.v7 = true; }
   return s;
 }
 let settings = normSettings(store.get('settings', {}));
@@ -1317,9 +1322,16 @@ function cut(s, max){
   const i = s.lastIndexOf('-');
   return (i > max*0.5 ? s.slice(0,i) : s).replace(/-+$/,'');
 }
+// data da coleção no nome da pasta: 20.10.2026
+const dataPasta = iso => { const [a, m, d] = (iso || hojeIso()).split('-'); return `${d}.${m}.${a}`; };
+const hojeIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+// nome legível (com maiúsculas e acentos); só sai o que o Windows e o Drive não aceitam
 function folderName(p){
-  const s = cut(dedupe(tidy(render(settings.tplFolder, p).replace(/\u0000/g,''))), settings.maxLen);
-  return s || 'produto-' + p.id;
+  const map = { categoria: p.categoria, produto: p.nome, marca: p.marca, modelo: p.modelo, sku: p.sku, data: dataPasta(p.dataColecao) };
+  const limpa = v => String(v || '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const s = (settings.tplFolder || PASTA_TPL).replace(/\{(\w+)\}/g, (_, k) => limpa(map[k]))
+    .split(' - ').map(x => x.trim()).filter(Boolean).join(' - ').slice(0, 150).replace(/[\s.]+$/, '');
+  return s || 'Produto ' + p.id;
 }
 function extOf(name){ const m = name.match(/\.[^.]+$/); return m ? m[0].toLowerCase().replace(/^\.(jpeg|jfif)$/,'.jpg') : ''; }
 // nome SEO dos arquivos dos produtos. Se passar do tamanho máximo, sai primeiro o que menos pesa na busca.
@@ -1674,7 +1686,9 @@ function migrate(pl){
     ['nome','titulo','sku','marca','modelo','categoria','extra','prompt','notas','pasta'].forEach(k => p[k] ??= '');
     // SEO do anúncio
     ['tipo','material','cor','palavra','medidaValor','descritivo','descricao'].forEach(k => p[k] ??= '');
-    p.medidaUn ||= 'cm'; p.estilo ||= []; p.anexos ||= [];
+    p.medidaUn ||= 'cm'; p.estilo ||= []; p.anexos ||= []; p.colecoes ||= [];
+    // os arquivos do fornecedor continuam no caminho antigo mesmo se a pasta de fotos mudar de nome
+    if (p.pasta && p.anexos.length && !p.anexosPasta) p.anexosPasta = p.pasta;
     if (!STATUS.some(s => s[0] === p.status)) p.status = 'produzir';
   }
   return pl;
@@ -1986,7 +2000,8 @@ function renderDetail(){
       </div>
     </div>
 
-    ${ws ? `<div class="folder compacta">${ic('folder')} <b>Pasta ${u.nome ? 'da variação' : 'do produto'}</b><span class="ajuda">Os arquivos desta ${u.nome ? 'variação' : 'produto'} ficam em: <code>${esc(pathOf(p, u))}</code></span></div>`
+    ${ws ? `<div class="folder compacta">${ic('folder')} <b>Pasta ${u.nome ? 'da variação' : 'do produto'}</b><span class="ajuda">${p.pasta ? `Coleção de ${dataPasta(p.dataColecao)}. Os arquivos desta ${u.nome ? 'variação' : 'produto'} ficam em: <code>${esc(pathOf(p, u))}</code>` : `A pasta é criada quando as fotos entram, com a data do dia (ex.: <code>${esc(folderName({ ...p, dataColecao: hojeIso() }))}</code>).`}${p.colecoes?.length ? ` · ${p.colecoes.length} coleção(ões) anterior(es)` : ''}</span>
+      ${p.pasta ? `<button class="sm" data-act="novacolecao" style="margin-left:8px" title="As próximas fotos vão para uma pasta nova, com a data delas">Nova coleção de fotos</button>` : ''}</div>`
       : `<div class="folder warn">${ic('folder')} Conecte a pasta de trabalho para poder enviar os arquivos.
         <button class="sm" data-act="connect" style="margin-left:8px">Conectar pasta</button></div>`}
     ${p.anexos?.length ? `<div class="danexos"><span class="muted">${ic('clip')} Arquivos do fornecedor:</span>${p.anexos.map((a, i) => `<button class="sm" data-act="veranexo" data-i="${i}" title="Abrir">${esc(a.nome)}</button>`).join('')}</div>` : ''}
@@ -2206,6 +2221,11 @@ async function uploadFiles(p, u, item, files){
   const video = isVideo(item);
   const ok = files.filter(f => video ? VID_EXT.test(f.name) || IMG_EXT.test(f.name) : IMG_EXT.test(f.name));
   if (!ok.length) return toast(video ? 'Envie um vídeo (.mp4, .mov, .webm).' : 'Envie uma imagem (.jpg, .png, .webp).');
+  if (p.pasta && p.drive?.em && p.dataColecao !== hojeIso() && confirm(`A coleção de ${dataPasta(p.dataColecao)} já foi enviada ao Drive.\n\nOK: começar uma NOVA coleção (pasta nova com a data de hoje, ${dataPasta()}).\nCancelar: juntar estas fotos à coleção atual.`)){
+    novaColecao(p); registrar('Checklist', 'Começou uma nova coleção de fotos', p, `pasta ${folderName({ ...p, dataColecao: hojeIso() })}`);
+  }
+  // primeira foto de uma coleção criada em outro dia (pasta ainda vazia): a data passa a ser a de hoje
+  if (p.pasta && !prog(p).done && p.dataColecao !== hojeIso()){ p.dataColecao = hojeIso(); await alinharPasta(p); }
   try {
     await comTrava(async () => {
       ensureFolders(p);
@@ -2360,6 +2380,12 @@ $('detail').addEventListener('click', async e => {
   if (!p) return;
   const u = curU(p);
   const item = p.checklist.find(c => c.id === b.closest('.clrow')?.dataset.iid);
+  if (act === 'novacolecao'){
+    if (!confirm(`Começar uma nova coleção de fotos?\n\nA coleção atual (${p.pasta}) fica guardada na pasta e no Drive, e o checklist recomeça vazio. As próximas fotos vão para uma pasta nova, com a data do dia em que entrarem.`)) return;
+    const antiga = p.pasta; novaColecao(p); mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail();
+    registrar('Checklist', 'Começou uma nova coleção de fotos', p, `a anterior fica em ${antiga}`);
+    return toast('Nova coleção iniciada. Envie as fotos: a pasta nova é criada com a data de hoje.', 4500);
+  }
   if (act === 'edit') openForm(p);
   if (act === 'editia'){ openForm(p); return iaSeo($('fIaSeo')); }
   if (act === 'pprio') return setPrioProduto(p, b.dataset.v);
@@ -2789,10 +2815,10 @@ $('dlgProd').addEventListener('paste', e => {
   e.preventDefault(); addAnexos(files);
 });
 // os anexos ficam em _sistema/fornecedor/<produto>/: dentro da pasta do produto entram só fotos e o descritivo.txt
-const anexoArq = (p, nome) => `fornecedor/${p.pasta}/${nome}`;
+const anexoArq = (p, nome) => `fornecedor/${p.anexosPasta || p.pasta}/${nome}`;
 async function arquivoAnexo(p, a){
   if (a.file) return a.file;
-  const f = ws && p?.pasta ? await sisLerArquivo(anexoArq(p, a.nome), a.nome) : null;
+  const f = ws && (p?.anexosPasta || p?.pasta) ? await sisLerArquivo(anexoArq(p, a.nome), a.nome) : null;
   if (!f) throw new Error(`Não encontrei "${a.nome}" em _sistema.`);
   return f;
 }
@@ -2803,11 +2829,11 @@ async function abrirAnexo(p, a){
 // grava os novos em _sistema/fornecedor e manda os tirados para a lixeira
 async function gravarAnexos(p){
   if (!ws){ if (fAnexos.some(a => a.file)) toast('Conecte a pasta principal para guardar os arquivos do fornecedor.', 4500); p.anexos = fAnexos.filter(a => !a.file).map(({ file, ...a }) => a); return; }
-  ensureFolders(p);
+  p.anexosPasta ||= p.pasta || slug(p.nome) || 'produto-' + p.id;
   for (const nome of fAnexosRm){
     try {
       const f = await sisLerArquivo(anexoArq(p, nome), nome); if (!f) continue;
-      await sisGravar(`${LIXEIRA}/${p.pasta}/${ANEXOS}/${agora()}-${nome}`, f);
+      await sisGravar(`${LIXEIRA}/${p.anexosPasta}/${ANEXOS}/${agora()}-${nome}`, f);
       await sisApagar(anexoArq(p, nome));
     } catch {}
   }
@@ -3064,14 +3090,62 @@ async function connectWs(pickNew = false){
 $('wsChip').onclick = () => ws ? goCfg('conexoes', 'cfgWs') : connectWs();
 $('cfgWsChange').onclick = () => connectWs(true);
 
+// nome livre para a pasta (sem repetir a de outro produto ou de uma coleção antiga)
+function pastaLivre(p){
+  const used = new Set(plan.produtos.flatMap(x => [x !== p && x.pasta, ...(x.colecoes || []).map(c => c.pasta)]).filter(Boolean));
+  let base = folderName(p), name = base, i = 2;
+  while (used.has(name)) name = `${base} (${i++})`;
+  return name;
+}
+// a pasta nasce quando as fotos entram: a data dela é a do envio das fotos
 function ensureFolders(p){
-  if (!p.pasta){
-    const used = new Set(plan.produtos.map(x => x.pasta).filter(Boolean));
-    let base = folderName(p), name = base, i = 2;
-    while (used.has(name)) name = `${base}-${i++}`;
-    p.pasta = name;
-  }
+  if (!p.pasta){ p.dataColecao ||= hojeIso(); p.pasta = pastaLivre(p); }
   p.variacoes.forEach((v, i) => { if (!v.pasta) v.pasta = slug(v.nome) || `variacao-${i + 1}`; });
+}
+// renomeia a pasta do computador quando o padrão, a categoria ou o nome mudam (também traz as pastas antigas para o padrão novo)
+async function moverPasta(origem, destino){
+  for await (const [nome, h] of origem.entries()){
+    if (h.kind === 'directory') await moverPasta(h, await destino.getDirectoryHandle(nome, { create: true }));
+    else if (!(await exists(destino, nome))) await writeFile(destino, nome, await h.getFile());
+  }
+}
+async function alinharPasta(p){
+  if (!ws || !p.pasta) return false;
+  if (!p.dataColecao) p.dataColecao = await dataDasFotos(p);
+  const novo = pastaLivre(p);
+  if (novo === p.pasta) return false;
+  return comTrava(async () => {
+    const velha = await subIfExists(ws, p.pasta);
+    if (velha){
+      if (await subIfExists(ws, novo)) return false; // já existe uma pasta com esse nome: não mistura
+      let movida = false;
+      if (typeof velha.move === 'function'){ try { await velha.move(novo); movida = true; } catch {} }
+      if (!movida){ await moverPasta(velha, await sub(ws, novo)); await ws.removeEntry(p.pasta, { recursive: true }); }
+    }
+    for (const k of [...thumbCache.keys()]) if (k.startsWith(p.pasta + '/')) thumbCache.delete(k);
+    p.pasta = novo; descCache.delete(p.id);
+    return true;
+  });
+}
+// pasta antiga sem data guardada: usa o dia da foto mais antiga dela (senão, o do último envio ao Drive)
+async function dataDasFotos(p){
+  let menor = Infinity;
+  try {
+    for (const u of units(p)){
+      const dir = await subIfExists(ws, p.pasta, u.pasta); if (!dir) continue;
+      for (const it of p.checklist) for (const f of filesOf(u, it)){ try { menor = Math.min(menor, (await (await dir.getFileHandle(f)).getFile()).lastModified); } catch {} }
+    }
+  } catch {}
+  const d = isFinite(menor) ? new Date(menor) : p.drive?.em ? new Date(p.drive.em) : new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+// nova coleção de fotos: a atual fica guardada (pasta e Drive) e as próximas fotos vão para uma pasta nova, com a data delas
+function novaColecao(p){
+  p.colecoes ||= [];
+  if (p.pasta) p.colecoes.push({ pasta: p.pasta, data: p.dataColecao || '', drive: p.drive || null, fim: new Date().toISOString() });
+  p.pasta = ''; p.dataColecao = ''; p.drive = null;
+  p.arquivos = {}; p.variacoes.forEach(v => v.arquivos = {});
+  descCache.delete(p.id);
 }
 // dentro de cada produto ficam só as fotos e o descritivo.txt (o checklist e os prompts ficam no app)
 const descCache = new Map();
@@ -3099,8 +3173,9 @@ async function writeDescritivo(p){
   } catch {}
 }
 async function createFolders(p){
+  if (!p.pasta) return; // produto ainda sem fotos: a pasta é criada quando elas entram
   try {
-    ensureFolders(p);
+    await alinharPasta(p);
     const pd = await sub(ws, p.pasta);
     for (const v of (p.temVariacao ? p.variacoes : [])) await sub(pd, v.pasta);
     descCache.delete(p.id);
@@ -3172,7 +3247,7 @@ $('cfgEstilo').oninput = () => { settings.estilo = $('cfgEstilo').value; saveSet
 $('cfgEstiloVideo').oninput = () => { settings.estiloVideo = $('cfgEstiloVideo').value; saveSettings(); };
 function readSettings(){
   settings.tplProd = $('tplProd').value || DEFAULT_TPL_PROD;
-  settings.tplFolder = $('tplFolder').value || '{produto}';
+  settings.tplFolder = $('tplFolder').value || PASTA_TPL;
   settings.maxLen = Math.min(200, Math.max(30, +$('maxLen').value || 90));
   settings.stop = $('stop').checked;
   settings.seo.usarLoja = $('seoLojaOn').checked;
@@ -3839,7 +3914,7 @@ async function buildJobs(p, onProg){
   return { us, jobs };
 }
 // no Drive as pastas levam o nome SEO atual (no computador a pasta mantém o nome do cadastro)
-const driveDir = p => folderName(p);
+const driveDir = p => p.pasta || folderName({ ...p, dataColecao: p.dataColecao || hojeIso() });
 const driveVarDir = u => u.pasta ? slug(u.nome) || u.pasta : '';
 function manifestFor(p, jobs){
   const line = r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';');
