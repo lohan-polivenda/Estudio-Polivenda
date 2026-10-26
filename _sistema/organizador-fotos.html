@@ -3771,6 +3771,23 @@ async function dFolderFor(name, parent, id){
   return dFolder(name, parent);
 }
 const dTrash = id => gFetch(`${DAPI}/files/${id}?fields=id`, { method: 'PATCH', headers: jsonH, body: JSON.stringify({ trashed: true }) });
+const dMover = (id, de, para) => gFetch(`${DAPI}/files/${id}?fields=id&addParents=${para}&removeParents=${de}`, { method: 'PATCH', headers: jsonH, body: '{}' });
+const dArquivos = dir => dList(`'${dir}' in parents and trashed=false and mimeType!='${FOLDER}'`);
+const dPastas = dir => dList(`'${dir}' in parents and trashed=false and mimeType='${FOLDER}'`);
+// coleção antiga no Drive (uma pasta por coleção, com a data no nome): as fotos vão para produto / variação / data
+// e a pasta velha (só com o manifesto e a descrição antigos) vai para a lixeira
+async function juntarColecaoDrive(velha, pf, cd){
+  let n = 0;
+  const soltas = (await dArquivos(velha)).filter(f => ![MANIFEST, DESC_FILE].includes(f.name));
+  if (soltas.length){ const alvo = await dFolder(cd, pf); for (const f of soltas){ await dMover(f.id, velha, alvo); n++; } }
+  for (const v of await dPastas(velha)){
+    const alvo = await dFolder(cd, await dFolder(v.name, pf));
+    for (const f of await dArquivos(v.id)){ await dMover(f.id, v.id, alvo); n++; }
+    for (const s2 of await dPastas(v.id)){ const a2 = await dFolder(s2.name, alvo); for (const f of await dArquivos(s2.id)){ await dMover(f.id, s2.id, a2); n++; } }
+  }
+  await dTrash(velha);
+  return n;
+}
 // envia um arquivo novo, ou substitui o conteúdo de um que já existe (id)
 async function dUpload(name, blob, parent, id){
   const meta = id ? { name } : { name, parents: [parent] }, mime = blob.type || 'application/octet-stream';
@@ -4234,6 +4251,7 @@ function rvStep3(){
   else if (!d.clientId) h += '<div class="alert block">O Google Drive ainda não foi configurado. <button class="sm" data-act="cfgdrive" style="margin-left:6px">Configurar agora</button></div>';
   h += `<div class="alert info">Destino: <b>${[d.pastaNome || DRIVE_ROOT, p.categoria, driveDir(p)].filter(Boolean).map(esc).join(' / ')}</b>${p.temVariacao ? ' / uma pasta por variação' : ''} / ${dataPasta(p.dataColecao)}<br>
     ${rv.jobs.length} arquivo(s)${conv ? `, ${conv} convertido(s) para JPG` : ''} + ${MANIFEST} (nomes e textos alternativos).<br>
+    ${(() => { const n = rv.us.reduce((t, u) => t + acvDe(p, u).length, 0); return n ? `${n} foto(s) do Arquivo, na subpasta ${ACV_DIR} da data.<br>` : ''; })()}
     Arquivo com o mesmo nome é substituído. Arquivo antigo dessas pastas com nome desatualizado vai para a lixeira do Drive (recuperável por 30 dias).</div>`;
   if (!gOk() && d.clientId && !isFileUrl) h += `<div class="muted" style="margin-top:8px">Ao clicar em Enviar, o Google pode abrir uma janela para você entrar${d.email ? ' com ' + esc(d.email) : ''}.</div>`;
   return h + `<div class="progress"><div id="dvBar" style="width:${rv.result?.ok ? 100 : 0}%"></div></div><div id="dvLog" class="log">${esc(rv.log)}</div>`;
@@ -4250,9 +4268,20 @@ async function sendToDrive(){
     const root = await ensureRoot(), catDir = p.categoria ? await dFolder(p.categoria, root) : root;
     const pf = await dFolderFor(driveDir(p), catDir, p.drive?.pastaId), vars = {};
     log(`Pasta ${[settings.drive.pastaNome, p.categoria, driveDir(p)].filter(Boolean).join('/')}/`);
-    let done = 0, trashed = 0;
+    for (const c of p.colecoes || []){
+      const id = c.drive?.pastaId; if (!id) continue;
+      // mesma data do envio atual: subpasta separada, senão o espelho do envio mandaria essas fotos para a lixeira
+      let cd = dataPasta(c.data || c.drive.em?.slice(0, 10)); if (cd === dataPasta(p.dataColecao)) cd += ' (anterior)';
+      if (id !== pf){
+        try { log(`   coleção antiga juntada em ${cd}/: ${await juntarColecaoDrive(id, pf, cd)} arquivo(s)`); }
+        catch (e) { if (e.status !== 404) throw e; } // a pasta velha já não existe
+      }
+      c.drive = { em: c.drive.em };
+    }
+    const nAcv = us.reduce((t, u) => t + acvDe(p, u).length, 0), total = jobs.length + nAcv + 1;
+    let done = 0, trashed = 0, acvEnv = 0;
     for (const u of us){
-      const uj = jobs.filter(j => j.u === u); if (!uj.length) continue;
+      const uj = jobs.filter(j => j.u === u); if (!uj.length && !acvDe(p, u).length) continue;
       const vdir = u.pasta ? vars[u.id] = await dFolderFor(driveVarDir(u), pf, p.drive?.vars?.[u.id]) : pf;
       // as fotos ficam numa subpasta com a data do envio (produto / variação / data)
       const dir = await dFolder(dataPasta(p.dataColecao), vdir);
@@ -4268,10 +4297,25 @@ async function sendToDrive(){
         await dUpload(j.name, j.a.out, dir, ex?.id);
         keep.add(j.name);
         log(`   ${ex ? 'substituído' : 'enviado'}: ${j.name}${j.a.ajustada ? '  (ajustado)' : j.a.converted ? '  (convertido para JPG)' : ''}`);
-        bar(++done / (jobs.length + 1) * 100);
+        bar(++done / total * 100);
       });
       // espelho do computador: o que ficou com nome antigo vai para a lixeira do Drive
       for (const f of have) if (!keep.has(f.name)){ await dTrash(f.id); trashed++; log(`   para a lixeira (nome desatualizado): ${f.name}`); }
+      // fotos do Arquivo: vão como estão para data / Arquivo (a que já está no Drive não sobe de novo)
+      const acv = acvDe(p, u), aex = (await dList(`name='${ACV_DIR}' and mimeType='${FOLDER}' and '${dir}' in parents and trashed=false`))[0]?.id;
+      if (acv.length || aex){
+        const adir = aex || await dFolder(ACV_DIR, dir), ldir = await subIfExists(ws, ...ud(p, u), ACV_DIR);
+        const ahave = await dArquivos(adir), akeep = new Set();
+        await emParalelo(acv, 3, async nome => {
+          akeep.add(nome);
+          if (!ahave.some(f => f.name === nome)){
+            try { await dUpload(nome, await (await ldir.getFileHandle(nome)).getFile(), adir); acvEnv++; log(`   enviado (${ACV_DIR}): ${nome}`); }
+            catch (e) { if (e.status) throw e; log(`   não achei no computador (${ACV_DIR}): ${nome}`); }
+          }
+          bar(++done / total * 100);
+        });
+        for (const f of ahave) if (!akeep.has(f.name)){ await dTrash(f.id); trashed++; log(`   para a lixeira (saiu do ${ACV_DIR}): ${f.name}`); }
+      }
     }
     const ex = (await dList(`name='${MANIFEST}' and '${pf}' in parents and trashed=false`))[0];
     await dUpload(MANIFEST, new Blob(['﻿' + manifestFor(p, jobs)], { type: 'text/csv' }), pf, ex?.id);
@@ -4286,7 +4330,7 @@ async function sendToDrive(){
     p.drive = { em: new Date().toISOString(), pastaId: pf, vars, arquivos: jobs.length };
     savePlan(); renderDetail();
     rv.result = { ok: true, url: 'https://drive.google.com/drive/folders/' + pf };
-    log(`\nConcluído: ${jobs.length} arquivo(s) no Drive${trashed ? `, ${trashed} antigo(s) na lixeira` : ''}.`);
+    log(`\nConcluído: ${jobs.length} arquivo(s) no Drive${acvEnv ? ` + ${acvEnv} do ${ACV_DIR}` : ''}${trashed ? `, ${trashed} antigo(s) na lixeira` : ''}.`);
     toast('Enviado ao Google Drive.');
     const aj = jobs.filter(j => j.a.ajustada).length;
     registrar('Envio ao Drive', 'Enviou ao Google Drive', p, `${jobs.length} arquivo(s) para ${[settings.drive.pastaNome, p.categoria, driveDir(p)].filter(Boolean).join(' / ')}`
