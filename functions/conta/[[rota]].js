@@ -55,14 +55,20 @@ export async function onRequest({ request, env, params }){
     await env.OLIST.delete(chaveF);
     return json({ nome: u.nome, usuario }, 200, { 'Set-Cookie': await abrirSessao(env, usuario) });
   }
-  // primeiro acesso: só enquanto não existe nenhuma conta, e com a senha da equipe da Cloudflare
+  // com a senha da equipe (ESTUDIO_CHAVE): primeiro acesso, acesso novo ou senha nova para um usuário que já existe
   if (rota === 'primeiro' && m === 'POST'){
-    if ((await lista(env)).length) return erro('Já existem contas. Peça um acesso a quem já entra no Estúdio.', 409);
-    if (!env.ESTUDIO_CHAVE || corpo.chave !== env.ESTUDIO_CHAVE) return erro('Senha da equipe errada.', 403);
-    const d = { nome: corpo.nome, usuario: String(corpo.usuario || '').trim().toLowerCase(), senha: corpo.senha }, v = validar(d);
+    const falhas = +(await env.OLIST.get('falhas:chave') || 0);
+    if (falhas >= MAX_FALHAS) return erro('Muitas tentativas erradas. Espere 15 minutos e tente de novo.', 429);
+    if (!env.ESTUDIO_CHAVE || !iguais(String(corpo.chave || ''), env.ESTUDIO_CHAVE)){
+      await env.OLIST.put('falhas:chave', String(falhas + 1), { expirationTtl: 900 });
+      return erro('Senha da equipe errada.', 403);
+    }
+    await env.OLIST.delete('falhas:chave');
+    const usuario = String(corpo.usuario || '').trim().toLowerCase(), existe = await env.OLIST.get('usuario:' + usuario, 'json');
+    const d = { nome: existe?.nome || corpo.nome, usuario, senha: corpo.senha }, v = validar(d);
     if (v) return erro(v);
-    const u = await gravarUsuario(env, d, 'primeiro acesso');
-    return json({ nome: u.nome, usuario: u.usuario }, 200, { 'Set-Cookie': await abrirSessao(env, u.usuario) });
+    const u = await gravarUsuario(env, d, (await lista(env)).length ? 'senha da equipe' : 'primeiro acesso', existe);
+    return json({ nome: u.nome, usuario: u.usuario, senhaNova: !!existe }, 200, { 'Set-Cookie': await abrirSessao(env, u.usuario) });
   }
 
   // daqui para baixo, só quem já entrou

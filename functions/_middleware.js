@@ -24,32 +24,43 @@ input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:
 input:focus{outline:2px solid var(--accent);outline-offset:-1px}
 button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
 button:disabled{opacity:.6}#erro{color:var(--danger);font-size:13px;min-height:18px;margin-top:10px}
+.troca{display:block;width:auto;margin:14px auto 0;padding:4px;background:none;color:var(--accent);font-weight:400;font-size:13px}
+.so-chave{display:none}form.chave .so-chave{display:block}form.chave .so-entrar{display:none}
 </style></head><body>
-<form id="f" autocomplete="on">
+<form id="f" autocomplete="on" class="${primeiro ? 'chave' : ''}">
   <h1>Estúdio Polivenda</h1>
-  ${primeiro ? `<p>Primeiro acesso: crie a sua conta. Use a senha da equipe que está na Cloudflare (ESTUDIO_CHAVE).</p>
-  <label for="chave">Senha da equipe</label><input id="chave" type="password" required autocomplete="off">
-  <label for="nome">Seu nome</label><input id="nome" required maxlength="60" autocomplete="name">
-  <label for="usuario">Usuário</label><input id="usuario" required autocomplete="username" autocapitalize="none" placeholder="ex.: ana">
-  <label for="senha">Senha</label><input id="senha" type="password" required minlength="6" autocomplete="new-password" placeholder="mínimo 6 caracteres">`
-  : `<p>Entre com o seu usuário e senha.</p>
-  <label for="usuario">Usuário</label><input id="usuario" required autocomplete="username" autocapitalize="none" autofocus>
-  <label for="senha">Senha</label><input id="senha" type="password" required autocomplete="current-password">`}
+  <p class="so-entrar">Entre com o seu usuário e senha.</p>
+  <p class="so-chave">${primeiro ? 'Primeiro acesso: crie a sua conta.' : 'Com a senha da equipe você cria um acesso novo ou troca a senha de um usuário que já existe.'} A senha da equipe é a que está na Cloudflare (ESTUDIO_CHAVE).</p>
+  <div class="so-chave"><label for="chave">Senha da equipe</label><input id="chave" type="password" autocomplete="off">
+  <label for="nome">Seu nome</label><input id="nome" maxlength="60" autocomplete="name"></div>
+  <label for="usuario">Usuário</label><input id="usuario" required autocomplete="username" autocapitalize="none" ${primeiro ? 'placeholder="ex.: ana"' : 'autofocus'}>
+  <label for="senha" id="senhaRot">${primeiro ? 'Senha (mínimo 6 caracteres)' : 'Senha'}</label><input id="senha" type="password" required autocomplete="current-password">
   <button id="b">${primeiro ? 'Criar e entrar' : 'Entrar'}</button>
   <div id="erro" role="alert"></div>
+  ${primeiro ? '' : '<button type="button" class="troca" id="troca">Não tenho acesso ou esqueci a senha</button>'}
 </form>
 <script>
-const f = document.getElementById('f'), v = id => document.getElementById(id)?.value.trim() ?? '';
+const f = document.getElementById('f'), $ = id => document.getElementById(id), v = id => $(id)?.value.trim() ?? '';
+const modo = () => f.classList.contains('chave');
+function mostrar(){
+  const c = modo();
+  $('b').textContent = c ? ${primeiro ? "'Criar e entrar'" : "'Salvar e entrar'"} : 'Entrar';
+  $('senhaRot').textContent = c ? 'Nova senha (mínimo 6 caracteres)' : 'Senha';
+  $('senha').autocomplete = c ? 'new-password' : 'current-password';
+  $('chave').required = c; if ($('troca')) $('troca').textContent = c ? 'Voltar para entrar' : 'Não tenho acesso ou esqueci a senha';
+  $('erro').textContent = '';
+}
+$('troca')?.addEventListener('click', () => { f.classList.toggle('chave'); mostrar(); (modo() ? $('chave') : $('usuario')).focus(); });
+mostrar();
 f.onsubmit = async e => {
-  e.preventDefault(); const b = document.getElementById('b'); b.disabled = true; document.getElementById('erro').textContent = '';
-  const corpo = ${primeiro ? `{ chave: v('chave'), nome: v('nome'), usuario: v('usuario').toLowerCase(), senha: document.getElementById('senha').value }`
-    : `{ usuario: v('usuario').toLowerCase(), senha: document.getElementById('senha').value }`};
+  e.preventDefault(); const b = $('b'); b.disabled = true; $('erro').textContent = '';
+  const c = modo(), corpo = { usuario: v('usuario').toLowerCase(), senha: $('senha').value, ...(c ? { chave: v('chave'), nome: v('nome') } : {}) };
   try {
-    const r = await fetch('/conta/${primeiro ? 'primeiro' : 'entrar'}', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+    const r = await fetch(c ? '/conta/primeiro' : '/conta/entrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
     const d = await r.json().catch(() => ({}));
     if (r.ok) return location.reload();
-    document.getElementById('erro').textContent = d.mensagem || 'Não deu certo. Tente de novo.';
-  } catch { document.getElementById('erro').textContent = 'Sem conexão. Confira a internet.'; }
+    $('erro').textContent = d.mensagem || 'Não deu certo. Tente de novo.';
+  } catch { $('erro').textContent = 'Sem conexão. Confira a internet.'; }
   b.disabled = false;
 };
 </script></body></html>`;
