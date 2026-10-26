@@ -513,62 +513,26 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 .folder.compacta{padding:7px 12px;margin-top:12px}
 .etapa .info-i{margin-left:0}
 /* ---------- resumo (painel) e aprovação ---------- */
-:root{--s1:#0891b2;--s2:#ea580c;--s3:#5d6ec8}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--s1:#0aa5c4;--s2:#e8661a;--s3:#7385e0}}
-:root[data-theme="dark"]{--s1:#0aa5c4;--s2:#e8661a;--s3:#7385e0}
 .painel{padding:0;overflow:hidden}
-.pnhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--border)}
+.pnhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--border)}
 .pnhead h2,.aphead h2{margin:0}
 .pnhead h2{margin-right:auto}
 .pnhead select,#rsDatas input{width:auto}
 #rsDatas{display:inline-flex;align-items:center;gap:6px;font-size:13px}
 #rsDatas.hidden{display:none}
-#rsPersBox{padding:12px 20px;border-bottom:1px solid var(--border);background:var(--soft)}
+#rsPersBox{padding:12px 20px;border-bottom:1px solid var(--border);background:var(--soft);font-size:13px}
 #rsPersBox.hidden{display:none}
 .rspers .grupo{margin:10px 0 4px;font-weight:600;font-size:12px;color:var(--muted)}
 .rspers label{display:inline-flex;align-items:center;gap:6px;margin:0 16px 6px 0;font-size:13px;font-weight:400;cursor:pointer}
+.rspers label.off{opacity:.45;cursor:default}
 .rspers input{width:auto;margin:0}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-bottom:1px solid var(--border)}
-.kpi{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;white-space:normal;min-width:0;padding:14px 20px;background:none;border:0;border-radius:0;border-left:1px solid var(--border);margin-left:-1px;font:inherit;color:inherit}
+.kpis{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr))}
+.kpi{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;white-space:normal;min-width:0;padding:16px 20px;background:none;border:0;border-radius:0;border-left:1px solid var(--border);font:inherit;color:inherit}
+.kpi:first-child{border-left:0}
 button.kpi{cursor:pointer}
 button.kpi:hover{background:var(--soft)}
-.kpi b{font-size:26px;line-height:1.15;font-weight:600}
-.kpi span{font-size:13px;display:flex;align-items:baseline;gap:6px;line-height:1.3}
-.kpi span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);flex:none;transform:translateY(-1px)}
-.kpi small{font-size:11px;color:var(--muted);padding-left:14px}
-.pngrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
-.pncel{padding:16px 20px;position:relative;min-width:0}
-.pncel+.pncel{border-left:1px solid var(--border)}
-.pntit{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;font-size:14px}
-.pntit .muted{font-size:12px}
-.atvleg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;margin-bottom:10px}
-.atvleg span{display:inline-flex;align-items:center;gap:6px}
-.atvleg span::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
-.atvleg b{font-weight:600}
-.atvplot{position:relative;height:150px;margin-left:24px}
-.atvplot.vazio{margin:0;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border);border-radius:8px;font-size:13px}
-.atvgrid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
-.atvgrid span{border-top:1px solid var(--border);position:relative;height:0}
-.atvgrid span:last-child{border-top-color:color-mix(in srgb,var(--muted) 45%,transparent)}
-.atvgrid small{position:absolute;right:calc(100% + 6px);top:-8px;font-size:10px;color:var(--muted)}
-.atvcols{position:absolute;inset:0;display:flex}
-.atvc{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:0 1px;border-radius:4px 4px 0 0;min-width:0}
-.atvc.on{background:var(--soft)}
-.atvc i{width:min(10px,28%);background:var(--c);border-radius:3px 3px 0 0}
-.atvx{display:flex;margin:6px 0 0 24px}
-.atvx span{flex:1;font-size:10px;color:var(--muted);text-align:center;white-space:nowrap;overflow:visible;min-width:0}
-.atvtip{position:absolute;z-index:3;pointer-events:none;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 18px #0002;padding:8px 10px;font-size:12px;display:flex;flex-direction:column;gap:3px;min-width:150px}
-.atvtip span{display:flex;align-items:center;gap:6px}
-.atvtip span::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--c)}
-.atvtip span b{margin-left:auto;padding-left:12px}
-.etapas{display:flex;flex-direction:column;gap:2px}
-.etrow{display:grid;grid-template-columns:minmax(0,150px) 1fr 28px;align-items:center;gap:10px;padding:5px 6px;border:0;background:none;border-radius:6px;font:inherit;font-size:12px;color:var(--text);text-align:left;cursor:pointer}
-.etrow:hover{background:var(--soft)}
-.etrow span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.etrow.zero{color:var(--muted)}
-.etbar{height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
-.etbar i{display:block;height:100%;background:var(--c);border-radius:4px}
-.etrow b{text-align:right;font-weight:600}
+.kpi b{font-size:28px;line-height:1.1;font-weight:600}
+.kpi span{font-size:13px;color:var(--muted)}
 .apwrap{margin-top:16px}
 .aphead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .aphead .apvista{margin-left:auto}
@@ -576,45 +540,60 @@ button.kpi:hover{background:var(--soft)}
 .apvista button b{margin-left:6px}
 .apgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
 .apsem{grid-column:1/-1}
-.apcard{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:14px;background:var(--panel);overflow:hidden;transition:box-shadow .2s}
-.apcard.reprovar{border-color:var(--danger)}
-.apcard.pisca{box-shadow:0 0 0 4px var(--accent-soft),0 0 0 1px var(--accent)}
-.apmain{position:relative;aspect-ratio:3/4;background:var(--soft)}
-.apmain>img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
-.apcard.reprovar .apmain>img{cursor:pointer}
-.apvazio{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:13px}
-.apnav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--border);opacity:0;transition:opacity .15s}
-.apnav .ic{margin:0}
-.apmain:hover .apnav,.apnav:focus-visible{opacity:1}
-@media (hover:none){.apnav{opacity:1}}
-.apnav.ant{left:8px}.apnav.prx{right:8px}
-.apselos{position:absolute;top:8px;left:8px;right:8px;display:flex;flex-wrap:wrap;gap:4px;pointer-events:none}
-.apselos .lbl,.apselos .st{margin:0;background:color-mix(in srgb,var(--c) 16%,var(--panel))}
-.apmain .refazer{position:absolute;top:8px;right:8px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--danger);color:#fff}
-.apcont{position:absolute;left:8px;bottom:8px;max-width:calc(100% - 16px);font-size:11px;padding:3px 9px;border-radius:20px;background:#000000a6;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.apthumbs{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid var(--border)}
-.apthumbs button{flex:none;width:42px;height:56px;padding:0;border-radius:6px;overflow:hidden;border:2px solid transparent;background:var(--soft)}
-.apthumbs button.on{border-color:var(--accent)}
-.apthumbs button.marcada{border-color:var(--danger)}
-.apthumbs img{width:100%;height:100%;object-fit:cover;display:block}
-.apinfo{padding:10px 12px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
-.apinfo .l1{display:flex;align-items:center;gap:6px}
-.apinfo .l1 b{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.apinfo .l1 button{padding:2px 6px}
-.apinfo .muted{font-size:12px}
-.apinfo .mot{font-size:12px;color:var(--danger);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.aprep{padding:10px 12px 0;display:flex;flex-direction:column;gap:6px;font-size:12px}
-.aprep .opt{font-size:12px;padding:3px 10px}
-.aprep textarea{width:100%;min-height:56px}
-.aprep .apbtns{padding:2px 0 0}
-.apbtns{display:flex;gap:8px;padding:10px 12px 12px}
-.apbtns button{flex:1;justify-content:center}
+.apcard{display:flex;flex-direction:column;padding:0;border:1px solid var(--border);border-radius:14px;background:var(--panel);overflow:hidden;text-align:left;font:inherit;color:inherit;cursor:pointer;white-space:normal}
+.apcard:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.apcard .capa{aspect-ratio:3/4;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.apcard .capa img{width:100%;height:100%;object-fit:cover;display:block}
+.apcard .apinfo{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 14px 14px;min-width:0}
+.apcard .apinfo b{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apcard .apinfo .muted{font-size:13px}
+.apcard .mot{font-size:12px;color:var(--danger);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apsit{margin-top:6px;font-size:12px;padding:4px 12px;border-radius:20px;background:var(--soft);color:var(--muted);border:1px solid var(--border)}
+dialog.dlgap{width:min(1100px,calc(100vw - 32px));max-height:calc(100vh - 32px)}
+#amBody{display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
+.amhead{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.amhead .t{flex:1;min-width:0}
+.amhead h2{margin:0}
+.amhead .muted{font-size:13px}
+.amhead button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.amcorpo{flex:1;overflow:auto;padding:16px 20px}
+.amvazio{padding:30px 0;text-align:center}
+.amvar{margin:14px 0 8px;font-weight:600;font-size:13px}
+.amvar:first-child{margin-top:0}
+.amgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.amft{display:flex;flex-direction:column;gap:5px;min-width:0}
+.amft .img{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--soft);border:2px solid transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:zoom-in}
+.amft .img img{width:100%;height:100%;object-fit:cover;display:block}
+.amft.aprovada .img{border-color:var(--ok)}
+.amft.reprovada .img{border-color:var(--danger)}
+.amft.sel .img{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+dialog.dlgap.selecionando .amft .img{cursor:pointer}
+.amck{position:absolute;top:8px;left:8px;width:22px;height:22px;border-radius:6px;border:2px solid #fff;background:#0004;display:flex;align-items:center;justify-content:center;color:#fff}
+.amft.sel .amck{background:var(--accent);border-color:var(--accent)}
+.amck .ic{width:14px;height:14px;margin:0}
+.amst{position:absolute;bottom:8px;left:8px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;color:#fff;background:var(--ok)}
+.amft.reprovada .amst{background:var(--danger)}
+.amst .ic{width:12px;height:12px;margin:0}
+.ambl{position:absolute;top:8px;right:8px;margin:0;background:color-mix(in srgb,var(--danger) 16%,var(--panel))}
+.amrod{display:flex;align-items:center;gap:4px;min-width:0}
+.amrot{flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amrod button{width:30px;height:30px;padding:0;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none}
+.amrod button .ic{margin:0}
+.amok:hover,.amok.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.amno:hover,.amno.on{background:var(--danger);border-color:var(--danger);color:#fff}
+.ammot{font-size:11px;color:var(--danger);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ambar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--border);background:var(--panel);box-shadow:0 -6px 16px #0000000d}
+.ambar .ambtns{margin-left:auto;display:flex;gap:8px}
+.ambar.rep{flex-direction:column;align-items:stretch}
+.ambar.rep .opt{font-size:12px;padding:3px 10px}
+.ambar.rep textarea{width:100%}
 button.aprovar{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
 button.reprovar{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
 button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:600}
 .tabs .cnt.aprov{background:var(--accent)}
-@media (max-width:1000px){.pngrid{grid-template-columns:1fr}.pncel+.pncel{border-left:0;border-top:1px solid var(--border)}.apgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:600px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:12px 14px}.kpi b{font-size:22px}.apgrid{grid-template-columns:1fr}.tabs{max-width:100%;overflow-x:auto}.tabs button{flex:none}}
+@media (max-width:1000px){.apgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-left:0;border-top:1px solid var(--border)}.kpi b{font-size:22px}}
+@media (max-width:600px){.apgrid{grid-template-columns:1fr}.amgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{max-width:100%;overflow-x:auto}.tabs button{flex:none}}
 </style>
 </head>
 <body>
@@ -691,20 +670,14 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
       <h2>Resumo</h2>
       <select id="rsPeriodo" title="Período dos números que contam o que aconteceu"></select>
       <span id="rsDatas" class="hidden"><input type="date" id="rsDe"> até <input type="date" id="rsAte"></span>
-      <button id="rsPers" type="button" class="sm"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>Personalizar</button>
+      <button id="rsPers" type="button" class="sm ghost" title="Escolher os números do painel"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg></button>
     </div>
     <div class="hidden" id="rsPersBox"></div>
     <div class="kpis" id="rsMetricas"></div>
-    <div class="pngrid">
-      <div class="pncel"><div class="pntit"><b>Atividade</b><span class="muted" id="rsAtivTit"></span></div>
-        <div class="atv" id="rsAtiv"></div><div class="atvtip" id="rsTip" hidden></div></div>
-      <div class="pncel"><div class="pntit"><b>Produtos por etapa</b><span class="muted" id="rsEtTot"></span></div>
-        <div class="etapas" id="rsFunil"></div></div>
-    </div>
   </div>
   <div class="panel apwrap" id="apWrap">
     <div class="aphead"><h2>Aprovação</h2>
-      <span class="muted ajuda">A equipe encaminha o produto pela tela dele. Aqui você vê as fotos (setas ou miniaturas; clique na foto para ampliar) e aprova ou reprova. Aprovado, ele sobe sozinho para o Google Drive; reprovado, volta para a equipe com o que precisa ser feito.</span>
+      <span class="muted ajuda">A equipe encaminha o produto pela tela dele. Clique no card para ver todas as fotos e aprovar ou reprovar uma a uma (ou várias com "Selecionar"). Todas aprovadas, o produto sobe sozinho para o Google Drive; com alguma reprovada, ele volta para a equipe com o motivo.</span>
       <div class="yn apvista" id="apVista"></div></div>
     <div class="apgrid" id="apCards"></div>
   </div>
@@ -1140,6 +1113,7 @@ _sistema/                          ← tudo que não é produto
 </dialog>
 
 <!-- ======================= DIÁLOGO: ENVIAR AO DRIVE ======================= -->
+<dialog id="dlgAp" class="dlgap"><div id="amBody"></div></dialog>
 <dialog id="dlgDrive" class="wide">
   <div class="dlg-body" id="dvBody"></div>
   <div class="dlg-foot" id="dvFoot"></div>
@@ -1954,7 +1928,7 @@ function aplicarPlanoMesclado(m){
   plan.produtos = migrate(m).produtos;
   store.set('plan', plan);
   renderList();
-  if (!$('tab-resumo').classList.contains('hidden') && !apRep) renderResumo();
+  if (!$('tab-resumo').classList.contains('hidden') && !$('dlgAp').open) renderResumo();
   if (curP() !== antes) renderDetail();
 }
 async function gravarPlano(){
@@ -5916,10 +5890,13 @@ $('btnLista').onclick = () => { store.set('listaOculta', !store.get('listaOculta
 aplicarLista();
 
 // =====================================================================
-// RESUMO: painel da equipe (cada pessoa escolhe os números) e aprovação dos produtos antes do Drive
+// RESUMO: painel da equipe (até 5 números escolhidos por quem usa) e aprovação dos produtos antes do Drive
 // =====================================================================
-// p.aprovacao = { status: 'pendente' | 'aprovado' | 'reprovado', em, por, alterado (aprovado), motivo e fotos (reprovado) }
-// p.aprovHist = encaminhado / aprovado / reprovado / enviado, para os números e o gráfico do período
+// p.aprovacao = { status: 'pendente' | 'aprovado' | 'reprovado', em, por, av, alterado (aprovado), motivo e fotos (reprovado) }
+// av = avaliação foto a foto: { 'variação|item|arquivo': { status: 'aprovada' | 'reprovada', em, por, motivo } }
+//      a chave leva o nome do arquivo: foto trocada (ou renomeada) volta a ficar pendente
+// Todas aprovadas → produto aprovado e sobe sozinho; todas avaliadas com alguma reprovada → volta para a equipe.
+// p.aprovHist = encaminhado / aprovado / reprovado / enviado, para os números do período
 // a aprovação vale para o produto como estava: qualquer mudança depois (mexeu) pede para encaminhar de novo
 // (funções declaradas: a lista e a tela do produto usam antes deste trecho carregar)
 function aprovValida(p){ return p.aprovacao?.status === 'aprovado' && (p.aprovacao.alterado || '') === (p.alterado || ''); }
@@ -5939,39 +5916,57 @@ function reprovacaoAnterior(p){
   return r >= 0 && !h.slice(r).some(x => x.status === 'aprovado') ? h[r] : null;
 }
 function dtBR(iso){ return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); }
-const AP_MOTIVOS = ['Fundo', 'Iluminação', 'Enquadramento', 'Cor diferente do produto', 'Foto cortada ou distorcida', 'Qualidade baixa', 'Falta foto', 'Título ou SEO'];
+const AP_MOTIVOS = ['Fundo', 'Iluminação', 'Enquadramento', 'Cor diferente do produto', 'Foto cortada ou distorcida', 'Qualidade baixa', 'Título ou SEO'];
+const fotoChave = j => `${j.u.id}|${j.it.id}|${j.local}`;
+const avDe = (p, j) => p.aprovacao?.av?.[fotoChave(j)] || null;
+const rotFoto = j => { const fs = filesOf(j.u, j.it); return (j.u.nome ? j.u.nome + ' · ' : '') + j.it.nome + (fs.length > 1 ? ' ' + (fs.indexOf(j.local) + 1) : ''); };
+const nFotos = p => units(p).reduce((t, u) => t + p.checklist.reduce((s, it) => s + filesOf(u, it).length, 0), 0);
 
-// a equipe encaminha pela tela do produto (também depois de corrigir uma reprovação)
+// a equipe encaminha pela tela do produto (também depois de corrigir uma reprovação).
+// Depois de reprovado, as fotos já aprovadas continuam aprovadas; as reprovadas voltam a ficar pendentes.
 function encaminhar(p){
-  p.aprovacao = { status: 'pendente', em: histAprov(p, 'encaminhado').em, por: quem() };
+  const ant = p.aprovacao, av = {};
+  if (ant?.status === 'reprovado' || ant?.status === 'pendente') for (const [k, v] of Object.entries(ant.av || {})) if (v.status === 'aprovada') av[k] = v;
+  p.aprovacao = { status: 'pendente', em: histAprov(p, 'encaminhado').em, por: quem(), av };
   registrar('Aprovação', 'Encaminhou para aprovação', p);
   savePlan(); renderList(); renderDetail();
   if (!$('tab-resumo').classList.contains('hidden')) renderResumo();
   toast(etapa(p) === 'aprovacao' ? 'Encaminhado. O produto está na aprovação (aba Resumo).' : `Encaminhado. Ele aparece na aprovação quando estiver completo (agora: ${etapaInfo(etapa(p))[1]}).`, 5000);
 }
 async function aprovarProduto(p){
-  if (etapa(p) !== 'aprovacao') return toast('Este produto não está esperando aprovação.');
   const x = histAprov(p, 'aprovado');
-  p.aprovacao = { status: 'aprovado', em: x.em, por: x.por, alterado: p.alterado || '' };
-  apRep = null; savePlan(); renderList(); renderResumo();
-  registrar('Aprovação', 'Aprovou o produto', p, 'O envio ao Google Drive começa em seguida');
+  p.aprovacao = { status: 'aprovado', em: x.em, por: x.por, alterado: p.alterado || '', av: p.aprovacao?.av || {} };
+  savePlan(); renderList(); renderResumo();
+  registrar('Aprovação', 'Aprovou o produto (todas as fotos)', p, 'O envio ao Google Drive começa em seguida');
   if (!ws) return toast('Aprovado. Conecte a pasta para o envio ao Drive começar.', 5000);
   if (isFileUrl || !settings.drive.clientId) return toast('Aprovado. O Google Drive ainda não está configurado: depois de conectar, envie em Aprovação → Aprovados.', 7000);
   // o login do Google abre uma janela: precisa ser agora, ainda no clique
   if (!gOk()) try { await gLogin(); } catch {}
   openReview(p, { auto: true });
 }
-function reprovarProduto(p){
-  const r = apRep, texto = r.texto.trim(), mot = [...r.motivos];
-  if (!mot.length && !texto) return toast('Diga o que precisa ser feito: escolha um motivo ou escreva.', 4000);
-  const motivo = mot.join(', ') + (texto ? (mot.length ? ': ' : '') + texto : ''), fotos = [...r.fotos];
-  p.aprovacao = histAprov(p, 'reprovado', { motivo, fotos });
-  registrar('Aprovação', 'Reprovou o produto', p, motivo + (fotos.length ? ` · refazer: ${fotos.join(', ')}` : ''));
-  apRep = null; savePlan(); renderList(); renderResumo();
-  toast('Reprovado. A equipe vê o motivo na tela do produto.', 4000);
+// grava a decisão de várias fotos de uma vez e vê se o produto terminou de ser avaliado
+function avaliarFotos(p, jobs, status, motivo = ''){
+  const a = p.aprovacao; if (a?.status !== 'pendente' || !jobs.length) return;
+  a.av ||= {};
+  const em = new Date().toISOString(), por = quem();
+  for (const j of jobs) a.av[fotoChave(j)] = status === 'aprovada' ? { status, em, por } : { status, em, por, motivo };
+  registrar('Aprovação', `${status === 'aprovada' ? 'Aprovou' : 'Reprovou'} ${jobs.length} foto(s)`, p, jobs.map(rotFoto).join(', ') + (motivo ? ' · ' + motivo : ''));
+  am.sel.clear(); am.rep = null;
+  const todas = am.jobs, st = todas.map(j => avDe(p, j)?.status);
+  if (st.some(s => !s)){ savePlan(); renderList(); renderAprov(); return renderAm(); }
+  // só ficam as avaliações das fotos de agora
+  const vale = new Set(todas.map(fotoChave)); for (const k of Object.keys(a.av)) if (!vale.has(k)) delete a.av[k];
+  fecharAm();
+  if (st.every(s => s === 'aprovada')) return aprovarProduto(p);
+  const rep = todas.filter(j => avDe(p, j).status === 'reprovada'), motivos = [...new Set(rep.map(j => avDe(p, j).motivo).filter(Boolean))];
+  p.aprovacao = { ...histAprov(p, 'reprovado', { motivo: motivos.join(' · '), fotos: rep.map(rotFoto) }), av: a.av };
+  registrar('Aprovação', 'Reprovou o produto', p, `${rep.length} foto(s) para refazer: ${rep.map(rotFoto).join(', ')}${motivos.length ? ' · ' + motivos.join(' · ') : ''}`);
+  savePlan(); renderList(); renderResumo();
+  toast(`Reprovado: ${rep.length} foto(s) voltaram para a equipe com o motivo.`, 5000);
 }
 
-// ---------- números ----------
+// ---------- números (no máximo 5, em linha) ----------
+const RS_MAX = 5;
 const RS_PERIODOS = [['hoje', 'Hoje'], ['7', 'Últimos 7 dias'], ['30', 'Últimos 30 dias'], ['mes', 'Este mês'], ['mesant', 'Mês passado'], ['tudo', 'Desde o início'], ['datas', 'Escolher datas']];
 // data local (AAAA-MM-DD) de um ISO ou de uma data já curta
 const diaDe = s => !s ? '' : /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : new Date(s).toLocaleDateString('sv');
@@ -6007,65 +6002,29 @@ function irProdutos(st = ''){
   if (store.get('listaOculta', false)){ store.set('listaOculta', false); aplicarLista(); }
   $('pStatus').value = st; showTab('produtos');
 }
-// cada número: k, grupo, rótulo, cor, conta, se depende do período e aonde vai no clique
-const corEt = k => etapaInfo(k)[2];
-const RS_ROTULO = { enviar: 'Prontos para encaminhar', reprovado: 'Reprovados (a corrigir)', pronto: 'Aprovados, falta enviar' };
+// cada número: k, grupo, rótulo, conta, se depende do período e aonde vai no clique
+const RS_ROTULO = { aprovacao: 'Pendentes de aprovação', enviar: 'Prontos para encaminhar', reprovado: 'Reprovados', pronto: 'Aprovados, falta enviar' };
 const RS_METRICAS = [
-  ...['aprovacao', 'reprovado', 'enviar', 'pronto', 'produzir', 'gerando', 'seo', 'drive', 'publicado'].map(k => ({ k, g: 'Produtos agora', l: RS_ROTULO[k] || etapaInfo(k)[1], c: corEt(k), n: x => x.et[k],
+  ...['aprovacao', 'reprovado', 'enviar', 'pronto', 'produzir', 'gerando', 'seo', 'drive', 'publicado'].map(k => ({ k, g: 'Produtos agora', l: RS_ROTULO[k] || etapaInfo(k)[1], n: x => x.et[k],
     ir: () => k === 'aprovacao' ? apIr('aguardando') : k === 'reprovado' ? apIr('reprovados') : k === 'pronto' ? apIr('aprovados') : irProdutos(k) })),
-  { k: 'total', g: 'Produtos agora', l: 'Produtos cadastrados', c: '#475569', n: () => plan.produtos.length, ir: () => irProdutos() },
-  { k: 'fila', g: 'Produtos agora', l: 'Na fila de prioridade', c: '#dc2626', n: () => plan.produtos.filter(p => prioProduto(p)).length,
+  { k: 'total', g: 'Produtos agora', l: 'Produtos cadastrados', n: () => plan.produtos.length, ir: () => irProdutos() },
+  { k: 'fila', g: 'Produtos agora', l: 'Na fila de prioridade', n: () => plan.produtos.filter(p => prioProduto(p)).length,
     ir: () => { $('pOrdem').value = 'demanda'; store.set('pOrdem', 'demanda'); irProdutos(); } },
-  { k: 'fotosFalta', g: 'Produtos agora', l: 'Fotos faltando', c: '#ea580c', n: () => plan.produtos.filter(p => p.status !== 'publicado').reduce((t, p) => { const x = prog(p); return t + x.total - x.done; }, 0) },
-  { k: 'aprovados', g: 'No período', per: 1, l: 'Aprovações', c: '#0891b2', n: x => x.ev('aprovado').length, ir: () => apIr('aprovados') },
-  { k: 'reprovacoes', g: 'No período', per: 1, l: 'Reprovações', c: '#ea580c', n: x => x.ev('reprovado').length },
-  { k: 'primeira', g: 'No período', per: 1, l: 'Aprovados de primeira', c: '#0891b2', n: x => x.aps.length ? Math.round(x.aps.filter(Boolean).length / x.aps.length * 100) + '%' : '–' },
-  { k: 'enviados', g: 'No período', per: 1, l: 'Enviados ao Drive', c: '#5d6ec8', n: x => plan.produtos.filter(p => x.noP(p.drive?.em)).length },
-  { k: 'novos', g: 'No período', per: 1, l: 'Produtos cadastrados', c: '#475569', n: x => plan.produtos.filter(p => x.noP(criadoEm(p))).length },
-  { k: 'publicadosP', g: 'No período', per: 1, l: 'Publicados', c: '#7c3aed', n: x => plan.produtos.filter(p => p.status === 'publicado' && x.noP(p.publicadoEm)).length },
-  { k: 'dAbertas', g: 'Demandas', l: 'Demandas em aberto', c: '#5d6ec8', n: x => x.ab.length, ir: () => irDem('') },
-  { k: 'dUrg', g: 'Demandas', l: 'Demandas urgentes', c: '#dc2626', n: x => x.ab.filter(d => prioridadeDe(d) === 'urgente').length, ir: () => irDem('urgentes') },
-  { k: 'dAtras', g: 'Demandas', l: 'Demandas atrasadas', c: '#dc2626', n: x => x.ab.filter(atrasada).length, ir: () => irDem('atrasadas') },
-  { k: 'dNovas', g: 'Demandas', per: 1, l: 'Demandas criadas', c: '#5d6ec8', n: x => dem.demandas.filter(d => x.noP(d.criada)).length },
-  { k: 'dFeitas', g: 'Demandas', per: 1, l: 'Demandas concluídas', c: '#16a34a', n: x => dem.demandas.filter(d => d.status === 'feita' && x.noP(d.feitaEm)).length },
+  { k: 'fotosFalta', g: 'Produtos agora', l: 'Fotos faltando', n: () => plan.produtos.filter(p => p.status !== 'publicado').reduce((t, p) => { const x = prog(p); return t + x.total - x.done; }, 0) },
+  { k: 'aprovados', g: 'No período', l: 'Aprovados', n: x => x.ev('aprovado').length, ir: () => apIr('aprovados') },
+  { k: 'reprovacoes', g: 'No período', l: 'Reprovações', n: x => x.ev('reprovado').length },
+  { k: 'primeira', g: 'No período', l: 'Aprovados de primeira', n: x => x.aps.length ? Math.round(x.aps.filter(Boolean).length / x.aps.length * 100) + '%' : '–' },
+  { k: 'enviados', g: 'No período', l: 'Enviados ao Drive', n: x => plan.produtos.filter(p => x.noP(p.drive?.em)).length },
+  { k: 'novos', g: 'No período', l: 'Produtos cadastrados', n: x => plan.produtos.filter(p => x.noP(criadoEm(p))).length },
+  { k: 'publicadosP', g: 'No período', l: 'Publicados', n: x => plan.produtos.filter(p => p.status === 'publicado' && x.noP(p.publicadoEm)).length },
+  { k: 'dAbertas', g: 'Demandas', l: 'Demandas em aberto', n: x => x.ab.length, ir: () => irDem('') },
+  { k: 'dUrg', g: 'Demandas', l: 'Demandas urgentes', n: x => x.ab.filter(d => prioridadeDe(d) === 'urgente').length, ir: () => irDem('urgentes') },
+  { k: 'dAtras', g: 'Demandas', l: 'Demandas atrasadas', n: x => x.ab.filter(atrasada).length, ir: () => irDem('atrasadas') },
+  { k: 'dNovas', g: 'Demandas', l: 'Demandas criadas', n: x => dem.demandas.filter(d => x.noP(d.criada)).length },
+  { k: 'dFeitas', g: 'Demandas', l: 'Demandas concluídas', n: x => dem.demandas.filter(d => d.status === 'feita' && x.noP(d.feitaEm)).length },
 ];
-const RS_PADRAO = ['aprovacao', 'reprovado', 'enviar', 'gerando', 'aprovados', 'enviados', 'dAbertas', 'dAtras'];
-const rsSel = () => store.get('rsMetricas', RS_PADRAO).filter(k => RS_METRICAS.some(m => m.k === k));
-
-// ---------- gráfico: atividade no período (aprovações, reprovações e envios ao Drive) ----------
-const RS_SERIES = [['aprovado', 'Aprovações', 'var(--s1)'], ['reprovado', 'Reprovações', 'var(--s2)'], ['enviado', 'Envios ao Drive', 'var(--s3)']];
-let rsBaldes = [];
-function rsAtividade(){
-  let [de, ate] = rsIntervalo();
-  const hoje = hojeSv(), evs = [];
-  for (const p of plan.produtos){
-    const h = p.aprovHist || [];
-    for (const x of h) if (RS_SERIES.some(s => s[0] === x.status)) evs.push([x.status, diaDe(x.em)]);
-    // envio feito antes do histórico existir: conta o último
-    if (p.drive?.em && !h.some(x => x.status === 'enviado')) evs.push(['enviado', diaDe(p.drive.em)]);
-  }
-  if (ate > hoje) ate = hoje;
-  if (de === '0000') de = evs.map(e => e[1]).sort()[0] || somaDias(-29);
-  if (de > ate) de = ate;
-  const D = s => new Date(s + 'T12:00'), dd = s => Math.round((D(s) - D(de)) / 864e5), dias = dd(ate) + 1;
-  const un = dias <= 31 ? 'dia' : dias <= 183 ? 'semana' : 'mes', m0 = D(de).getFullYear() * 12 + D(de).getMonth();
-  const idx = s => un === 'dia' ? dd(s) : un === 'semana' ? Math.floor(dd(s) / 7) : D(s).getFullYear() * 12 + D(s).getMonth() - m0;
-  const n = idx(ate) + 1;
-  rsBaldes = Array.from({ length: n }, (_, i) => {
-    const d0 = un === 'mes' ? new Date(Math.floor((m0 + i) / 12), (m0 + i) % 12, 1) : new Date(D(de).getTime() + i * (un === 'semana' ? 7 : 1) * 864e5);
-    const nome = un === 'mes' ? d0.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('. de ', '/').replace(' de ', '/')
-      : d0.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-    return { nome: un === 'semana' ? 'semana de ' + nome : nome, curto: nome, v: [0, 0, 0] };
-  });
-  for (const [st, d] of evs) if (d >= de && d <= ate) rsBaldes[idx(d)].v[RS_SERIES.findIndex(s => s[0] === st)]++;
-  const max = Math.max(0, ...rsBaldes.flatMap(b => b.v)), topo = max <= 4 ? 4 : Math.ceil(max / 4) * 4, passo = Math.ceil(n / 8);
-  const leg = `<div class="atvleg">${RS_SERIES.map(([, l, c], i) => `<span style="--c:${c}">${l} <b>${rsBaldes.reduce((t, b) => t + b.v[i], 0)}</b></span>`).join('')}</div>`;
-  if (!max) return leg + `<div class="atvplot vazio"><span class="muted">Nenhuma aprovação, reprovação ou envio neste período.</span></div>`;
-  return leg + `<div class="atvplot">
-    <div class="atvgrid">${[topo, topo / 2, 0].map(v => `<span><small>${v}</small></span>`).join('')}</div>
-    <div class="atvcols">${rsBaldes.map((b, i) => `<div class="atvc" data-b="${i}">${b.v.map((v, k) => `<i style="--c:${RS_SERIES[k][2]};height:${v / topo * 100}%"></i>`).join('')}</div>`).join('')}</div></div>
-    <div class="atvx">${rsBaldes.map((b, i) => `<span>${i % passo === 0 ? esc(b.curto) : ''}</span>`).join('')}</div>`;
-}
+const RS_PADRAO = ['aprovacao', 'reprovado', 'enviar', 'aprovados', 'enviados'];
+const rsSel = () => store.get('rsMetricas', RS_PADRAO).filter(k => RS_METRICAS.some(m => m.k === k)).slice(0, RS_MAX);
 
 // número no botão da aba: produtos esperando aprovação
 function renderResumoCont(){
@@ -6078,33 +6037,26 @@ function renderResumo(){
   $('rsPeriodo').innerHTML = RS_PERIODOS.map(([k, l]) => `<option value="${k}" ${k === per ? 'selected' : ''}>${l}</option>`).join('');
   $('rsDatas').classList.toggle('hidden', per !== 'datas');
   $('rsDe').value = store.get('rsDe', ''); $('rsAte').value = store.get('rsAte', '');
-  const x = rsCtx(), pn = rsPeriodoNome();
-  $('rsMetricas').innerHTML = rsSel().map(k => RS_METRICAS.find(m => m.k === k)).map(m => {
+  const x = rsCtx(), sel = rsSel();
+  $('rsMetricas').style.setProperty('--n', Math.max(1, sel.length));
+  $('rsMetricas').innerHTML = sel.map(k => RS_METRICAS.find(m => m.k === k)).map(m => {
     const tag = m.ir ? 'button' : 'div';
-    return `<${tag} ${m.ir ? 'type="button"' : ''} class="kpi" data-rsm="${m.k}" style="--c:${m.c}"><b>${m.n(x)}</b><span>${esc(m.l)}</span><small>${m.per ? esc(pn) : 'agora'}</small></${tag}>`;
-  }).join('') || '<div class="muted" style="padding:12px 0">Nenhum número escolhido. Clique em Personalizar.</div>';
-  $('rsAtiv').innerHTML = rsAtividade();
-  $('rsAtivTit').textContent = rsPeriodoNome();
-  // produtos em cada etapa (barra proporcional ao maior grupo)
-  const mx = Math.max(1, ...Object.values(x.et));
-  $('rsFunil').innerHTML = ETAPAS.map(([k, l, c]) => `<button type="button" class="etrow ${x.et[k] ? '' : 'zero'}" data-rsm="${k}" style="--c:${c}">
-    <span>${esc(RS_ROTULO[k] || l)}</span><span class="etbar"><i style="width:${x.et[k] / mx * 100}%"></i></span><b>${x.et[k]}</b></button>`).join('');
-  $('rsEtTot').textContent = `${plan.produtos.length} no total`;
+    return `<${tag} ${m.ir ? 'type="button"' : ''} class="kpi" data-rsm="${m.k}" title="${m.g === 'No período' ? esc(rsPeriodoNome()) : 'agora'}"><b>${m.n(x)}</b><span>${esc(m.l)}</span></${tag}>`;
+  }).join('') || '<div class="muted" style="padding:14px 20px">Nenhum número escolhido.</div>';
   if (!$('rsPersBox').classList.contains('hidden')) renderRsPers();
   renderAprov();
 }
 function renderRsPers(){
-  const sel = new Set(rsSel()), grupos = [...new Set(RS_METRICAS.map(m => m.g))];
-  $('rsPersBox').innerHTML = `<div class="rspers"><b>Números do painel</b>
-    <span class="muted ajuda">Marque os números que quer ver. "No período" segue o período escolhido no topo. A escolha fica guardada neste computador.</span>
-    ${grupos.map(g => `<div class="grupo">${g}</div>` + RS_METRICAS.filter(m => m.g === g).map(m => `<label><input type="checkbox" data-rsk="${m.k}" ${sel.has(m.k) ? 'checked' : ''}>${esc(m.l)}</label>`).join('')).join('')}
+  const sel = new Set(rsSel()), cheio = sel.size >= RS_MAX, grupos = [...new Set(RS_METRICAS.map(m => m.g))];
+  $('rsPersBox').innerHTML = `<div class="rspers"><b>Números do painel</b> <span class="muted">· escolha até ${RS_MAX} (${sel.size} de ${RS_MAX})</span>
+    ${grupos.map(g => `<div class="grupo">${g}</div>` + RS_METRICAS.filter(m => m.g === g).map(m => `<label class="${cheio && !sel.has(m.k) ? 'off' : ''}"><input type="checkbox" data-rsk="${m.k}" ${sel.has(m.k) ? 'checked' : cheio ? 'disabled' : ''}>${esc(m.l)}</label>`).join('')).join('')}
     <div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="sm" data-rs="padrao">${ic('undo')}Voltar ao padrão</button><button type="button" class="sm primary" data-rs="fechar">Pronto</button></div></div>`;
 }
 $('rsPers').onclick = () => { $('rsPersBox').classList.toggle('hidden'); renderResumo(); };
 $('rsPersBox').addEventListener('change', e => {
   const k = e.target.dataset.rsk;
   // guarda na ordem da lista de números
-  if (k){ const s = new Set(rsSel()); e.target.checked ? s.add(k) : s.delete(k); store.set('rsMetricas', RS_METRICAS.map(m => m.k).filter(x => s.has(x))); }
+  if (k){ const s = new Set(rsSel()); e.target.checked ? s.add(k) : s.delete(k); store.set('rsMetricas', RS_METRICAS.map(m => m.k).filter(x => s.has(x)).slice(0, RS_MAX)); }
   renderResumo();
 });
 $('rsPersBox').addEventListener('click', e => {
@@ -6116,26 +6068,11 @@ $('rsPersBox').addEventListener('click', e => {
 $('rsPeriodo').onchange = () => { store.set('rsPeriodo', $('rsPeriodo').value); renderResumo(); if ($('rsPeriodo').value === 'datas' && !$('rsDe').value) $('rsDe').focus(); };
 $('rsDe').onchange = () => { store.set('rsDe', $('rsDe').value); renderResumo(); };
 $('rsAte').onchange = () => { store.set('rsAte', $('rsAte').value); renderResumo(); };
-const rsClique = e => { const k = e.target.closest('[data-rsm]')?.dataset.rsm; if (!k) return; RS_METRICAS.find(m => m.k === k)?.ir?.(); };
-$('rsMetricas').onclick = rsClique;
-$('rsFunil').onclick = rsClique;
-// balão do gráfico: o período da coluna e os três números
-$('rsAtiv').addEventListener('mousemove', e => {
-  const c = e.target.closest('.atvc'), tip = $('rsTip');
-  document.querySelectorAll('.atvc.on').forEach(x => x !== c && x.classList.remove('on'));
-  if (!c){ tip.hidden = true; return; }
-  c.classList.add('on');
-  const b = rsBaldes[+c.dataset.b], caixa = $('rsAtiv').getBoundingClientRect();
-  tip.innerHTML = `<b>${esc(b.nome)}</b>` + RS_SERIES.map(([, l, cor], i) => `<span style="--c:${cor}">${l}<b>${b.v[i]}</b></span>`).join('');
-  tip.hidden = false;
-  const x = Math.min(e.clientX - caixa.left + 14, caixa.width - tip.offsetWidth - 4);
-  tip.style.left = Math.max(0, x) + 'px'; tip.style.top = (e.clientY - caixa.top - tip.offsetHeight - 10) + 'px';
-});
-$('rsAtiv').addEventListener('mouseleave', () => { $('rsTip').hidden = true; document.querySelectorAll('.atvc.on').forEach(x => x.classList.remove('on')); });
+$('rsMetricas').onclick = e => { const k = e.target.closest('[data-rsm]')?.dataset.rsm; if (k) RS_METRICAS.find(m => m.k === k)?.ir?.(); };
 
-// ---------- cards de aprovação: um por produto, a foto em destaque ----------
-let apVista = store.get('apVista', 'aguardando'), apRep = null;
-const apSel = new Map(), apCache = new Map(); // foto escolhida em cada card; fotos lidas de cada produto
+// ---------- cards de aprovação: uma foto, nome, quantidade e situação ----------
+let apVista = store.get('apVista', 'aguardando');
+const apCapas = new Map();
 function apListas(){
   const { noP } = rsCtx(), quando = p => p.aprovacao?.em || '';
   return {
@@ -6147,108 +6084,156 @@ function apListas(){
       .sort((a, b) => (etapa(b) === 'pronto') - (etapa(a) === 'pronto') || quando(b).localeCompare(quando(a))),
   };
 }
-const rotFoto = j => { const fs = filesOf(j.u, j.it); return (j.u.nome ? j.u.nome + ' · ' : '') + j.it.nome + (fs.length > 1 ? ' ' + (fs.indexOf(j.local) + 1) : ''); };
-const nFotos = p => units(p).reduce((t, u) => t + p.checklist.reduce((s, it) => s + filesOf(u, it).length, 0), 0);
-const apAssin = p => JSON.stringify([p.alterado, units(p).map(u => p.checklist.map(it => filesOf(u, it)))]);
-const apFotosDe = p => (apCache.get(p.id)?.jobs || []).filter(j => j.url);
-function apCard(p){
-  const c = apCache.get(p.id), jobs = c?.jobs || [], fotos = jobs.filter(j => j.url), rep = apRep?.pid === p.id ? apRep : null;
-  const i = Math.min(apSel.get(p.id) || 0, Math.max(0, fotos.length - 1)), j = fotos[i], a = p.aprovacao, e = etapa(p), [, lab, col] = etapaInfo(e);
-  const blq = jobs.filter(jobBlocked).length, pp = prioProduto(p), marcada = f => rep?.fotos.has(rotFoto(f));
-  const principal = !ws ? `<div class="apvazio">${ic('folder', 'lg')}<span>Conecte a pasta para ver as fotos</span></div>`
-    : !c || c.carregando ? `<div class="apvazio">${ic('loader', 'lg spin')}</div>`
-    : j ? `<img src="${j.url}" alt="${esc(rotFoto(j))}" data-apver title="${rep ? 'Clique para marcar: refazer esta foto' : 'Clique para ver grande'}">`
-    : `<div class="apvazio">${ic('image', 'lg')}<span>Sem fotos</span></div>`;
-  const botoes = apVista === 'aguardando'
-    ? rep ? '' : `<button type="button" class="aprovar" data-apact="aprovar">${ic('check')}Aprovar</button><button type="button" class="reprovar" data-apact="reprovar">${ic('x')}Reprovar</button>`
-    : apVista === 'aprovados' && e === 'pronto' ? `<button type="button" class="primary" data-apact="enviar">${ic('upload')}Enviar ao Drive</button>`
-    : apVista === 'aprovados' && p.drive?.pastaId ? `<button type="button" data-apact="verdrive">${ic('external')}Ver no Drive</button>` : '';
-  return `<div class="apcard ${rep ? 'reprovar' : ''}" data-ap="${p.id}">
-    <div class="apmain">${principal}
-      ${fotos.length > 1 ? `<button type="button" class="apnav ant" data-apnav="-1" aria-label="Foto anterior">${ic('back')}</button><button type="button" class="apnav prx" data-apnav="1" aria-label="Próxima foto">${ic('arrow')}</button>` : ''}
-      <span class="apselos">${pp ? `<span class="lbl" style="--c:${prioInfo(pp)[2]}">${prioInfo(pp)[1]}</span>` : ''}${apVista === 'aprovados' ? `<span class="st" style="--c:${col}">${lab}</span>` : ''}${blq && apVista === 'aguardando' ? `<span class="lbl block" title="Fora da regra de envio: o envio para na conferência até ajustar ou trocar">${ic('ban')}${blq} fora da regra</span>` : ''}</span>
-      ${j && marcada(j) ? '<span class="refazer">Refazer</span>' : ''}
-      ${j ? `<span class="apcont">${i + 1}/${fotos.length} · ${esc(rotFoto(j))}</span>` : ''}
-    </div>
-    ${fotos.length > 1 ? `<div class="apthumbs">${fotos.map((f, k) => `<button type="button" class="${k === i ? 'on' : ''} ${marcada(f) ? 'marcada' : ''}" data-apth="${k}" title="${esc(rotFoto(f))}"><img src="${f.url}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
-    <div class="apinfo"><div class="l1"><b title="${esc(p.titulo || '')}">${esc(p.nome)}</b><button type="button" class="sm ghost" data-apact="abrir" title="Abrir o produto">${ic('external')}</button></div>
-      <span class="muted">${esc([p.categoria, `${nFotos(p)} fotos`].filter(Boolean).join(' · '))}</span>
-      ${apVista === 'reprovados' && a ? `<span class="mot" title="${esc(a.motivo)}">${esc(a.motivo)}</span>` : ''}
-      ${apVista === 'aguardando' && reprovacaoAnterior(p)?.motivo ? `<span class="mot" title="${esc(reprovacaoAnterior(p).motivo)}">Reprovado antes: ${esc(reprovacaoAnterior(p).motivo)}</span>` : ''}
-      ${apVista !== 'aguardando' && a ? `<span class="muted">${a.status === 'reprovado' ? 'reprovado' : 'aprovado'} por ${esc(a.por)} · ${esc(dtBR(a.em))}</span>` : ''}</div>
-    ${rep ? `<div class="aprep"><div class="opts">${AP_MOTIVOS.map(m => `<button type="button" class="opt ${rep.motivos.has(m) ? 'on' : ''}" data-apmot="${esc(m)}">${esc(m)}</button>`).join('')}</div>
-      <textarea data-aptexto placeholder="O que precisa ser feito?">${esc(rep.texto)}</textarea>
-      <div class="muted">${rep.fotos.size ? `${rep.fotos.size} foto(s) para refazer` : 'Clique nas fotos que precisam ser refeitas'}</div>
-      <div class="apbtns"><button type="button" class="reprovar solid" data-apact="confrep">Confirmar reprovação</button><button type="button" data-apact="cancrep">Cancelar</button></div></div>` : ''}
-    ${botoes ? `<div class="apbtns">${botoes}</div>` : ''}
-  </div>`;
+function apSituacao(p){
+  const e = etapa(p);
+  if (e === 'aprovacao'){ const av = Object.values(p.aprovacao?.av || {}), ok = av.filter(v => v.status === 'aprovada').length;
+    return ok ? `Pendente · ${ok} de ${nFotos(p)} aprovadas` : 'Pendente de aprovação'; }
+  if (e === 'reprovado') return 'Reprovado';
+  if (e === 'pronto') return 'Aprovado · falta enviar';
+  return 'Aprovado';
 }
-function apRedesenhar(pid){
-  const el = document.querySelector(`.apcard[data-ap="${pid}"]`), p = plan.produtos.find(x => x.id === pid);
-  if (el && p) el.outerHTML = apCard(p);
+function apCard(p){
+  const cv = apCapas.get(p.id), ant = apVista === 'aguardando' ? reprovacaoAnterior(p) : null;
+  return `<button type="button" class="apcard" data-ap="${p.id}">
+    <span class="capa">${cv ? `<img src="${cv.url}" alt="">` : ic('image', 'lg')}</span>
+    <span class="apinfo"><b title="${esc(p.titulo || '')}">${esc(p.nome)}</b><span class="muted">${nFotos(p)} fotos</span>
+      ${ant?.motivo ? `<span class="mot" title="${esc(ant.motivo)}">Reprovado antes: ${esc(ant.motivo)}</span>` : ''}
+      <span class="apsit">${esc(apSituacao(p))}</span></span></button>`;
 }
 function renderAprov(){
   const L = apListas();
   $('apVista').innerHTML = [['aguardando', 'Aguardando'], ['reprovados', 'Reprovados'], ['aprovados', 'Aprovados']]
     .map(([k, l]) => `<button type="button" data-apv="${k}" class="${apVista === k ? 'on' : ''}">${l}<b>${L[k].length}</b></button>`).join('');
   const lista = L[apVista];
-  if (apRep && !lista.some(p => p.id === apRep.pid)) apRep = null;
   const vazio = { aguardando: 'Nenhum produto esperando aprovação. A equipe encaminha pela tela do produto, quando as fotos e o cadastro estão completos.',
     reprovados: 'Nenhum produto reprovado.', aprovados: `Nenhuma aprovação em: ${rsPeriodoNome()}.` }[apVista];
   $('apCards').innerHTML = lista.length ? lista.map(apCard).join('') : `<div class="muted apsem">${esc(vazio)}</div>`;
-  apCarregar(lista);
+  apCarregarCapas(lista);
 }
-// lê as fotos de cada card (com a conferência do envio, para marcar as que estão fora da regra); só relê o que mudou
-async function apCarregar(lista){
+async function apCarregarCapas(lista){
   if (!ws) return;
   for (const p of lista){
-    const ass = apAssin(p);
-    let c = apCache.get(p.id);
-    if (c && c.ass === ass) continue;
-    c?.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url));
-    c = { ass, jobs: [], us: [], carregando: true }; apCache.set(p.id, c);
-    try { Object.assign(c, await buildJobs(p)); } catch {}
-    c.carregando = false;
-    if (apCache.get(p.id) !== c){ c.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url)); continue; }
-    apRedesenhar(p.id);
+    try {
+      const f = await capaDoProduto(p); if (!f) continue;
+      let c = apCapas.get(p.id);
+      if (!c || c.nome !== f.name || c.mod !== f.lastModified){
+        if (c) URL.revokeObjectURL(c.url);
+        c = { nome: f.name, mod: f.lastModified, url: (await lerFoto(f, 480)).mini }; apCapas.set(p.id, c);
+      }
+      const el = document.querySelector(`.apcard[data-ap="${p.id}"] .capa`);
+      if (el && !el.querySelector('img')) el.innerHTML = `<img src="${c.url}" alt="">`;
+    } catch {}
   }
 }
 function apIr(vista){
-  apVista = vista; store.set('apVista', vista); apRep = null;
+  apVista = vista; store.set('apVista', vista);
   showTab('resumo'); $('apWrap').scrollIntoView({ behavior: 'smooth' });
 }
 function apIrProduto(p){
   apIr(etapa(p) === 'pronto' ? 'aprovados' : etapa(p) === 'reprovado' ? 'reprovados' : 'aguardando');
-  const el = document.querySelector(`.apcard[data-ap="${p.id}"]`);
-  if (el){ el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('pisca'); setTimeout(() => el.classList.remove('pisca'), 1600); }
+  abrirAm(p);
 }
-$('apVista').onclick = e => { const b = e.target.closest('[data-apv]'); if (!b) return; apVista = b.dataset.apv; store.set('apVista', apVista); apRep = null; renderAprov(); };
+$('apVista').onclick = e => { const b = e.target.closest('[data-apv]'); if (!b) return; apVista = b.dataset.apv; store.set('apVista', apVista); renderAprov(); };
 $('apCards').addEventListener('click', e => {
-  const card = e.target.closest('.apcard'); if (!card) return;
-  const p = plan.produtos.find(x => x.id === card.dataset.ap); if (!p) return;
-  const fotos = apFotosDe(p), i = Math.min(apSel.get(p.id) || 0, Math.max(0, fotos.length - 1));
-  const marcar = f => { const l = rotFoto(f); apRep.fotos.has(l) ? apRep.fotos.delete(l) : apRep.fotos.add(l); };
-  const nav = e.target.closest('[data-apnav]');
-  if (nav){ apSel.set(p.id, (i + +nav.dataset.apnav + fotos.length) % fotos.length); return apRedesenhar(p.id); }
-  const th = e.target.closest('[data-apth]');
-  if (th){ const k = +th.dataset.apth; if (apRep?.pid === p.id) marcar(fotos[k]); apSel.set(p.id, k); return apRedesenhar(p.id); }
-  if (e.target.closest('[data-apver]')){
-    if (apRep?.pid === p.id){ marcar(fotos[i]); return apRedesenhar(p.id); }
-    const lista = fotos.map(x => ({ titulo: rotFoto(x), nome: x.local, url: x.url, size: x.a.size }));
-    return abrirVisor(lista, i);
-  }
-  const mot = e.target.closest('[data-apmot]');
-  if (mot && apRep){ const m = mot.dataset.apmot; apRep.motivos.has(m) ? apRep.motivos.delete(m) : apRep.motivos.add(m); return apRedesenhar(p.id); }
-  const a = e.target.closest('[data-apact]')?.dataset.apact; if (!a) return;
-  if (a === 'abrir'){ current = p.id; currentVar = null; return showTab('produtos'); }
-  if (a === 'aprovar') return aprovarProduto(p);
-  if (a === 'reprovar'){ const ant = apRep?.pid; apRep = { pid: p.id, motivos: new Set(), fotos: new Set(), texto: '' }; if (ant) apRedesenhar(ant); apRedesenhar(p.id); return document.querySelector(`.apcard[data-ap="${p.id}"] textarea`)?.focus(); }
-  if (a === 'cancrep'){ apRep = null; return apRedesenhar(p.id); }
-  if (a === 'confrep') return reprovarProduto(p);
-  if (a === 'enviar') return openReview(p, { auto: true });
-  if (a === 'verdrive') return window.open('https://drive.google.com/drive/folders/' + p.drive.pastaId, '_blank', 'noopener');
+  const c = e.target.closest('.apcard'), p = c && plan.produtos.find(x => x.id === c.dataset.ap);
+  if (p) abrirAm(p);
 });
-$('apCards').addEventListener('input', e => { if (e.target.matches('[data-aptexto]') && apRep) apRep.texto = e.target.value; });
+
+// ---------- janela do produto: todas as fotos, aprovar e reprovar uma a uma ou em lote ----------
+let am = null; // { pid, jobs, us, carregando, selecionar, sel: Set de índices, rep: { idx, motivos, texto } }
+const amP = () => am && plan.produtos.find(x => x.id === am.pid);
+const amEdita = p => p?.aprovacao?.status === 'pendente' && etapa(p) === 'aprovacao';
+async function abrirAm(p){
+  fecharAm();
+  const meu = am = { pid: p.id, jobs: [], us: [], carregando: true, selecionar: false, sel: new Set(), rep: null };
+  $('dlgAp').showModal(); renderAm();
+  if (!ws){ meu.carregando = false; return renderAm(); }
+  try { Object.assign(meu, await buildJobs(p)); } catch (e) { toast('Não consegui ler as fotos: ' + e.message, 5000); }
+  meu.carregando = false;
+  if (am !== meu) return meu.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url));
+  renderAm();
+}
+function fecharAm(){
+  if (!am) return;
+  am.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url));
+  am = null;
+  if ($('dlgAp').open) $('dlgAp').close();
+}
+function renderAm(){
+  const p = amP(); if (!p) return fecharAm();
+  const edita = amEdita(p), jobs = am.jobs, st = j => avDe(p, j)?.status || '';
+  const nOk = jobs.filter(j => st(j) === 'aprovada').length, nNo = jobs.filter(j => st(j) === 'reprovada').length, ant = edita ? reprovacaoAnterior(p) : null;
+  let corpo;
+  if (!ws) corpo = '<div class="alert">Conecte a pasta (botão no topo) para ver as fotos.</div>';
+  else if (am.carregando) corpo = `<div class="muted amvazio">${ic('loader', 'spin')} Carregando as fotos…</div>`;
+  else if (!jobs.length) corpo = '<div class="muted amvazio">Este produto não tem fotos.</div>';
+  else corpo = am.us.map(u => {
+    const uj = jobs.filter(j => j.u === u); if (!uj.length) return '';
+    return (u.nome ? `<div class="amvar">${esc(p.tipoVariacao)}: ${esc(u.nome)}</div>` : '') + `<div class="amgrid">${uj.map(j => {
+      const i = jobs.indexOf(j), s = st(j), v = avDe(p, j), sel = am.sel.has(i), bl = jobBlocked(j);
+      return `<div class="amft ${s} ${sel ? 'sel' : ''}" data-j="${i}">
+        <div class="img" title="${am.selecionar ? 'Clique para selecionar' : 'Clique para ver grande'}">${j.url ? `<img src="${j.url}" alt="">` : ic(j.a.video ? 'video' : 'ban', 'lg')}
+          ${am.selecionar ? `<span class="amck">${sel ? ic('check') : ''}</span>` : ''}
+          ${s ? `<span class="amst">${s === 'aprovada' ? ic('check') + 'Aprovada' : ic('x') + 'Reprovada'}</span>` : ''}
+          ${bl ? `<span class="lbl block ambl" title="${esc(j.a.issues.filter(x => x.lvl === 'block').map(x => x.msg).join('; '))}">${ic('ban')}Fora da regra</span>` : ''}</div>
+        <div class="amrod"><span class="amrot" title="${esc(rotFoto(j))}">${esc(rotFoto(j))}</span>
+          ${edita && !am.selecionar ? `<button type="button" class="amok ${s === 'aprovada' ? 'on' : ''}" data-am="ok" title="${s === 'aprovada' ? 'Desfazer aprovação' : 'Aprovar esta foto'}">${ic('check')}</button><button type="button" class="amno ${s === 'reprovada' ? 'on' : ''}" data-am="no" title="${s === 'reprovada' ? 'Desfazer reprovação' : 'Reprovar esta foto'}">${ic('x')}</button>` : ''}</div>
+        ${s === 'reprovada' && v.motivo ? `<div class="ammot" title="${esc(v.motivo)}">${esc(v.motivo)}</div>` : ''}</div>`; }).join('')}</div>`;
+  }).join('');
+  const k = am.sel.size, r = am.rep;
+  $('dlgAp').classList.toggle('selecionando', am.selecionar);
+  const barra = r ? `<div class="ambar rep"><b>Reprovar ${r.idx.length} foto(s)</b>
+      <div class="opts">${AP_MOTIVOS.map(m => `<button type="button" class="opt ${r.motivos.has(m) ? 'on' : ''}" data-ammot="${esc(m)}">${esc(m)}</button>`).join('')}</div>
+      <textarea id="amTexto" rows="2" placeholder="O que precisa ser feito? (vale para todas as fotos escolhidas)">${esc(r.texto)}</textarea>
+      <div class="ambtns"><button type="button" data-am="cancrep">Cancelar</button><button type="button" class="reprovar solid" data-am="confrep">${ic('x')}Confirmar reprovação</button></div></div>`
+    : am.selecionar ? `<div class="ambar"><b>${k} selecionada(s)</b><button type="button" class="sm ghost" data-am="todas">${k === jobs.length ? 'Limpar' : 'Selecionar todas'}</button>
+      <div class="ambtns"><button type="button" class="aprovar" data-am="oksel" ${k ? '' : 'disabled'}>${ic('check')}Aprovar</button><button type="button" class="reprovar" data-am="nosel" ${k ? '' : 'disabled'}>${ic('x')}Reprovar</button></div></div>`
+    : etapa(p) === 'pronto' ? `<div class="ambar"><span class="muted">Aprovado, ainda não subiu para o Drive.</span><div class="ambtns"><button type="button" class="primary" data-am="enviar">${ic('upload')}Enviar ao Drive</button></div></div>` : '';
+  $('amBody').innerHTML = `<div class="amhead"><div class="t"><h2>${esc(p.nome)}</h2>
+      <span class="muted">${jobs.length || nFotos(p)} fotos${nOk ? ` · ${nOk} aprovada(s)` : ''}${nNo ? ` · ${nNo} reprovada(s)` : ''}${edita && jobs.length ? ` · ${jobs.length - nOk - nNo} pendente(s)` : ` · ${esc(apSituacao(p))}`}</span></div>
+      ${edita && jobs.length ? `<button type="button" class="sm ${am.selecionar ? 'on' : ''}" data-am="sel" title="Escolher várias fotos para aprovar ou reprovar de uma vez">${ic('check-circle')}${am.selecionar ? 'Cancelar seleção' : 'Selecionar'}</button>` : ''}
+      <button type="button" class="sm ghost" data-am="abrir" title="Abrir o produto">${ic('external')}</button>
+      <button type="button" class="sm ghost" data-am="fechar" title="Fechar">${ic('x')}</button></div>
+    <div class="amcorpo">${ant?.motivo ? `<div class="alert" style="margin:0 0 12px">Reprovado antes (${esc(ant.por)}, ${esc(dtBR(ant.em))}): ${esc(ant.motivo)}</div>` : ''}
+      ${reprovado(p) ? `<div class="alert block" style="margin:0 0 12px">Reprovado por ${esc(p.aprovacao.por)} em ${esc(dtBR(p.aprovacao.em))}${p.aprovacao.motivo ? ': ' + esc(p.aprovacao.motivo) : ''}. A equipe corrige e encaminha de novo.</div>` : ''}
+      ${corpo}</div>${barra}`;
+}
+// (o aviso de fechar chega depois: se outra janela de produto já abriu, não mexe nela)
+$('dlgAp').addEventListener('close', () => { if (am && !$('dlgAp').open) fecharAm(); });
+$('dlgAp').addEventListener('input', e => { if (e.target.id === 'amTexto' && am?.rep) am.rep.texto = e.target.value; });
+$('dlgAp').addEventListener('click', e => {
+  const p = amP(); if (!p) return;
+  const mot = e.target.closest('[data-ammot]');
+  if (mot && am.rep){ const m = mot.dataset.ammot; am.rep.motivos.has(m) ? am.rep.motivos.delete(m) : am.rep.motivos.add(m); return renderAm(); }
+  const b = e.target.closest('[data-am]'), ft = e.target.closest('.amft'), i = ft ? +ft.dataset.j : -1, j = am.jobs[i];
+  if (!b){
+    if (!ft || !e.target.closest('.img')) return;
+    if (am.selecionar){ am.sel.has(i) ? am.sel.delete(i) : am.sel.add(i); return renderAm(); }
+    const lista = am.jobs.filter(x => x.url).map(x => ({ titulo: rotFoto(x), nome: x.local, url: x.url, size: x.a.size }));
+    return abrirVisor(lista, lista.findIndex(x => x.url === j?.url));
+  }
+  const a = b.dataset.am;
+  if (a === 'fechar') return fecharAm();
+  if (a === 'abrir'){ current = p.id; currentVar = null; fecharAm(); return showTab('produtos'); }
+  if (a === 'enviar'){ fecharAm(); return openReview(p, { auto: true }); }
+  if (!amEdita(p)) return;
+  if (a === 'sel'){ am.selecionar = !am.selecionar; am.sel.clear(); am.rep = null; return renderAm(); }
+  if (a === 'todas'){ am.sel.size === am.jobs.length ? am.sel.clear() : am.jobs.forEach((_, k) => am.sel.add(k)); return renderAm(); }
+  // clicar de novo na decisão já tomada desfaz (a foto volta a ficar pendente)
+  if ((a === 'ok' || a === 'no') && avDe(p, j)?.status === (a === 'ok' ? 'aprovada' : 'reprovada')){
+    delete p.aprovacao.av[fotoChave(j)]; savePlan(); renderAprov(); return renderAm();
+  }
+  if (a === 'ok') return avaliarFotos(p, [j], 'aprovada');
+  if (a === 'no'){ am.rep = { idx: [i], motivos: new Set(), texto: '' }; renderAm(); return $('amTexto')?.focus(); }
+  if (a === 'oksel') return avaliarFotos(p, [...am.sel].map(k => am.jobs[k]), 'aprovada');
+  if (a === 'nosel'){ am.rep = { idx: [...am.sel], motivos: new Set(), texto: '' }; renderAm(); return $('amTexto')?.focus(); }
+  if (a === 'cancrep'){ am.rep = null; return renderAm(); }
+  if (a === 'confrep'){
+    const r = am.rep, texto = r.texto.trim(), mot = [...r.motivos];
+    if (!mot.length && !texto) return toast('Diga o que precisa ser feito: escolha um motivo ou escreva.', 4000);
+    return avaliarFotos(p, r.idx.map(k => am.jobs[k]), 'reprovada', mot.join(', ') + (texto ? (mot.length ? ': ' : '') + texto : ''));
+  }
+});
 
 // =====================================================================
 // ATUALIZAÇÕES DO APP: cada versão instalada entra uma vez no registro de alterações
@@ -6317,6 +6302,12 @@ const ATUALIZACOES = [
     'Aprovação com um card por produto, três por linha, com a foto em destaque: setas e miniaturas mostram todas as fotos, clique amplia',
     'Na tela do produto não há mais "Enviar ao Drive": quando as fotos e o cadastro estão completos, clique em "Encaminhar para aprovação"',
     'Aprovado, o produto sobe sozinho para o Google Drive; reprovado, a equipe corrige e encaminha de novo'] },
+  { id: '2026-10-26-aprovacao-por-foto', em: '2026-10-26 12:14', titulo: 'Aprovação foto a foto e painel mais limpo', itens: [
+    'Painel do Resumo com no máximo 5 números em linha (a engrenagem escolhe quais)',
+    'Card de aprovação simples: uma foto, nome, quantidade de fotos, "Reprovado antes" (se houver) e a situação',
+    'Clique no card para ver todas as fotos e aprovar ou reprovar uma a uma',
+    'Botão "Selecionar": marque várias fotos e aprove ou reprove todas juntas, com uma justificativa só',
+    'Todas as fotos aprovadas: o produto sobe sozinho para o Drive. Alguma reprovada: volta para a equipe, e as aprovadas continuam aprovadas'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
