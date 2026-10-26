@@ -2075,20 +2075,20 @@ function renderList(){
 // miniatura da capa de cada produto na lista (lida uma vez e guardada)
 const coverCache = new Map();
 async function loadCovers(){
-  for (const img of document.querySelectorAll('#plist img[data-cv]')){
-    const p = plan.produtos.find(x => x.id === img.dataset.cv); if (!p) continue;
+  await emParalelo([...document.querySelectorAll('#plist img[data-cv]')], 4, async img => {
+    const p = plan.produtos.find(x => x.id === img.dataset.cv); if (!p) return;
     // só o produto aberto pode ter trocado de capa agora; os outros usam a guardada
     let c = coverCache.get(p.id);
-    if (c && p.id !== current) continue;
-    try {
-      const f = await capaDoProduto(p); if (!f) continue;
-      if (!c || c.nome !== f.name || c.mod !== f.lastModified){
+    if (!c || p.id === current) try {
+      const r = await capaRef(p); if (!r) return;
+      const assin = await capaAssin(r);
+      if (!c || c.assin !== assin){
         if (c) URL.revokeObjectURL(c.url);
-        c = { nome: f.name, mod: f.lastModified, url: (await lerFoto(f, 96)).mini }; coverCache.set(p.id, c);
+        c = { assin, url: (await lerFotoDe(r[0], r[1], 96)).mini }; coverCache.set(p.id, c);
       }
-      if (img.isConnected && img.src !== c.url) img.src = c.url;
-    } catch {}
-  }
+    } catch { return; }
+    if (c && img.isConnected && img.src !== c.url) img.src = c.url;
+  });
 }
 $('plist').onclick = e => {
   const r = e.target.closest('.prow'); if (!r) return;
@@ -2264,7 +2264,7 @@ async function acvThumbs(p, u){
   await emParalelo(imgs, 4, async img => {
     const key = `${ud(p, u).join('/')}/${ACV_DIR}/${img.dataset.af}`;
     let t = thumbCache.get(key);
-    if (!t){ try { const f = await (await dir.getFileHandle(img.dataset.af)).getFile(); t = { ...(await lerFoto(f)), size: f.size }; thumbCache.set(key, t); } catch { return; } }
+    if (!t){ try { t = await lerFotoDe(dir, img.dataset.af); thumbCache.set(key, t); } catch { return; } }
     if (img.isConnected){ img.src = t.mini; img.closest('.fthumb').querySelector('.dim').textContent = `${t.w}×${t.h}`; }
   });
 }
@@ -2364,8 +2364,7 @@ async function loadThumbs(p, u){
     let t = thumbCache.get(key);
     if (!t){
       try {
-        const f = await (await dir.getFileHandle(img.dataset.f)).getFile();
-        t = { ...(await lerFoto(f)), size: f.size }; thumbCache.set(key, t);
+        t = await lerFotoDe(dir, img.dataset.f); thumbCache.set(key, t);
       } catch { return; }
     }
     if (img.isConnected) mostrarThumb(img, t); // a tela pode ter mudado no meio do caminho
@@ -2528,6 +2527,8 @@ async function verifyFiles(force = false){
   verifRodando = true; verifUltima = Date.now();
   const gen = fsGen, mudou = [];
   try {
+    // na nuvem: a pasta toda num pedido só (as listagens de cada produto saem dela)
+    if (ws.nuvem && Date.now() - (nvArvoreEm.get(ROOT_NAME) || 0) > 3000) await nvArvore(ROOT_NAME);
     for (const p of plan.produtos){
       if (!p.pasta) continue;
       for (const u of units(p)){
@@ -2898,14 +2899,20 @@ A partir do descritivo, dos arquivos do fornecedor (se houver) e da foto (se hou
 Nunca invente marca, material, medida ou código que o descritivo, os arquivos e a foto não confirmam.`;
 let fIaAntes = null;
 // primeira foto do produto (a capa, se houver), para a IA ver o produto
-async function capaDoProduto(p){
+// onde está a capa: [pasta, nome do arquivo]
+async function capaRef(p){
   if (!ws || !p?.pasta) return null;
   const itens = [...p.checklist].sort((a, b) => isCapa(b) - isCapa(a));
   for (const u of units(p)){
     const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) continue;
-    for (const it of itens) for (const f of filesOf(u, it)) if (IMG_EXT.test(f)){ try { return await (await dir.getFileHandle(f)).getFile(); } catch {} }
+    for (const it of itens) for (const f of filesOf(u, it)) if (IMG_EXT.test(f)){ try { await dir.getFileHandle(f); return [dir, f]; } catch {} }
   }
   return null;
+}
+async function capaDoProduto(p){ const r = await capaRef(p); return r ? (await r[0].getFileHandle(r[1])).getFile() : null; }
+// assinatura da capa: muda quando a foto muda (na nuvem pela etiqueta; no computador pela data do arquivo)
+async function capaAssin(r){
+  return r[1] + ':' + (r[0].nuvem ? (await nvListar(r[0].caminho)).arquivos.get(r[1])?.etag : (await (await r[0].getFileHandle(r[1])).getFile()).lastModified);
 }
 async function iaSeo(btn, soTitulo = false){
   if (!aiKey()) return toast('Cadastre a chave do Gemini em Configurações → Conexões para usar a IA.', 4500);
@@ -3276,6 +3283,44 @@ async function nvListar(pasta, forcar = false){
   nvListas.set(pasta, x);
   return x;
 }
+// a pasta inteira de uma vez: monta as listagens de todas as subpastas num pedido só
+const nvArvoreEm = new Map();
+async function nvArvore(raiz){
+  const { itens } = await (await nvPedir('arvore', { c: raiz })).json(), em = Date.now(), novas = new Map();
+  const pasta = cam => {
+    let l = novas.get(cam);
+    if (!l){
+      l = { em, pastas: new Set(), arquivos: new Map() }; novas.set(cam, l);
+      if (cam !== raiz){ const i = cam.lastIndexOf('/'); pasta(cam.slice(0, i)).pastas.add(cam.slice(i + 1)); }
+    }
+    return l;
+  };
+  pasta(raiz);
+  for (const it of itens){
+    const cam = juntarCam(raiz, it.k);
+    if (cam.endsWith('/')){ pasta(cam.slice(0, -1)); continue; }
+    const i = cam.lastIndexOf('/'), nome = cam.slice(i + 1);
+    pasta(cam.slice(0, i)).arquivos.set(nome, { nome, tamanho: it.tamanho, mod: it.mod, etag: it.etag });
+  }
+  esquecerPasta(raiz);
+  for (const [k, v] of novas) nvListas.set(k, v);
+  nvArvoreEm.set(raiz, em);
+}
+// miniatura de uma foto: na nuvem fica guardada (pela etiqueta do conteúdo) e serve para todos os aparelhos;
+// só a primeira vez baixa a foto inteira. Fora da nuvem, lê o arquivo como antes.
+const MINI_DIR = '_sistema/miniaturas';
+async function lerFotoDe(dir, nome, larg = 144){
+  const etag = dir?.nuvem ? (await nvListar(dir.caminho)).arquivos.get(nome)?.etag?.replace(/\W/g, '') : '';
+  if (etag){
+    try {
+      const k = [...(await nvListar(MINI_DIR)).arquivos.keys()].find(n => n.startsWith(`${etag}-${larg}-`)), m = k?.match(/-(\d+)x(\d+)-(\d+)\.jpg$/);
+      if (m) return { w: +m[1], h: +m[2], size: +m[3], mini: URL.createObjectURL(await new NuvemArquivo(`${MINI_DIR}/${k}`).getFile()) };
+    } catch {}
+  }
+  const f = await (await dir.getFileHandle(nome)).getFile(), t = { ...(await lerFoto(f, larg)), size: f.size };
+  if (etag) fetch(t.mini).then(r => r.blob()).then(b => nvGravar(`${MINI_DIR}/${etag}-${larg}-${t.w}x${t.h}-${f.size}.jpg`, b)).catch(() => {});
+  return t;
+}
 function nvGuardarBlob(cam, etag, file){
   const ant = nvBlobs.get(cam); if (ant) nvBlobBytes -= ant.file.size;
   nvBlobs.set(cam, { etag, file }); nvBlobBytes += file.size;
@@ -3314,7 +3359,9 @@ class NuvemPasta {
     return new NuvemArquivo(juntarCam(this.caminho, nome));
   }
   async removeEntry(nome){
-    const cam = juntarCam(this.caminho, nome);
+    const cam = juntarCam(this.caminho, nome), c = nvListas.get(this.caminho);
+    // a listagem é recente e não tem esse nome: nada para apagar (evita um pedido à toa)
+    if (c && Date.now() - c.em < 8000 && !c.arquivos.has(nome) && !c.pastas.has(nome)) return;
     await nvPedir('apagar', { c: cam }, { method: 'POST' });
     const l = nvListas.get(this.caminho); l?.arquivos.delete(nome); l?.pastas.delete(nome);
     esquecerPasta(cam); nvBlobs.delete(cam);
@@ -3326,7 +3373,7 @@ class NuvemPasta {
     this.caminho = para; this.name = novo;
   }
   async *entries(){
-    const l = await nvListar(this.caminho, true);
+    const c = nvListas.get(this.caminho), l = c && Date.now() - c.em < 2000 ? c : await nvListar(this.caminho, true);
     for (const n of l.pastas) yield [n, new NuvemPasta(juntarCam(this.caminho, n))];
     for (const n of l.arquivos.keys()) yield [n, new NuvemArquivo(juntarCam(this.caminho, n))];
   }
@@ -3365,6 +3412,8 @@ async function nuvemDisponivel(){ if (!WEB) return false; try { return (await fe
 async function usarNuvem(){
   $('warn').style.display = 'none'; // no celular não há "escolher pasta", e nem precisa
   sisDir = new NuvemPasta('_sistema');
+  // tudo o que a abertura vai olhar, de uma vez: fotos, dados e miniaturas
+  await Promise.all([nvArvore(ROOT_NAME), nvArvore('_sistema/dados'), nvArvore(MINI_DIR)].map(x => x.catch(() => {})));
   await useWorkspace(new NuvemPasta(ROOT_NAME));
 }
 // uma vez só: copia a pasta "Organizador de Fotos" do computador (Google Drive) para a nuvem
@@ -3603,7 +3652,9 @@ async function dataDasFotos(p){
   try {
     for (const u of units(p)){
       const dir = await subIfExists(ws, p.pasta, u.pasta); if (!dir) continue; // layout antigo, sem a data
-      for (const it of p.checklist) for (const f of filesOf(u, it)){ try { menor = Math.min(menor, (await (await dir.getFileHandle(f)).getFile()).lastModified); } catch {} }
+      // na nuvem a data vem da listagem (sem baixar as fotos)
+      const lista = dir.nuvem ? (await nvListar(dir.caminho)).arquivos : null;
+      for (const it of p.checklist) for (const f of filesOf(u, it)){ try { menor = Math.min(menor, lista ? lista.get(f)?.mod ?? Infinity : (await (await dir.getFileHandle(f)).getFile()).lastModified); } catch {} }
     }
   } catch {}
   const d = isFinite(menor) ? new Date(menor) : p.drive?.em ? new Date(p.drive.em) : new Date();
@@ -3649,7 +3700,9 @@ async function createFolders(p){
     await alinharPasta(p);
     const pd = await sub(ws, p.pasta);
     for (const v of (p.temVariacao ? p.variacoes : [])) await sub(pd, v.pasta);
-    descCache.delete(p.id);
+    // na nuvem o descritivo é gravado por quem muda o produto: se já existe, não grava de novo a cada abertura
+    if (pd.nuvem && (await nvListar(pd.caminho)).arquivos.has('descritivo.txt')) descCache.set(p.id, p.pasta + '\n' + textoDescritivo(p));
+    else descCache.delete(p.id);
     await writeDescritivo(p);
   } catch (e) { toast('Erro ao criar pastas: ' + e.message); }
 }
@@ -6553,18 +6606,19 @@ function renderAprov(){
 }
 async function apCarregarCapas(lista){
   if (!ws) return;
-  for (const p of lista){
+  await emParalelo(lista, 4, async p => {
     try {
-      const f = await capaDoProduto(p); if (!f) continue;
+      const r = await capaRef(p); if (!r) return;
+      const assin = await capaAssin(r);
       let c = apCapas.get(p.id);
-      if (!c || c.nome !== f.name || c.mod !== f.lastModified){
+      if (!c || c.assin !== assin){
         if (c) URL.revokeObjectURL(c.url);
-        c = { nome: f.name, mod: f.lastModified, url: (await lerFoto(f, 480)).mini }; apCapas.set(p.id, c);
+        c = { assin, url: (await lerFotoDe(r[0], r[1], 480)).mini }; apCapas.set(p.id, c);
       }
       const el = document.querySelector(`.apcard[data-ap="${p.id}"] .capa`);
       if (el && !el.querySelector('img')) el.innerHTML = `<img src="${c.url}" alt="">`;
     } catch {}
-  }
+  });
 }
 function apIr(vista){
   apVista = vista; store.set('apVista', vista);
@@ -6586,13 +6640,34 @@ const amP = () => am && plan.produtos.find(x => x.id === am.pid);
 const amEdita = p => p?.aprovacao?.status === 'pendente' && etapa(p) === 'aprovacao';
 async function abrirAm(p){
   fecharAm();
-  const meu = am = { pid: p.id, jobs: [], us: [], carregando: true, selecionar: false, sel: new Set(), rep: null };
+  const meu = am = { pid: p.id, jobs: [], us: units(p), carregando: true, selecionar: false, sel: new Set(), rep: null };
   $('dlgAp').showModal(); renderAm();
   if (!ws){ meu.carregando = false; return renderAm(); }
-  try { Object.assign(meu, await buildJobs(p)); } catch (e) { toast('Não consegui ler as fotos: ' + e.message, 5000); }
+  // primeiro as miniaturas (rápido); a conferência completa (fotos fora da regra) chega depois
+  for (const u of meu.us){
+    const dir = await subIfExists(ws, ...ud(p, u));
+    for (const it of p.checklist) for (const f of filesOf(u, it)) meu.jobs.push({ u, it, local: f, dir, a: { issues: [], video: isVideo(it) } });
+  }
   meu.carregando = false;
-  if (am !== meu) return meu.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url));
+  if (am !== meu) return;
   renderAm();
+  let raf = 0;
+  const redesenhar = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (am === meu) renderAm(); }); };
+  await emParalelo(meu.jobs, 4, async j => {
+    if (!j.dir || !IMG_EXT.test(j.local) || am !== meu) return;
+    try { j.url = (await lerFotoDe(j.dir, j.local, 480)).mini; } catch {}
+    redesenhar();
+  });
+  if (am !== meu) return;
+  try {
+    const { jobs } = await buildJobs(p);
+    for (const x of jobs){
+      const j = meu.jobs.find(y => y.u.id === x.u.id && y.it.id === x.it.id && y.local === x.local);
+      if (j){ j.a = x.a; j.file = x.file; }
+      if (x.url) URL.revokeObjectURL(x.url);
+    }
+  } catch {}
+  if (am === meu) renderAm();
 }
 function fecharAm(){
   if (!am) return;
@@ -6650,8 +6725,10 @@ $('dlgAp').addEventListener('click', e => {
   if (!b){
     if (!ft || !e.target.closest('.img')) return;
     if (am.selecionar){ am.sel.has(i) ? am.sel.delete(i) : am.sel.add(i); return renderAm(); }
-    const lista = am.jobs.filter(x => x.url).map(x => ({ titulo: rotFoto(x), nome: x.local, url: x.url, size: x.a.size }));
-    return abrirVisor(lista, lista.findIndex(x => x.url === j?.url));
+    // o visor abre a foto inteira (a janela mostra só a miniatura)
+    const lista = am.jobs.filter(x => x.dir && IMG_EXT.test(x.local)).map(x => ({ titulo: rotFoto(x), nome: x.local,
+      arquivo: async () => x.file || (await x.dir.getFileHandle(x.local)).getFile() }));
+    return abrirVisor(lista, lista.findIndex(x => x.nome === j?.local));
   }
   const a = b.dataset.am;
   if (a === 'fechar') return fecharAm();
@@ -6768,6 +6845,11 @@ const ATUALIZACOES = [
     'No site, produtos, demandas, aprovações e fotos ficam na nuvem (Cloudflare): quem entra com usuário e senha vê tudo, em qualquer computador ou celular',
     'Não precisa mais conectar a pasta do Google Drive em cada computador',
     'Configurações → Conexões → Pasta principal → "Trazer os arquivos de uma pasta do computador" copia a pasta Organizador de Fotos para a nuvem (uma vez só)'] },
+  { id: '2026-10-26-nuvem-rapida', em: '2026-10-26 16:02', titulo: 'Estúdio mais rápido na nuvem', itens: [
+    'Ao abrir, o app traz a lista de todas as pastas e fotos de uma vez, em vez de pasta por pasta',
+    'Capas e miniaturas ficam guardadas em tamanho pequeno na nuvem: depois da primeira vez, abrem rápido em qualquer aparelho',
+    'Capas carregam várias ao mesmo tempo; a janela de aprovação mostra as fotos na hora e confere as medidas depois',
+    'O app não regrava mais a descrição de todos os produtos a cada abertura'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';

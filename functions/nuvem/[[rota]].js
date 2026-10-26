@@ -2,7 +2,7 @@
 // guardadas no Cloudflare R2 (ligação "ARQUIVOS"). O app usa como se fosse uma pasta do computador.
 // Pasta = prefixo do caminho; pasta vazia = objeto marcador terminado em "/".
 // Só quem entrou no Estúdio chega aqui (functions/_middleware.js).
-// Rotas: GET estado · GET lista?c= · GET arquivo?c= · PUT arquivo?c= · POST pasta?c= · POST apagar?c= · POST mover?de=&para=
+// Rotas: GET estado · GET lista?c= · GET arvore?c= · GET arquivo?c= · PUT arquivo?c= · POST pasta?c= · POST apagar?c= · POST mover?de=&para=
 import { usuarioDaSessao } from '../_middleware.js';
 
 const RAIZES = ['Estudio Polivenda', '_sistema'];
@@ -50,6 +50,17 @@ export async function onRequest({ request, env, params }){
     } while (cursor);
     if (!c) RAIZES.forEach(r => pastas.add(r));
     return json({ existe: algo, pastas: [...pastas], arquivos });
+  }
+  // a pasta inteira, com subpastas, num pedido só (o app monta todas as listagens de uma vez)
+  if (rota === 'arvore' && m === 'GET'){
+    if (!caminhoOk(c)) return erro('Caminho inválido.');
+    const itens = []; let cursor;
+    do {
+      const l = await b.list({ prefix: c + '/', cursor, limit: 1000 });
+      for (const o of l.objects) itens.push({ k: o.key.slice(c.length + 1), tamanho: o.size, mod: o.uploaded.getTime(), etag: o.httpEtag });
+      cursor = l.truncated ? l.cursor : null;
+    } while (cursor);
+    return json({ itens });
   }
   if (rota === 'arquivo' && m === 'GET'){
     if (!caminhoOk(c)) return erro('Caminho inválido.');
