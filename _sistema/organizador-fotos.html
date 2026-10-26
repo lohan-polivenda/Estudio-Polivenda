@@ -323,6 +323,8 @@ dialog.wide{width:min(1000px,calc(100vw - 32px))}
 .cl.fechado .cltog .ic{transform:rotate(-90deg)}
 .cl.fechado .clbody{display:none}
 .cl.fechado .clhead{border-bottom:0}
+.acvgrid{display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px}
+.cl.acv.drag{border-color:var(--accent);background:var(--accent-soft)}
 .clhead b{cursor:pointer}
 .clgrupo{display:flex;align-items:center;gap:8px;width:100%;border:0;border-top:1px solid var(--border);border-radius:0;background:var(--soft);padding:8px 14px;font-weight:600;color:var(--ok)}
 .clgrupo .ic{margin:0;transition:transform .15s}
@@ -1999,6 +2001,7 @@ function renderDetail(){
       <div class="addline" id="addLine"><button class="sm" data-act="addopen">+ Adicionar item ao checklist</button></div>
       </div>
     </div>
+    ${acvHtml(p, u)}
 
     ${ws ? `<div class="folder compacta">${ic('folder')} <b>Pasta ${u.nome ? 'da variação' : 'do produto'}</b><span class="ajuda">${p.pasta ? `Coleção de ${dataPasta(p.dataColecao)}. Os arquivos desta ${u.nome ? 'variação' : 'produto'} ficam em: <code>${esc(pathOf(p, u))}</code>` : `A pasta é criada quando as fotos entram, com a data do dia (ex.: <code>${esc(folderName({ ...p, dataColecao: hojeIso() }))}</code>).`}${p.colecoes?.length ? ` · ${p.colecoes.length} coleção(ões) anterior(es)` : ''}</span>
       ${p.pasta ? `<button class="sm" data-act="novacolecao" style="margin-left:8px" title="As próximas fotos vão para uma pasta nova, com a data delas">Nova coleção de fotos</button>` : ''}</div>`
@@ -2011,7 +2014,7 @@ function renderDetail(){
     <details class="notes"><summary>Anotações${p.notas ? ' ●' : ''}</summary>
       <textarea id="dNotas" rows="3" placeholder="Fornecedor, preço, observações…" style="margin-top:8px">${esc(p.notas)}</textarea></details>
     ${histHtml(p)}`;
-  loadThumbs(p, u);
+  loadThumbs(p, u); acvThumbs(p, u);
 }
 // uma linha do checklist (item, miniaturas, botões)
 function clLinha(p, u, it, i){
@@ -2034,6 +2037,60 @@ function clLinha(p, u, it, i){
         </div>
         ${it.id === editDica ? `<div class="dicaedit">${dicaEditor(it)}</div>` : ''}
       </div>`;
+}
+// "Arquivo": as fotos que já eram usadas no produto, todas juntas e sem limite (fora do checklist e do nome SEO).
+// Ficam na subpasta Arquivo da coleção, com o nome original.
+const ACV_DIR = 'Arquivo';
+const acvDe = (p, u) => (p.acervo ||= {})[u.id || '_'] ||= [];
+let acvFechado = store.get('acvFechado', false);
+function acvHtml(p, u){
+  const fs = acvDe(p, u);
+  return `<div class="cl acv ${acvFechado ? 'fechado' : ''}">
+      <div class="clhead">
+        <button class="cltog" data-act="acvtog" title="${acvFechado ? 'Abrir' : 'Fechar'}">${ic('down')}</button>
+        <b data-act="acvtog">Arquivo${u.nome ? ' · ' + esc(u.nome) : ''}</b>
+        <span class="muted">${fs.length} foto(s)</span>
+        <span class="muted ajuda">As fotos que já eram usadas. Sem limite: arraste várias de uma vez para cá.</span>
+        <button class="sm" data-act="acvup">${ic('clip')}Adicionar fotos</button>
+      </div>
+      <div class="clbody"><div class="acvgrid">${fs.length ? fs.map(f => `<div class="fthumb" title="${esc(f)}"><img data-af="${esc(f)}" alt="" title="Clique para ver grande">
+          <button data-act="acvrm" data-f="${esc(f)}" title="Tirar do arquivo">${ic('x')}</button><div class="dim"></div></div>`).join('')
+        : `<button class="slot" data-act="acvup" title="Clique para escolher, ou arraste as fotos para cá">${ic('image', 'lg')}</button>`}</div></div>
+    </div>`;
+}
+async function acvUpload(p, u, files){
+  if (!ws) return toast('Conecte a pasta de trabalho primeiro (botão no topo).');
+  const ok = files.filter(f => IMG_EXT.test(f.name));
+  if (!ok.length) return toast('Envie imagens (.jpg, .png, .webp).');
+  try {
+    await comTrava(async () => {
+      ensureFolders(p);
+      const dir = await sub(ws, p.pasta, u.pasta, ACV_DIR), lista = acvDe(p, u);
+      for (const f of ok){
+        let nome = f.name, k = 2;
+        while (await exists(dir, nome)) nome = f.name.replace(/(\.[^.]+)?$/, m => `-${k++}${m}`);
+        await writeFile(dir, nome, f); lista.push(nome);
+      }
+    });
+    mexeu(p); savePlan(); renderDetail();
+    registrar('Arquivo', `Guardou ${ok.length} foto(s) no arquivo`, p, ok.map(f => f.name).join(', '));
+    toast(`${ok.length} foto(s) no arquivo.` + (files.length > ok.length ? ` ${files.length - ok.length} ignorado(s): não é imagem.` : ''));
+  } catch (e) { toast('Erro ao salvar: ' + e.message, 6000); }
+}
+async function acvThumbs(p, u){
+  const imgs = [...document.querySelectorAll('#detail img[data-af]')]; if (!ws || !imgs.length) return;
+  const dir = await subIfExists(ws, p.pasta, u.pasta, ACV_DIR); if (!dir) return;
+  await emParalelo(imgs, 4, async img => {
+    const key = `${p.pasta}/${u.pasta}/${ACV_DIR}/${img.dataset.af}`;
+    let t = thumbCache.get(key);
+    if (!t){ try { const f = await (await dir.getFileHandle(img.dataset.af)).getFile(); t = { ...(await lerFoto(f)), size: f.size }; thumbCache.set(key, t); } catch { return; } }
+    if (img.isConnected){ img.src = t.mini; img.closest('.fthumb').querySelector('.dim').textContent = `${t.w}×${t.h}`; }
+  });
+}
+function acvVer(p, u, f){
+  const lista = acvDe(p, u).map(nome => ({ titulo: 'Arquivo' + (u.nome ? ' · ' + u.nome : ''), nome, arquivo: async () =>
+    (await (await subIfExists(ws, p.pasta, u.pasta, ACV_DIR)).getFileHandle(nome)).getFile() }));
+  abrirVisor(lista, Math.max(0, lista.findIndex(x => x.nome === f)));
 }
 // checklist fechado (vale para todos os produtos)
 let clFechado = store.get('clFechado', false);
@@ -2245,7 +2302,7 @@ async function uploadFiles(p, u, item, files){
     if (files.length > ok.length) setTimeout(() => toast(`${files.length - ok.length} arquivo(s) ignorado(s): tipo não aceito.`), 4100);
   } catch (e) { toast('Erro ao salvar: ' + e.message, 6000); }
 }
-$('upIn').onchange = () => { if (upTarget) uploadFiles(upTarget.p, upTarget.u, upTarget.item, [...$('upIn').files]); };
+$('upIn').onchange = () => { if (!upTarget) return; const fs = [...$('upIn').files]; upTarget.acv ? acvUpload(upTarget.p, upTarget.u, fs) : uploadFiles(upTarget.p, upTarget.u, upTarget.item, fs); };
 
 // renomeia todos os arquivos do produto para o padrão SEO atual (e renumera)
 async function syncNames(p){
@@ -2349,11 +2406,15 @@ $('detail').addEventListener('change', e => {
 });
 // arrastar e soltar arquivos na linha do checklist
 $('detail').addEventListener('dragover', e => {
+  const a = e.target.closest('.cl.acv'); if (a){ e.preventDefault(); a.classList.add('drag'); return; }
   const r = e.target.closest('.clrow[data-iid]'); if (!r) return;
   e.preventDefault(); document.querySelectorAll('.clrow.drag').forEach(x => x !== r && x.classList.remove('drag')); r.classList.add('drag');
 });
+$('detail').addEventListener('dragleave', e => { const a = e.target.closest('.cl.acv'); if (a && !a.contains(e.relatedTarget)) a.classList.remove('drag'); });
 $('detail').addEventListener('dragleave', e => { const r = e.target.closest('.clrow'); if (r && !r.contains(e.relatedTarget)) r.classList.remove('drag'); });
 $('detail').addEventListener('drop', e => {
+  const a = e.target.closest('.cl.acv');
+  if (a){ e.preventDefault(); a.classList.remove('drag'); const p = curP(); return acvUpload(p, curU(p), [...e.dataTransfer.files]); }
   const r = e.target.closest('.clrow[data-iid]'); if (!r) return;
   e.preventDefault(); r.classList.remove('drag');
   const p = curP(), item = p.checklist.find(c => c.id === r.dataset.iid);
@@ -2361,11 +2422,14 @@ $('detail').addEventListener('drop', e => {
 });
 $('detail').addEventListener('click', async e => {
   const b = e.target.closest('button, b[data-act]');
+  if (b?.dataset.act === 'acvtog'){ acvFechado = !acvFechado; store.set('acvFechado', acvFechado); return renderDetail(); }
   if (b?.dataset.act === 'cltog'){ clFechado = !clFechado; store.set('clFechado', clFechado); return renderDetail(); }
   if (b?.dataset.act === 'verdem'){ const d = dem.demandas.find(x => x.id === b.dataset.dm); showTab('demandas'); if (d) abrirDem(d); return; }
   if (b?.dataset.act === 'veranexo') return abrirAnexo(curP(), curP().anexos[+b.dataset.i]);
   if (!b){
     const p = curP(); if (!p) return;
+    const ai = e.target.closest('img[data-af]');
+    if (ai) return acvVer(p, curU(p), ai.dataset.af);
     const img = e.target.closest('img[data-f]');
     if (img) return verFotos(p, curU(p), img.dataset.f);
     const row = e.target.closest('.clrow[data-iid]');
@@ -2400,6 +2464,19 @@ $('detail').addEventListener('click', async e => {
   if (act === 'dicapadrao') return salvarDica(p, item, dicaPadrao(item).dica);
   if (act === 'dicacancel'){ editDica = null; return renderDetail(); }
   if (act === 'drive') openReview(p);
+  if (act === 'acvup'){
+    if (!ws) return toast('Conecte a pasta de trabalho primeiro (botão no topo).');
+    upTarget = { p, u, acv: true }; $('upIn').accept = 'image/*';
+    $('upIn').value = ''; $('upIn').click();
+  }
+  if (act === 'acvrm' && confirm(`Tirar "${b.dataset.f}" do arquivo?\n\nEla vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
+    await comTrava(async () => {
+      try { await paraLixeira(await sub(ws, p.pasta, u.pasta, ACV_DIR), b.dataset.f, p.pasta, u.pasta, ACV_DIR); }
+      catch (e) { if (e.name !== 'NotFoundError') return toast('Não consegui mover para a lixeira: ' + e.message, 6000); }
+      const l = acvDe(p, u); l.splice(l.indexOf(b.dataset.f), 1);
+    });
+    mexeu(p); savePlan(); renderDetail(); registrar('Arquivo', 'Tirou uma foto do arquivo', p, b.dataset.f);
+  }
   if (act === 'upload'){
     if (!ws) return toast('Conecte a pasta de trabalho primeiro (botão no topo).');
     upTarget = {p, u, item};
@@ -3144,7 +3221,7 @@ function novaColecao(p){
   p.colecoes ||= [];
   if (p.pasta) p.colecoes.push({ pasta: p.pasta, data: p.dataColecao || '', drive: p.drive || null, fim: new Date().toISOString() });
   p.pasta = ''; p.dataColecao = ''; p.drive = null;
-  p.arquivos = {}; p.variacoes.forEach(v => v.arquivos = {});
+  p.arquivos = {}; p.variacoes.forEach(v => v.arquivos = {}); p.acervo = {};
   descCache.delete(p.id);
 }
 // dentro de cada produto ficam só as fotos e o descritivo.txt (o checklist e os prompts ficam no app)
