@@ -4,6 +4,8 @@
 //   variáveis OLIST_CLIENT_ID, OLIST_CLIENT_SECRET e ESTUDIO_CHAVE (a senha da equipe) e
 //   a ligação de KV chamada OLIST (guarda o login).
 // Rotas: POST /olist/entrar · GET /olist/retorno · GET /olist/status · POST /olist/api · POST /olist/sair
+import { usuarioDaSessao } from '../_middleware.js';
+
 const API = 'https://api.tiny.com.br/public-api/v3';
 const CONTA = 'https://accounts.tiny.com.br/realms/tiny/protocol/openid-connect';
 // o que o app pode pedir ao Olist: ler produtos e cuidar dos anexos (imagens) deles
@@ -59,9 +61,10 @@ export async function onRequest({ request, env, params }){
       : pagina('Não deu certo', 'O Olist recusou o login. Confira o ID do cliente, a chave secreta e o endereço de retorno no aplicativo do Olist.', false);
   }
 
-  // daqui para baixo, só com a senha da equipe
+  // daqui para baixo, só quem entrou no Estúdio (ou com a senha da equipe)
   if (falta.length) return json({ erro: 'configuracao', falta }, 503);
-  if (request.headers.get('X-Estudio-Chave') !== env.ESTUDIO_CHAVE) return json({ erro: 'chave', mensagem: 'Senha da equipe para o Olist errada.' }, 403);
+  if (request.headers.get('X-Estudio-Chave') !== env.ESTUDIO_CHAVE && !await usuarioDaSessao(request, env))
+    return json({ erro: 'chave', mensagem: 'Entre no Estúdio (ou confira a senha da equipe para o Olist).' }, 403);
 
   if (rota === 'status' && metodo === 'GET'){
     const t = await env.OLIST.get('tokens', 'json');

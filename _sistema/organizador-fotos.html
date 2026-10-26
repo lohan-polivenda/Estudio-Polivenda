@@ -591,6 +591,11 @@ button.aprovar{background:var(--ok);border-color:var(--ok);color:#fff;font-weigh
 button.reprovar{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
 button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:600}
 .tabs .cnt.aprov{background:var(--accent)}
+.acrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--border)}
+.acrow:first-child{padding-top:0}
+.acrow .t{flex:1;min-width:200px}
+.acrow .muted{font-size:12px}
+.acrow .inrow input{width:200px}
 @media (max-width:1000px){.apgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-left:0;border-top:1px solid var(--border)}.kpi b{font-size:22px}}
 @media (max-width:600px){.apgrid{grid-template-columns:1fr}.amgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{max-width:100%;overflow-x:auto}.tabs button{flex:none}}
@@ -743,6 +748,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
       <button type="button" data-sec="seo"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>SEO e nomes</span><i></i></button>
       <button type="button" data-sec="novidades"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span>Novidades de SEO</span><i></i></button>
       <button type="button" data-sec="registro"><svg class="ic" aria-hidden="true"><use href="#i-history"/></svg><span>Registro de alterações</span><i></i></button>
+      <button type="button" data-sec="acessos"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Acessos</span><i></i></button>
       <button type="button" data-sec="aparencia"><svg class="ic" aria-hidden="true"><use href="#i-contrast"/></svg><span>Aparência</span><i></i></button>
     </nav>
     <div class="cfgbody">
@@ -819,8 +825,8 @@ _sistema/                          ← tudo que não é produto
       <h3><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg>Olist ERP</h3>
       <div class="muted">No cadastro, o botão <b>Olist</b> ao lado do SKU traz os dados do produto. Depois da aprovação, as fotos que sobem ao Drive vão também para o produto no Olist (o SKU precisa ser igual nos dois).</div>
       <div id="olStatus" class="alert info"></div>
-      <label class="f">Senha da equipe para o Olist</label>
-      <div class="inrow"><input id="olChave" type="password" autocomplete="off"><button id="olSalvar" type="button">Salvar</button></div>
+      <div id="olChaveBox"><label class="f">Senha da equipe para o Olist</label>
+      <div class="inrow"><input id="olChave" type="password" autocomplete="off"><button id="olSalvar" type="button">Salvar</button></div></div>
       <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:400"><input type="checkbox" id="olFotos" style="width:auto;margin:0">Mandar as fotos aprovadas para o Olist junto com o envio ao Drive</label>
       <div class="muted ajuda" data-em="#olFotos">O Olist baixa cada foto pelo link: as fotos enviadas a ele ficam no Drive com acesso "qualquer pessoa com o link". O Estúdio só troca as imagens que ele mesmo pôs no produto; as outras ficam.</div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="primary" id="olEntrar" type="button">Entrar no Olist</button><button id="olSair" type="button" class="hidden">Desligar o Olist</button></div>
@@ -1007,6 +1013,24 @@ _sistema/                          ← tudo que não é produto
     </div>
 
     <!-- ---------- Aparência ---------- -->
+    <div class="cfgsec" data-sec="acessos">
+      <div class="cfghead"><h2>Acessos</h2><div class="muted ajuda">No site, cada pessoa entra com o próprio usuário e senha, e o nome dela vai sozinho para o registro de alterações. Todos os acessos podem fazer tudo, inclusive criar e remover acessos.</div></div>
+    <div class="panel" id="cfgAcessos">
+      <h3><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>Quem pode entrar</h3>
+      <div id="acLista"></div>
+      <div id="acNovo" class="hidden">
+        <h3 style="margin-top:18px">Novo acesso</h3>
+        <div class="g3">
+          <div><label class="f">Nome</label><input id="acNome" maxlength="60" placeholder="Ex.: Ana Souza" autocomplete="off"></div>
+          <div><label class="f">Usuário</label><input id="acUser" maxlength="30" placeholder="Ex.: ana" autocomplete="off" autocapitalize="none"></div>
+          <div><label class="f">Senha</label><input id="acSenha" type="password" placeholder="mínimo 6 caracteres" autocomplete="new-password"></div>
+        </div>
+        <div class="muted ajuda" data-em="#acUser">Usuário: letras minúsculas e números, sem espaço nem acento (pode ter ponto, hífen ou sublinhado).</div>
+        <div style="margin-top:10px"><button class="primary" id="acCriar" type="button">Criar acesso</button></div>
+      </div>
+    </div>
+    </div>
+
     <div class="cfgsec" data-sec="aparencia">
       <div class="cfghead"><h2>Aparência</h2><div class="muted">Vale só para este computador.</div></div>
     <div class="panel">
@@ -1721,7 +1745,7 @@ function showTab(t){
   ['resumo','produtos','demandas','config'].forEach(k => $('tab-' + k).classList.toggle('hidden', k !== t));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   store.set('tab', t);
-  if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); }
+  if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); renderAcessos(); }
   if (t === 'demandas') renderDem();
   if (t === 'produtos'){ renderList(); renderDetail(); }
   if (t === 'resumo') renderResumo();
@@ -3616,11 +3640,89 @@ $('catLista').onclick = e => {
   saveSettings(); renderCatsCfg(); renderList();
 };
 
+// ---------- acessos: no site cada pessoa entra com usuário e senha (functions/conta); o nome dela vai para o registro ----------
+let conta = null; // { nome, usuario } de quem entrou no site; null = sem login (atalho local ou site sem contas ligadas)
+let acSenhaDe = null; // usuário com o campo de nova senha aberto
+async function carregarConta(){
+  if (!WEB) return;
+  try {
+    const r = await fetch('/conta/eu', { cache: 'no-store' });
+    if (r.status === 401) return location.reload(); // a sessão venceu: volta para a tela de entrada
+    if (!r.ok) return;
+    conta = await r.json();
+  } catch { return; }
+  store.set('usuario', conta.nome);
+  if (!settings.equipe.some(x => sameTxt(x, conta.nome))){ settings.equipe.push(conta.nome); saveSettings(); renderEquipe(); }
+  if ($('dlgQuem').open) $('dlgQuem').close();
+  renderUser(); renderOlist(); renderAcessos();
+}
+async function contaPedir(rota, corpo){
+  let r;
+  try { r = await fetch('/conta/' + rota, corpo === undefined ? { cache: 'no-store' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) }); }
+  catch { throw new Error('Sem conexão. Confira a internet.'); }
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401){ location.reload(); throw new Error('Entre de novo.'); }
+  if (!r.ok) throw new Error(d.mensagem || `Erro (${r.status}).`);
+  return d;
+}
+async function sairDaConta(){
+  try { await contaPedir('sair', {}); } catch {}
+  store.set('usuario', ''); location.reload();
+}
+async function renderAcessos(){
+  const box = $('acLista'); if (!box) return;
+  $('acNovo').classList.toggle('hidden', !conta);
+  if (!conta){
+    box.innerHTML = `<div class="alert info" style="margin-top:0">${WEB ? 'Os acessos ainda não estão ligados neste site (falta a ligação de KV "OLIST" na Cloudflare).' : 'Os acessos com usuário e senha valem no site do Estúdio.'}</div>`;
+    return;
+  }
+  let us;
+  try { us = await contaPedir('usuarios'); } catch (e) { box.innerHTML = `<div class="alert block" style="margin-top:0">${esc(e.message)}</div>`; return; }
+  box.innerHTML = us.map(u => `<div class="acrow">
+      <div class="t"><b>${esc(u.nome)}</b>${u.usuario === conta.usuario ? ' <span class="lbl info">você</span>' : ''}
+        <div class="muted">usuário <code>${esc(u.usuario)}</code>${u.criado ? ` · criado em ${esc(new Date(u.criado).toLocaleDateString('pt-BR'))}${u.por ? ' por ' + esc(u.por) : ''}` : ''}</div></div>
+      ${acSenhaDe === u.usuario ? `<div class="inrow"><input type="password" id="acNova" placeholder="nova senha (mínimo 6)" autocomplete="new-password"><button type="button" class="sm primary" data-ac="salvar" data-u="${esc(u.usuario)}">Salvar</button><button type="button" class="sm" data-ac="cancelar">Cancelar</button></div>`
+        : `<button type="button" class="sm" data-ac="senha" data-u="${esc(u.usuario)}">${ic('pencil')}Nova senha</button>
+           ${u.usuario === conta.usuario ? '' : `<button type="button" class="sm ghost" data-ac="remover" data-u="${esc(u.usuario)}" data-n="${esc(u.nome)}" title="Tirar o acesso desta pessoa">${ic('trash')}Remover</button>`}`}
+    </div>`).join('') || '<div class="muted">Nenhum acesso ainda.</div>';
+  if (acSenhaDe) $('acNova')?.focus();
+}
+$('acLista').addEventListener('click', async e => {
+  const b = e.target.closest('[data-ac]'); if (!b) return;
+  const a = b.dataset.ac, u = b.dataset.u;
+  if (a === 'senha'){ acSenhaDe = u; return renderAcessos(); }
+  if (a === 'cancelar'){ acSenhaDe = null; return renderAcessos(); }
+  try {
+    if (a === 'salvar'){
+      await contaPedir('senha', { usuario: u, senha: $('acNova').value });
+      acSenhaDe = null; registrar('Acessos', 'Trocou a senha de um acesso', null, u); toast(u === conta.usuario ? 'Sua senha foi trocada.' : `Senha de ${u} trocada.`);
+    }
+    if (a === 'remover'){
+      if (!confirm(`Tirar o acesso de ${b.dataset.n} (${u})? A pessoa não consegue mais entrar no Estúdio.`)) return;
+      await contaPedir('remover', { usuario: u });
+      registrar('Acessos', 'Removeu um acesso', null, `${b.dataset.n} (${u})`); toast('Acesso removido.');
+    }
+  } catch (err) { return toast(err.message, 5000); }
+  renderAcessos();
+});
+$('acLista').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'acNova'){ e.preventDefault(); $('acLista').querySelector('[data-ac="salvar"]')?.click(); } });
+$('acCriar').onclick = async () => {
+  const d = { nome: $('acNome').value.trim(), usuario: $('acUser').value.trim().toLowerCase(), senha: $('acSenha').value };
+  if (!d.nome || !d.usuario || !d.senha) return toast('Preencha nome, usuário e senha.');
+  try { await contaPedir('usuarios', d); } catch (e) { return toast(e.message, 6000); }
+  if (!settings.equipe.some(x => sameTxt(x, d.nome))){ settings.equipe.push(d.nome); saveSettings(); renderEquipe(); }
+  registrar('Acessos', 'Criou um acesso', null, `${d.nome} (${d.usuario})`);
+  $('acNome').value = $('acUser').value = $('acSenha').value = '';
+  toast(`Acesso criado. Passe para ${d.nome}: usuário "${d.usuario}" e a senha que você escolheu.`, 6000);
+  renderAcessos();
+};
+
 // ---------- quem está usando (vai para o registro) ----------
 function renderUser(){
   const u = quemUsa(), c = $('userChip');
   c.classList.toggle('falta', !u);
   c.innerHTML = ic('user') + esc(u || 'Quem é você?');
+  c.title = conta ? `Você entrou como ${conta.usuario}. Clique para trocar a senha ou sair.` : 'Quem está usando este computador (vai para o registro de alterações)';
 }
 function renderQuem(){
   const u = quemUsa();
@@ -3632,7 +3734,14 @@ function escolherQuem(n){
   if (!settings.equipe.some(x => sameTxt(x, n))){ settings.equipe.push(n); saveSettings(); renderEquipe(); }
   $('dlgQuem').close(); toast(`Olá, ${n}. O que você fizer aqui vai para o registro com o seu nome.`);
 }
-$('userChip').onclick = () => { renderQuem(); $('dlgQuem').showModal(); };
+$('userChip').onclick = e => {
+  if (!conta){ renderQuem(); return $('dlgQuem').showModal(); }
+  const r = e.currentTarget.getBoundingClientRect();
+  abrirMenu(r.left, r.bottom + 4, [{ titulo: `${conta.nome} · ${conta.usuario}` },
+    { t: 'Trocar minha senha', ic: 'pencil', fn: () => { acSenhaDe = conta.usuario; goCfg('acessos', 'cfgAcessos'); renderAcessos(); } },
+    { t: 'Acessos da equipe', ic: 'user', fn: () => goCfg('acessos', 'cfgAcessos') },
+    '-', { t: 'Sair', ic: 'x', fn: sairDaConta }]);
+};
 $('quemFechar').onclick = () => $('dlgQuem').close();
 $('quemOpts').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -5923,14 +6032,16 @@ aplicarLista();
 // Neste computador fica só a senha da equipe (localStorage 'olistChave').
 // p.olist = { produtoId, sku, em, anexos: [{ id (no Olist), drive, chave }] } — as fotos que o Estúdio pôs no produto
 const olistChave = () => store.get('olistChave', '');
-const olistAtivo = () => WEB && !!olistChave() && store.get('olistFotos', true);
+// com login no site a ponte já sabe quem é; sem login, vale a senha da equipe guardada neste computador
+const olistLiberado = () => !!(conta || olistChave());
+const olistAtivo = () => WEB && olistLiberado() && store.get('olistFotos', true);
 // endereço de onde o Olist baixa cada foto (o arquivo do Drive fica visível para quem tem o link)
 const olistImg = id => `https://lh3.googleusercontent.com/d/${id}`;
 async function olistPedir(rota, opt = {}){
   if (!WEB) throw new Error('A ligação com o Olist funciona no site do Estúdio.');
-  if (!olistChave()) throw new Error('Falta a senha da equipe para o Olist (Configurações → Conexões → Olist ERP).');
+  if (!olistLiberado()) throw new Error('Falta a senha da equipe para o Olist (Configurações → Conexões → Olist ERP).');
   let r;
-  try { r = await fetch('/olist/' + rota, { ...opt, headers: { 'X-Estudio-Chave': olistChave(), ...(opt.body ? { 'Content-Type': 'application/json' } : {}) } }); }
+  try { r = await fetch('/olist/' + rota, { ...opt, headers: { ...(olistChave() ? { 'X-Estudio-Chave': olistChave() } : {}), ...(opt.body ? { 'Content-Type': 'application/json' } : {}) } }); }
   catch { throw new Error('Não consegui falar com o Olist. Confira a internet.'); }
   let d = {}; try { d = await r.json(); } catch {}
   if (r.ok) return d;
@@ -5997,8 +6108,9 @@ async function olistEnviarFotos(p, jobs){
 // ---------- Configurações → Conexões → Olist ERP ----------
 let olistEstado = null; // { conectado, desde, retorno } ou { erro }
 async function renderOlist(checar = true){
-  const tem = !!olistChave();
+  const tem = olistLiberado();
   $('fOlist').classList.toggle('hidden', !tem || !WEB);
+  $('olChaveBox').classList.toggle('hidden', !!conta);
   $('olChave').placeholder = tem ? 'guardada neste computador (digite outra só se mudar)' : 'a mesma ESTUDIO_CHAVE da Cloudflare';
   $('olFotos').checked = store.get('olistFotos', true);
   $('olRetorno').textContent = location.origin + '/olist/retorno';
@@ -6460,6 +6572,11 @@ const ATUALIZACOES = [
     'No cadastro, o botão "Olist" ao lado do SKU traz nome, marca, categoria, título e descrição do produto do Olist (só preenche o que está vazio)',
     'Depois da aprovação, as fotos que sobem ao Drive vão também como imagens do produto no Olist (pelo mesmo SKU)',
     'Configuração em Configurações → Conexões → Olist ERP; a chave do Olist fica guardada na Cloudflare, não no app'] },
+  { id: '2026-10-26-acessos', em: '2026-10-26 14:40', titulo: 'Acessos com usuário e senha', itens: [
+    'O site pede usuário e senha para entrar; cada pessoa tem o próprio acesso',
+    'O nome de quem entrou vai sozinho para o registro de alterações (não precisa mais escolher "Quem é você?")',
+    'Configurações → Acessos: criar, trocar senha e remover acessos; o botão com o seu nome no topo troca a senha ou sai',
+    'Com o login, o Olist funciona sem digitar a senha da equipe em cada computador'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -6513,9 +6630,9 @@ try {
   addEventListener('pagehide', () => canal.postMessage('tchau'));
 } catch {}
 current = plan.produtos[0]?.id || null;
-renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); renderResumoCont(); renderOlist();
+renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); renderResumoCont(); renderOlist(); carregarConta();
 // primeira vez neste computador: pergunta quem está usando (vai para o registro de alterações)
-if (!quemUsa()) setTimeout(() => { if (!quemUsa() && !document.querySelector('dialog[open]')){ renderQuem(); $('dlgQuem').showModal(); } }, 1500);
+if (!quemUsa()) setTimeout(() => { if (!quemUsa() && !conta && !document.querySelector('dialog[open]')){ renderQuem(); $('dlgQuem').showModal(); } }, 1500);
 // entra no Google sozinho se já tiver login guardado neste computador
 gStatus().then(() => gGuardado ? gSilent() : false).then(ok => { renderDrive(); if (ok && !settings.drive.email) gWho().catch(() => {}); });
 showTab(['resumo','produtos','demandas','config'].includes(store.get('tab')) ? store.get('tab') : 'resumo');
