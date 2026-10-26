@@ -57,8 +57,8 @@ f.onsubmit = async e => {
 export async function onRequest(ctx){
   const { request, env } = ctx, caminho = new URL(request.url).pathname;
   if (!env.OLIST) return ctx.next();
-  // as rotas de conta e do Olist conferem o acesso elas mesmas (entrar, primeiro acesso, volta do login do Olist)
-  if (caminho.startsWith('/conta/') || caminho.startsWith('/olist/')) return ctx.next();
+  // as rotas de conta, do Olist e do Google conferem o acesso elas mesmas (entrar, primeiro acesso, volta do login do Olist)
+  if (/^\/(conta|olist|google)\//.test(caminho)) return ctx.next();
   const u = await usuarioDaSessao(request, env);
   if (u){ ctx.data.usuario = u; return ctx.next(); }
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Entre no Estúdio primeiro.', { status: 401 });

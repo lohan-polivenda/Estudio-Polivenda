@@ -794,7 +794,7 @@ _sistema/                          ← tudo que não é produto
       <div class="muted" id="drvClientAviso" style="color:var(--warn);margin-top:4px"></div>
       <label class="f">Chave secreta do cliente (Client secret) <span id="drvSecretOk" style="font-weight:400;color:var(--ok)"></span></label>
       <input id="drvSecret" type="password" placeholder="GOCSPX-…" autocomplete="off">
-      <div class="muted ajuda" style="margin-top:4px">Com ela o app guarda o login e não pede para entrar toda vez. Fica só neste computador (pasta _sistema), nunca no Drive.</div>
+      <div class="muted ajuda" style="margin-top:4px">Com ela o app guarda o login e não pede para entrar toda vez. No site, fica guardada na Cloudflare e vale para toda a equipe; no atalho, fica só neste computador (pasta _sistema). Nunca vai para o Drive.</div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="primary" id="drvLogin">Entrar com Google</button>
         <button id="drvLogout" class="hidden">Sair</button>
@@ -3657,6 +3657,9 @@ async function carregarConta(){
   if (!settings.equipe.some(x => sameTxt(x, conta.nome))){ settings.equipe.push(conta.nome); saveSettings(); renderEquipe(); }
   if ($('dlgQuem').open) $('dlgQuem').close();
   renderUser(); renderOlist(); renderAcessos();
+  await gStatus();
+  if (gGuardado && !gOk() && await gSilent() && !settings.drive.email) gWho().catch(() => {});
+  renderDrive();
 }
 async function contaPedir(rota, corpo){
   let r;
@@ -3914,26 +3917,26 @@ const MANIFEST = 'manifesto-seo.csv';
 const MB = 1024 * 1024;
 const isFileUrl = location.protocol === 'file:';
 if (isFileUrl) $('fileWarn').style.display = 'block';
-// no site não há onde guardar a chave secreta: o login vale 1 hora e depois o Google pede um clique de novo
-if (WEB) for (const el of [$('drvSecret'), $('drvSecret').previousElementSibling, $('drvSecret').nextElementSibling]) el.classList.add('hidden');
 let gTok = null, gisLoading = null, gGuardado = false, gSegredo = false;
 try { const t = JSON.parse(sessionStorage.getItem('orgfotos:gtok')); if (t?.exp > Date.now()) gTok = t; } catch {}
 const gOk = () => !!gTok && gTok.exp > Date.now();
 function gDrop(){ gTok = null; try { sessionStorage.removeItem('orgfotos:gtok'); } catch {} renderDrive(); }
 function setTok(r){ gTok = { t: r.access_token, exp: Date.now() + (r.expires_in - 120) * 1000 }; try { sessionStorage.setItem('orgfotos:gtok', JSON.stringify(gTok)); } catch {} }
 // O servidor local (atalho) guarda a autorização do Google neste computador: o app entra sozinho, sem janela.
+// No site, quem guarda é a Cloudflare (functions/google), para toda a equipe, e só para quem entrou com login.
+const gGuarda = () => !isFileUrl && (!WEB || !!conta);
 async function srv(rota, body){
   const r = await fetch(rota, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
   return { ok: r.ok, j: await r.json().catch(() => ({})) };
 }
 const clientQ = () => '?client=' + encodeURIComponent(settings.drive.clientId);
 async function gStatus(){
-  if (isFileUrl || WEB || !settings.drive.clientId) return;
+  if (!gGuarda() || !settings.drive.clientId) return;
   try { const { ok, j } = await srv('/google/status' + clientQ()); if (ok){ gGuardado = !!j.conectado; gSegredo = !!j.temSegredo; } } catch {}
 }
 // novo acesso de 1 hora a partir do login guardado (sem abrir nada)
 async function gSilent(){
-  if (isFileUrl || WEB || !settings.drive.clientId) return false;
+  if (!gGuarda() || !settings.drive.clientId) return false;
   try { const { ok, j } = await srv('/google/token' + clientQ()); gGuardado = ok; if (ok) setTok(j); return ok; } catch { return false; }
 }
 const popupErro = rej => e => rej(new Error(e.type === 'popup_closed' ? 'A janela de login do Google foi fechada.'
@@ -3962,7 +3965,7 @@ async function gLoginJa(){
   await loadGis();
   const segredo = $('drvSecret').value.trim(), dica = settings.drive.email ? { login_hint: settings.drive.email } : {};
   const negado = r => new Error(r.error === 'access_denied' ? 'O acesso ao Drive não foi autorizado.' : 'Login do Google: ' + (r.error_description || r.error));
-  if (!WEB && (segredo || gSegredo)){
+  if (gGuarda() && (segredo || gSegredo)){
     // com a chave secreta: janela do Google só nesta vez; o servidor guarda o login e renova sozinho
     const code = await new Promise((res, rej) => google.accounts.oauth2.initCodeClient({
       client_id: settings.drive.clientId, scope: G_SCOPE, ux_mode: 'popup', ...dica,
@@ -4091,11 +4094,12 @@ function renderDrive(){
   $('drvStatus').className = 'alert ' + (isFileUrl ? 'block' : ok ? 'ok' : d.clientId ? 'info' : '');
   $('drvStatus').innerHTML = isFileUrl ? 'Este arquivo foi aberto direto do disco. Para usar o Drive, feche e abra pelo atalho <b>Estúdio Polivenda</b> na Área de Trabalho.'
     : !d.clientId ? 'Ainda não configurado. Siga o passo a passo abaixo (uma vez só).'
-    : ok ? `Conectado${d.email ? ' como <b>' + esc(d.email) + '</b>' : ''}.` + (gGuardado ? ' O login fica guardado neste computador (o Google pede um clique de novo a cada 7 dias).'
-      : WEB ? ' No site o login vale 1 hora; depois o Google pede um clique de novo.'
+    : ok ? `Conectado${d.email ? ' como <b>' + esc(d.email) + '</b>' : ''}.` + (gGuardado ? ` O login fica guardado ${WEB ? 'na Cloudflare, para toda a equipe' : 'neste computador'} (o Google pede um clique de novo a cada 7 dias).`
+      : !gGuarda() ? ' No site o login vale 1 hora; depois o Google pede um clique de novo.'
       : ' <b>Este login vale só 1 hora.</b> Para não pedir de novo, cole a chave secreta abaixo, clique em Sair e entre de novo.')
     : `Configurado${d.email ? ' para <b>' + esc(d.email) + '</b>' : ''}. Clique em <b>Entrar com Google</b> (ou só envie: o login aparece na hora).`;
-  $('drvSecretOk').innerHTML = gSegredo ? ic('check') + 'guardada neste computador' : '';
+  $('drvSecretOk').innerHTML = gSegredo ? ic('check') + (WEB ? 'guardada na Cloudflare' : 'guardada neste computador') : '';
+  for (const el of [$('drvSecret'), $('drvSecret').previousElementSibling, $('drvSecret').nextElementSibling]) el.classList.toggle('hidden', !gGuarda());
   $('drvSecret').placeholder = gSegredo ? 'já guardada (cole outra só se trocar)' : 'GOCSPX-…';
   $('drvLogin').classList.toggle('hidden', ok); $('drvLogin').disabled = isFileUrl || !d.clientId;
   $('drvLogout').classList.toggle('hidden', !ok);
@@ -4123,9 +4127,10 @@ $('drvLogin').onclick = async () => {
   renderDrive();
 };
 $('drvLogout').onclick = async () => {
+  if (WEB && gGuardado && !confirm('Sair do Google Drive para toda a equipe? Depois alguém precisa clicar em Entrar com Google de novo.')) return;
   try { google.accounts.oauth2.revoke(gTok.t, () => {}); } catch {}
-  if (!isFileUrl && !WEB) await srv('/google/sair', {}).catch(() => {});
-  gGuardado = false; gDrop(); toast('Você saiu do Google Drive neste computador.');
+  if (gGuarda()) await srv('/google/sair', {}).catch(() => {});
+  gGuardado = false; gDrop(); toast(WEB && conta ? 'O Google Drive foi desligado no site.' : 'Você saiu do Google Drive neste computador.');
 };
 $('drvOpen').onclick = () => window.open('https://drive.google.com/drive/folders/' + settings.drive.pastaId, '_blank', 'noopener');
 $('drvNew').onclick = async () => {
@@ -6581,6 +6586,10 @@ const ATUALIZACOES = [
     'Com o login, o Olist funciona sem digitar a senha da equipe em cada computador'] },
   { id: '2026-10-26-client-id-fixo', em: '2026-10-26 15:05', titulo: 'Google Drive já configurado em todo computador', itens: [
     'O ID do cliente do Google da Polivenda já vem preenchido: é só clicar em Entrar com Google'] },
+  { id: '2026-10-26-google-guardado-site', em: '2026-10-26 14:52', titulo: 'Login do Google guardado no site', itens: [
+    'No site, o login do Google fica guardado na Cloudflare para toda a equipe: não pede mais para entrar a cada hora',
+    'Na primeira vez, cole a chave secreta do cliente (GOCSPX-…) em Configurações → Conexões → Google Drive e clique em Entrar com Google',
+    'Enquanto o app do Google estiver em modo de teste, o Google pede um clique de novo a cada 7 dias'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
