@@ -181,6 +181,7 @@ button.icon .ic,.chip button .ic,.fthumb button .ic,.check .ic,.ckic .ic{margin-
 .fthumb .carrega{position:absolute;top:0;left:0;width:72px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:6px;background:#00000059;color:#fff;font-size:12px;font-weight:700;pointer-events:none}
 .fthumb .carrega .ic{width:20px;height:20px;margin:0}
 .clrow.subindo{background:var(--accent-soft);box-shadow:inset 3px 0 var(--accent)}
+.fthumb.removendo img{opacity:.35}
 /* barrinha no topo enquanto algo é gravado na nuvem */
 #nvBarra{position:fixed;top:0;left:0;right:0;height:3px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,transparent,var(--accent),transparent) no-repeat;background-size:40% 100%;animation:nvbarra 1.1s linear infinite}
 #nvBarra.on{opacity:1}
@@ -1685,6 +1686,12 @@ function avisoSistema(){
 // nada é apagado de vez: o arquivo vai para a lixeira, na pasta _sistema
 const LIXEIRA = 'lixeira';
 async function paraLixeira(dir, nome, ...caminho){
+  if (dir.nuvem && sisDir?.nuvem){
+    const de = juntarCam(dir.caminho, nome), lix = juntarCam(sisDir.caminho, LIXEIRA);
+    await comBarra(() => nvPedir('mover', { de, para: [lix, ...caminho.filter(Boolean), agora() + '-' + nome].join('/') }, { method: 'POST' }));
+    nvListas.get(dir.caminho)?.arquivos.delete(nome); nvBlobs.delete(de); esquecerPasta(lix);
+    return;
+  }
   const f = await (await dir.getFileHandle(nome)).getFile();
   await sisGravar([LIXEIRA, ...caminho.filter(Boolean), agora() + '-' + nome].join('/'), f); // primeiro copia para _sistema…
   await dir.removeEntry(nome);                                              // …e só então tira da pasta do produto
@@ -2231,6 +2238,7 @@ function renderDetail(){
 // uma linha do checklist (item, miniaturas, botões)
 // fotos subindo agora: produto|variação|item → { previas (endereços das fotos no aparelho), pct }
 const enviando = new Map();
+const removendo = new Set(); // produto|variação|arquivo saindo agora (fica apagado, com o círculo girando)
 function mostrarEnvio(chave, frac){
   const e = enviando.get(chave); if (!e) return;
   e.pct = Math.min(99, Math.round(frac * 100));
@@ -2241,9 +2249,10 @@ function clLinha(p, u, it, i){
   const subindo = env ? env.previas.map(src => `<div class="fthumb enviando"><img src="${src}" alt=""><div class="carrega">${ic('loader', 'spin')}<b>${env.pct}%</b></div><div class="dim">enviando…</div></div>`).join('') : '';
   return `<div class="clrow ${fs.length ? 'done' : ''} ${it.id === focoIid ? 'foco' : ''} ${it.id === editDica ? 'editando' : ''} ${env ? 'subindo' : ''}" data-iid="${it.id}">
         <span class="box" title="${fs.length ? 'Feito: arquivo enviado' : 'Envie um arquivo para marcar'}"></span>
-        <div class="files">${fs.length ? fs.map(f => `<div class="fthumb" title="${esc(f)}">
+        <div class="files">${fs.length ? fs.map(f => `<div class="fthumb ${removendo.has(`${p.id}|${u.id}|${f}`) ? 'removendo' : ''}" title="${esc(f)}">
               ${isVideo(it) || VID_EXT.test(f) ? `<div class="vid">${ic('video', 'lg')}</div>` : `<img data-f="${esc(f)}" alt="" title="Clique para ver grande">`}
-              <button data-act="rmfile" data-f="${esc(f)}" title="Remover arquivo">${ic('x')}</button><div class="dim" data-dim="${esc(f)}"></div></div>`).join('') + subindo
+              ${removendo.has(`${p.id}|${u.id}|${f}`) ? `<div class="carrega">${ic('loader', 'spin')}</div>`
+                : `<button data-act="rmfile" data-f="${esc(f)}" title="Remover arquivo">${ic('x')}</button>`}<div class="dim" data-dim="${esc(f)}"></div></div>`).join('') + subindo
             : subindo || `<button class="slot" data-act="upload" title="Clique para escolher o arquivo, arraste para cá ou cole (Ctrl+V)">${ic(isVideo(it) ? 'video' : 'image', 'lg')}</button>`}</div>
         <div class="cltext">
           <div class="clname">${i + 1}. ${esc(it.nome)}${isVideo(it) ? '<span class="tag">VÍDEO</span>' : ''}${it.id === focoIid ? proxTag(fs.length) : ''}</div>
@@ -2266,7 +2275,8 @@ const ACV_DIR = 'Arquivo';
 const acvDe = (p, u) => (p.acervo ||= {})[u.id || '_'] ||= [];
 let acvFechado = store.get('acvFechado', false);
 function acvHtml(p, u){
-  const fs = acvDe(p, u);
+  const fs = acvDe(p, u), env = enviando.get(`${p.id}|${u.id}|${ACV_DIR}`);
+  const subindo = env ? env.previas.map(src => `<div class="fthumb enviando"><img src="${src}" alt=""><div class="carrega">${ic('loader', 'spin')}<b>${env.pct}%</b></div><div class="dim">enviando…</div></div>`).join('') : '';
   return `<div class="cl acv ${acvFechado ? 'fechado' : ''}">
       <div class="clhead">
         <button class="cltog" data-act="acvtog" title="${acvFechado ? 'Abrir' : 'Fechar'}">${ic('down')}</button>
@@ -2275,8 +2285,9 @@ function acvHtml(p, u){
         <span class="muted ajuda">As fotos que já eram usadas. Sem limite: arraste várias de uma vez para cá.</span>
         <button class="sm" data-act="acvup">${ic('clip')}Adicionar fotos</button>
       </div>
-      <div class="clbody"><div class="acvgrid">${fs.length ? fs.map(f => `<div class="fthumb" title="${esc(f)}"><img data-af="${esc(f)}" alt="" title="Clique para ver grande">
-          <button data-act="acvrm" data-f="${esc(f)}" title="Tirar do arquivo">${ic('x')}</button><div class="dim"></div></div>`).join('')
+      <div class="clbody"><div class="acvgrid">${fs.length || subindo ? fs.map(f => { const rm = removendo.has(`${p.id}|${u.id}|${ACV_DIR}/${f}`);
+          return `<div class="fthumb ${rm ? 'removendo' : ''}" title="${esc(f)}"><img data-af="${esc(f)}" alt="" title="Clique para ver grande">
+          ${rm ? `<div class="carrega">${ic('loader', 'spin')}</div>` : `<button data-act="acvrm" data-f="${esc(f)}" title="Tirar do arquivo">${ic('x')}</button>`}<div class="dim"></div></div>`; }).join('') + subindo
         : `<button class="slot" data-act="acvup" title="Clique para escolher, ou arraste as fotos para cá">${ic('image', 'lg')}</button>`}</div></div>
     </div>`;
 }
@@ -2284,20 +2295,29 @@ async function acvUpload(p, u, files){
   if (!ws) return toast('Conecte a pasta de trabalho primeiro (botão no topo).');
   const ok = files.filter(f => IMG_EXT.test(f.name));
   if (!ok.length) return toast('Envie imagens (.jpg, .png, .webp).');
+  const chave = `${p.id}|${u.id}|${ACV_DIR}`, previas = ok.map(f => URL.createObjectURL(f));
+  enviando.set(chave, { previas, pct: 0 });
+  if (curP() === p) renderDetail();
+  const terminou = () => { enviando.delete(chave); setTimeout(() => previas.forEach(x => URL.revokeObjectURL(x)), 5000); };
   try {
     await comTrava(async () => {
       ensureFolders(p);
-      const dir = await sub(ws, ...ud(p, u), ACV_DIR), lista = acvDe(p, u);
+      const dir = await sub(ws, ...ud(p, u), ACV_DIR), lista = acvDe(p, u), total = ok.reduce((t, f) => t + f.size, 0) || 1;
+      let feito = 0;
       for (const f of ok){
         let nome = f.name, k = 2;
         while (await exists(dir, nome)) nome = f.name.replace(/(\.[^.]+)?$/, m => `-${k++}${m}`);
-        await writeFile(dir, nome, f); lista.push(nome);
+        if (dir.nuvem) await nvGravar(juntarCam(dir.caminho, nome), f, x => { const e = enviando.get(chave); if (!e) return; e.pct = Math.min(99, Math.round((feito + x * f.size) / total * 100));
+          document.querySelectorAll('#detail .acvgrid .carrega b').forEach(b => { b.textContent = e.pct + '%'; }); });
+        else await writeFile(dir, nome, f);
+        feito += f.size; lista.push(nome);
       }
     });
+    terminou();
     mexeu(p); savePlan(); renderDetail();
     registrar('Arquivo', `Guardou ${ok.length} foto(s) no arquivo`, p, ok.map(f => f.name).join(', '));
     toast(`${ok.length} foto(s) no arquivo.` + (files.length > ok.length ? ` ${files.length - ok.length} ignorado(s): não é imagem.` : ''));
-  } catch (e) { toast('Erro ao salvar: ' + e.message, 6000); }
+  } catch (e) { terminou(); if (curP() === p) renderDetail(); toast('Erro ao salvar: ' + e.message, 6000); }
 }
 async function acvThumbs(p, u){
   const imgs = [...document.querySelectorAll('#detail img[data-af]')]; if (!ws || !imgs.length) return;
@@ -2499,7 +2519,7 @@ async function uploadFiles(p, u, item, files){
   const video = isVideo(item);
   const ok = files.filter(f => video ? VID_EXT.test(f.name) || IMG_EXT.test(f.name) : IMG_EXT.test(f.name));
   if (!ok.length) return toast(video ? 'Envie um vídeo (.mp4, .mov, .webm).' : 'Envie uma imagem (.jpg, .png, .webp).');
-  if (p.dataColecao && prog(p).done && p.dataColecao !== hojeIso() && await confirmar(`As fotos atuais são do envio de ${dataPasta(p.dataColecao)}.\n\nOK: começar um NOVO envio (subpasta ${dataPasta()}; o checklist recomeça).\nCancelar: juntar estas fotos ao envio de ${dataPasta(p.dataColecao)}.`)){
+  if (p.dataColecao && prog(p).done && p.dataColecao !== hojeIso() && await confirmar(`As fotos atuais são do envio de ${dataPasta(p.dataColecao)}. Começar um novo envio?\n\nNovo envio: as fotos vão para a subpasta ${dataPasta()} e o checklist recomeça.\nJuntar: estas fotos entram no envio de ${dataPasta(p.dataColecao)}.`, 'Novo envio', 'Juntar')){
     novaColecao(p); registrar('Checklist', 'Começou um novo envio de fotos', p, `subpasta ${dataPasta()}`);
   }
   // primeira foto de uma coleção criada em outro dia (pasta ainda vazia): a data passa a ser a de hoje
@@ -2550,20 +2570,30 @@ async function syncNamesJa(p){
     for (const it of p.checklist) filesOf(u, it).forEach((from, i) =>
       jobs.push({ it, i, from, to: prodBase({...info, foto: it.nome}, i + 1) + extOf(from) }));
     const todo = jobs.filter(j => j.from !== j.to);
-    // 1ª etapa: nomes temporários (evita colisão quando nomes trocam de lugar)
-    for (const j of todo){
-      j.tmp = `tmp-renomeando-${uid()}${extOf(j.from)}`;
-      try { await renameFile(dir, j.from, j.tmp); } catch { j.missing = true; }
-    }
-    // 2ª etapa: nomes finais
-    for (const j of todo){
-      if (j.missing) continue;
-      let to = j.to, k = 2;
-      while (await exists(dir, to)) to = j.to.replace(/(\.[^.]+)$/, `-${k++}$1`);
-      await renameFile(dir, j.tmp, to);
-      u.arquivos[j.it.id][j.i] = to; changed++;
+    // renomeia direto quando o nome novo está livre (na nuvem cada renomeação copia a foto: uma só, não duas).
+    // Quando todos os que faltam esperam um nome ainda ocupado (troca em círculo), um vai para um nome provisório.
+    const ocupados = new Set(p.checklist.flatMap(it => filesOf(u, it)));
+    let pend = [...todo];
+    while (pend.length){
+      const j = pend.find(x => !ocupados.has(x.to)) || pend[0], direto = !ocupados.has(j.to);
+      let to = direto ? j.to : `tmp-renomeando-${uid()}${extOf(j.from)}`, k = 2;
+      if (direto) while (await exists(dir, to)) to = j.to.replace(/(\.[^.]+)$/, `-${k++}$1`);
+      try { await renameFile(dir, j.from, to); }
+      catch {
+        // a resposta pode ter se perdido depois de a nuvem já ter renomeado: confere antes de tirar a foto da lista
+        if (dir.nuvem) await nvListar(dir.caminho, true).catch(() => {});
+        const ficou = await exists(dir, j.from), foi = !ficou && await exists(dir, to);
+        if (!foi){
+          pend = pend.filter(x => x !== j);
+          if (!ficou){ j.missing = true; continue; }
+          to = j.from; // não renomeou: fica com o nome que tinha
+        }
+      }
+      ocupados.delete(j.from); ocupados.add(to);
       // a miniatura guardada com esses nomes não vale mais (ex.: a foto 02 virou 01)
       thumbCache.delete(`${ud(p, u).join('/')}/${j.from}`); thumbCache.delete(`${ud(p, u).join('/')}/${to}`);
+      u.arquivos[j.it.id][j.i] = to; j.from = to;
+      if (direto){ changed++; pend = pend.filter(x => x !== j); }
     }
     for (const j of todo) if (j.missing) u.arquivos[j.it.id] = u.arquivos[j.it.id].filter(f => f !== j.from);
   }
@@ -2707,11 +2737,14 @@ $('detail').addEventListener('click', async e => {
     $('upIn').value = ''; $('upIn').click();
   }
   if (act === 'acvrm' && await confirmar(`Tirar "${b.dataset.f}" do arquivo?\n\nEla vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
+    const chaveRm = `${p.id}|${u.id}|${ACV_DIR}/${b.dataset.f}`;
+    removendo.add(chaveRm); renderDetail();
     await comTrava(async () => {
       try { await paraLixeira(await sub(ws, ...ud(p, u), ACV_DIR), b.dataset.f, ...ud(p, u), ACV_DIR); }
       catch (e) { if (e.name !== 'NotFoundError') return toast('Não consegui mover para a lixeira: ' + e.message, 6000); }
       const l = acvDe(p, u); l.splice(l.indexOf(b.dataset.f), 1);
     });
+    removendo.delete(chaveRm);
     mexeu(p); savePlan(); renderDetail(); registrar('Arquivo', 'Tirou uma foto do arquivo', p, b.dataset.f);
   }
   if (act === 'upload'){
@@ -2722,13 +2755,16 @@ $('detail').addEventListener('click', async e => {
   }
   if (act === 'rmfile' && await confirmar(`Tirar o arquivo "${b.dataset.f}" deste item?\n\nEle vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
     let falhou = false;
+    const chaveRm = `${p.id}|${u.id}|${b.dataset.f}`;
+    removendo.add(chaveRm); renderDetail();
     await comTrava(async () => {
       try { await paraLixeira(await sub(ws, ...ud(p, u)), b.dataset.f, ...ud(p, u)); }
       catch (e) { falhou = true; toast('Não consegui mover o arquivo para a lixeira: ' + e.message, 6000); return; } // o arquivo continua onde estava
       u.arquivos[item.id] = filesOf(u, item).filter(f => f !== b.dataset.f);
       await syncNames(p);
     });
-    if (falhou) return;
+    removendo.delete(chaveRm);
+    if (falhou) return renderDetail();
     registrar('Checklist', 'Removeu um arquivo (foi para a _lixeira)', p, `${item.nome}${u.nome ? ' · ' + u.nome : ''}: ${b.dataset.f}`);
     focoIid = item.id; mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail(); toast('Arquivo movido para a lixeira (_sistema). Cole ou envie o novo (Ctrl+V).', 4000);
   }
@@ -3333,13 +3369,20 @@ async function nvPedir(rota, params, opt = {}){
   return r;
 }
 // conteúdo de uma pasta; "forcar" busca de novo em vez de usar o que foi lido há poucos segundos
+const nvListando = new Map(); // pedidos de listagem em andamento: quem pedir a mesma pasta espera o mesmo
 async function nvListar(pasta, forcar = false){
   const c = nvListas.get(pasta);
-  if (c && !forcar && Date.now() - c.em < 8000) return c;
-  const d = await (await nvPedir('lista', { c: pasta })).json();
-  const x = { em: Date.now(), pastas: new Set(d.pastas), arquivos: new Map(d.arquivos.map(a => [a.nome, a])) };
-  nvListas.set(pasta, x);
-  return x;
+  if (c && !forcar && Date.now() - c.em < 30000) return c;
+  // só reaproveita o pedido em andamento quando não precisa da lista mais nova (ele pode ter saído antes de uma gravação)
+  if (!forcar && nvListando.has(pasta)) return nvListando.get(pasta);
+  const pr = (async () => {
+    const d = await (await nvPedir('lista', { c: pasta })).json();
+    const x = { em: Date.now(), pastas: new Set(d.pastas), arquivos: new Map(d.arquivos.map(a => [a.nome, a])) };
+    nvListas.set(pasta, x);
+    return x;
+  })().finally(() => nvListando.delete(pasta));
+  nvListando.set(pasta, pr);
+  return pr;
 }
 // a pasta inteira de uma vez: monta as listagens de todas as subpastas num pedido só
 const nvArvoreEm = new Map();
@@ -3425,6 +3468,12 @@ class NuvemPasta {
   async isSameEntry(o){ return o?.caminho === this.caminho; }
   async getDirectoryHandle(nome, o = {}){
     const cam = juntarCam(this.caminho, nome);
+    // "crie se não existir": na nuvem a pasta existe assim que tiver um arquivo; segue na hora e marca a pasta por trás
+    if (o.create){
+      const c = nvListas.get(this.caminho);
+      if (!c?.pastas.has(nome)){ c?.pastas.add(nome); nvPedir('pasta', { c: cam }, { method: 'POST' }).catch(() => {}); }
+      return new NuvemPasta(cam);
+    }
     let l = await nvListar(this.caminho);
     if (!l.pastas.has(nome) && !l.arquivos.has(nome)) l = await nvListar(this.caminho, Date.now() - l.em > 1000);
     if (!l.pastas.has(nome)){
@@ -3443,7 +3492,7 @@ class NuvemPasta {
   async removeEntry(nome){
     const cam = juntarCam(this.caminho, nome), c = nvListas.get(this.caminho);
     // a listagem é recente e não tem esse nome: nada para apagar (evita um pedido à toa)
-    if (c && Date.now() - c.em < 8000 && !c.arquivos.has(nome) && !c.pastas.has(nome)) return;
+    if (c && Date.now() - c.em < 30000 && !c.arquivos.has(nome) && !c.pastas.has(nome)) return;
     await nvPedir('apagar', { c: cam }, { method: 'POST' });
     const l = nvListas.get(this.caminho); l?.arquivos.delete(nome); l?.pastas.delete(nome);
     esquecerPasta(cam); nvBlobs.delete(cam);
@@ -6939,6 +6988,11 @@ const ATUALIZACOES = [
   { id: '2026-10-26-pergunta-do-app', em: '2026-10-26 16:20', titulo: 'Perguntas de confirmação do próprio app', itens: [
     'As perguntas "tem certeza?" (remover foto, excluir, sair…) agora são do próprio app',
     'Antes eram as do navegador, que o Chrome pode bloquear depois de várias seguidas: aí o botão parecia não fazer nada (ex.: remover arquivo)'] },
+  { id: '2026-10-26-remover-rapido', em: '2026-10-26 16:28', titulo: 'Remover e adicionar mais rápidos, com sinal de carregando', itens: [
+    'Ao remover uma foto, ela fica apagada com um círculo girando na hora, até sair',
+    'Na nuvem, a foto vai para a lixeira sem ser baixada e enviada de novo; as outras fotos do item são renomeadas com uma cópia só',
+    'Fotos adicionadas no "Arquivo" também aparecem na hora, com a porcentagem do envio',
+    'A pergunta de envio de outro dia agora tem os botões "Novo envio" e "Juntar"'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
