@@ -598,7 +598,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
 .acrow .inrow input{width:200px}
 @media (max-width:1000px){.apgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-left:0;border-top:1px solid var(--border)}.kpi b{font-size:22px}}
-@media (max-width:600px){.apgrid{grid-template-columns:1fr}.amgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{max-width:100%;overflow-x:auto}.tabs button{flex:none}}
+@media (max-width:600px){.aphead .apvista{margin-left:0;width:100%}.apvista button{flex:1;padding-left:6px;padding-right:6px}.apgrid{grid-template-columns:1fr}.amgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{max-width:100%;overflow-x:auto}.tabs button{flex:none}}
 </style>
 </head>
 <body>
@@ -1160,6 +1160,14 @@ _sistema/                          ← tudo que não é produto
 </dialog>
 
 <!-- ======================= DIÁLOGO: ENVIAR AO DRIVE ======================= -->
+<dialog id="dlgNuvem">
+  <div class="dlg-body">
+    <h2>Levando os arquivos para a nuvem</h2>
+    <div class="muted" id="nvTxt" style="margin:8px 0 10px"></div>
+    <div class="prog"><div class="bar"><div id="nvBar" style="width:0%"></div></div></div>
+  </div>
+  <div class="dlg-foot"><button id="nvFechar" class="primary" disabled>Copiando…</button></div>
+</dialog>
 <dialog id="dlgAp" class="dlgap"><div id="amBody"></div></dialog>
 <dialog id="dlgDrive" class="wide">
   <div class="dlg-body" id="dvBody"></div>
@@ -3243,16 +3251,182 @@ const idb = {
   async get(k){ try { const d = await this.db(); return await new Promise(r => { const q = d.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => r(q.result); q.onerror = () => r(null); }); } catch { return null; } },
   async set(k, v){ try { const d = await this.db(); d.transaction('kv','readwrite').objectStore('kv').put(v, k); } catch {} }
 };
+// ---------- nuvem: no site, a pasta de trabalho fica no Cloudflare R2 (functions/nuvem) ----------
+// NuvemPasta e NuvemArquivo têm a mesma "cara" das pastas do computador (File System Access),
+// então o resto do app funciona igual — em qualquer computador ou celular, só com o login.
+const juntarCam = (...p) => p.filter(Boolean).join('/');
+const nvListas = new Map(); // pasta → { em, pastas: Set, arquivos: Map(nome → { tamanho, mod, etag }) }
+const nvBlobs = new Map();  // arquivo → { etag, file } (os últimos lidos, para não baixar de novo o que não mudou)
+let nvBlobBytes = 0;
+const nvNaoExiste = nome => new DOMException(`"${nome}" não existe.`, 'NotFoundError');
+async function nvPedir(rota, params, opt = {}){
+  let r;
+  try { r = await fetch('/nuvem/' + rota + '?' + new URLSearchParams(params), { cache: 'no-store', ...opt }); }
+  catch { throw new Error('Sem conexão com a nuvem. Confira a internet.'); }
+  if (r.status === 401){ location.reload(); throw new Error('Entre de novo.'); }
+  if (!r.ok && r.status !== 404 && r.status !== 304){ let m = ''; try { m = (await r.json()).erro; } catch {} throw new Error(m || `A nuvem respondeu ${r.status}.`); }
+  return r;
+}
+// conteúdo de uma pasta; "forcar" busca de novo em vez de usar o que foi lido há poucos segundos
+async function nvListar(pasta, forcar = false){
+  const c = nvListas.get(pasta);
+  if (c && !forcar && Date.now() - c.em < 8000) return c;
+  const d = await (await nvPedir('lista', { c: pasta })).json();
+  const x = { em: Date.now(), pastas: new Set(d.pastas), arquivos: new Map(d.arquivos.map(a => [a.nome, a])) };
+  nvListas.set(pasta, x);
+  return x;
+}
+function nvGuardarBlob(cam, etag, file){
+  const ant = nvBlobs.get(cam); if (ant) nvBlobBytes -= ant.file.size;
+  nvBlobs.set(cam, { etag, file }); nvBlobBytes += file.size;
+  // guarda no máximo ~150 MB: sai o que foi lido primeiro
+  for (const [k, v] of nvBlobs){ if (nvBlobBytes <= 150 * MB) break; nvBlobs.delete(k); nvBlobBytes -= v.file.size; }
+}
+async function nvGravar(cam, dados){
+  const blob = dados instanceof Blob ? dados : new Blob([dados]);
+  const d = await (await nvPedir('arquivo', { c: cam }, { method: 'PUT', body: blob, headers: { 'Content-Type': blob.type || 'application/octet-stream' } })).json();
+  const pasta = cam.slice(0, cam.lastIndexOf('/')), nome = cam.slice(cam.lastIndexOf('/') + 1);
+  nvListas.get(pasta)?.arquivos.set(nome, { nome, tamanho: d.tamanho, mod: d.mod, etag: d.etag });
+  nvGuardarBlob(cam, d.etag, new File([blob], nome, { type: blob.type, lastModified: d.mod }));
+  return d;
+}
+const esquecerPasta = cam => { for (const k of [...nvListas.keys()]) if (k === cam || k.startsWith(cam + '/')) nvListas.delete(k); };
+class NuvemPasta {
+  constructor(caminho){ this.caminho = caminho; this.name = caminho.split('/').pop(); this.kind = 'directory'; this.nuvem = true; }
+  async queryPermission(){ return 'granted'; }
+  async requestPermission(){ return 'granted'; }
+  async isSameEntry(o){ return o?.caminho === this.caminho; }
+  async getDirectoryHandle(nome, o = {}){
+    const cam = juntarCam(this.caminho, nome);
+    let l = await nvListar(this.caminho);
+    if (!l.pastas.has(nome) && !l.arquivos.has(nome)) l = await nvListar(this.caminho, Date.now() - l.em > 1000);
+    if (!l.pastas.has(nome)){
+      if (!o.create) throw nvNaoExiste(nome);
+      await nvPedir('pasta', { c: cam }, { method: 'POST' });
+      l.pastas.add(nome);
+    }
+    return new NuvemPasta(cam);
+  }
+  async getFileHandle(nome, o = {}){
+    let l = await nvListar(this.caminho);
+    if (!l.arquivos.has(nome)) l = await nvListar(this.caminho, Date.now() - l.em > 1000);
+    if (!l.arquivos.has(nome) && !o.create) throw nvNaoExiste(nome);
+    return new NuvemArquivo(juntarCam(this.caminho, nome));
+  }
+  async removeEntry(nome){
+    const cam = juntarCam(this.caminho, nome);
+    await nvPedir('apagar', { c: cam }, { method: 'POST' });
+    const l = nvListas.get(this.caminho); l?.arquivos.delete(nome); l?.pastas.delete(nome);
+    esquecerPasta(cam); nvBlobs.delete(cam);
+  }
+  async move(novo){
+    const pai = this.caminho.slice(0, this.caminho.lastIndexOf('/')), para = juntarCam(pai, novo);
+    await nvPedir('mover', { de: this.caminho, para }, { method: 'POST' });
+    esquecerPasta(this.caminho); nvListas.delete(pai);
+    this.caminho = para; this.name = novo;
+  }
+  async *entries(){
+    const l = await nvListar(this.caminho, true);
+    for (const n of l.pastas) yield [n, new NuvemPasta(juntarCam(this.caminho, n))];
+    for (const n of l.arquivos.keys()) yield [n, new NuvemArquivo(juntarCam(this.caminho, n))];
+  }
+  async *keys(){ for await (const [k] of this.entries()) yield k; }
+  async *values(){ for await (const [, v] of this.entries()) yield v; }
+}
+class NuvemArquivo {
+  constructor(caminho){ this.caminho = caminho; this.name = caminho.split('/').pop(); this.kind = 'file'; this.nuvem = true; }
+  async isSameEntry(o){ return o?.caminho === this.caminho; }
+  // sempre confere com a nuvem (é rápido quando não mudou: a resposta vem vazia)
+  async getFile(){
+    const c = nvBlobs.get(this.caminho);
+    const r = await nvPedir('arquivo', { c: this.caminho }, c ? { headers: { 'If-None-Match': c.etag } } : {});
+    if (r.status === 304 && c) return c.file;
+    if (r.status === 404) throw nvNaoExiste(this.name);
+    const etag = r.headers.get('ETag'), mod = +r.headers.get('X-Mod') || Date.now();
+    const f = new File([await r.blob()], this.name, { type: r.headers.get('Content-Type') || '', lastModified: mod });
+    nvGuardarBlob(this.caminho, etag, f);
+    return f;
+  }
+  async createWritable(){
+    const partes = [], cam = this.caminho;
+    return { async write(d){ partes.push(d?.type === 'write' ? d.data : d); }, async close(){ await nvGravar(cam, new Blob(partes, { type: partes[0]?.type || '' })); }, async truncate(){} };
+  }
+  async move(novo){
+    const pai = this.caminho.slice(0, this.caminho.lastIndexOf('/')), para = juntarCam(pai, novo);
+    await nvPedir('mover', { de: this.caminho, para }, { method: 'POST' });
+    const l = nvListas.get(pai), a = l?.arquivos.get(this.name);
+    l?.arquivos.delete(this.name); if (a) l.arquivos.set(novo, { ...a, nome: novo });
+    const b = nvBlobs.get(this.caminho); nvBlobs.delete(this.caminho); if (b) nvBlobs.set(para, b);
+    this.caminho = para; this.name = novo;
+  }
+}
+const nuvemNoAr = () => !!ws?.nuvem;
+async function nuvemDisponivel(){ if (!WEB) return false; try { return (await fetch('/nuvem/estado', { cache: 'no-store' })).ok; } catch { return false; } }
+async function usarNuvem(){
+  $('warn').style.display = 'none'; // no celular não há "escolher pasta", e nem precisa
+  sisDir = new NuvemPasta('_sistema');
+  await useWorkspace(new NuvemPasta(ROOT_NAME));
+}
+// uma vez só: copia a pasta "Organizador de Fotos" do computador (Google Drive) para a nuvem
+async function levarParaNuvem(){
+  if (!('showDirectoryPicker' in window)) return toast('Para trazer os arquivos do computador, abra o Estúdio no Chrome ou no Edge do computador que tem a pasta.', 6000);
+  let h;
+  try { h = await showDirectoryPicker({ id: 'raiz', mode: 'read' }); } catch { return; }
+  if (h.name === ROOT_NAME) return toast(`Escolha a pasta de fora, "${RAIZ_NAME}" (a que tem ${ROOT_NAME} e _sistema dentro).`, 7000);
+  const raizes = [];
+  for (const n of [ROOT_NAME, '_sistema']){ const d = await subIfExists(h, n); if (d) raizes.push([n, d]); }
+  if (!raizes.length) return toast(`Essa pasta não é a "${RAIZ_NAME}": ela precisa ter ${ROOT_NAME} e _sistema dentro. Procure no Google Drive (G:).`, 8000);
+  if (!confirm(`Copiar a pasta "${h.name}" para a nuvem?\n\nO cadastro, as demandas e o registro da nuvem passam a ser os do computador, e as fotos são copiadas. Nada é apagado do computador. Pode levar alguns minutos: deixe esta janela aberta.`)) return;
+  const nuvem = ws, txt = $('nvTxt'), bar = $('nvBar');
+  ws = null; clearTimeout(saveTimer); clearTimeout(demTimer); // nada grava na nuvem enquanto copia
+  $('nvFechar').disabled = true; $('nvFechar').textContent = 'Copiando…'; $('dlgNuvem').showModal();
+  txt.textContent = 'Procurando os arquivos…'; bar.style.width = '0%';
+  const arqs = [];
+  async function andar(dir, cam){
+    for await (const [n, x] of dir.entries()){
+      if (x.kind === 'directory') await andar(x, cam + '/' + n);
+      else if (!/^(desktop\.ini|thumbs\.db|\.ds_store)$/i.test(n) && !n.startsWith('~$') && !/^tmp-/.test(n)) arqs.push({ cam: cam + '/' + n, h: x });
+    }
+  }
+  let feitos = 0, pulados = 0, falhas = [];
+  try {
+    for (const [n, d] of raizes) await andar(d, n);
+    await emParalelo(arqs, 3, async it => {
+      try {
+        const f = await it.h.getFile(), pasta = it.cam.slice(0, it.cam.lastIndexOf('/')), nome = it.cam.slice(it.cam.lastIndexOf('/') + 1);
+        const la = (await nvListar(pasta)).arquivos.get(nome);
+        // fotos com o mesmo tamanho já estão lá (dá para rodar de novo sem copiar tudo); os dados vão sempre
+        if (la && la.tamanho === f.size && !it.cam.startsWith('_sistema/dados/')) pulados++;
+        else await nvGravar(it.cam, f);
+      } catch (e) { falhas.push(it.cam); }
+      feitos++;
+      txt.textContent = `${feitos} de ${arqs.length} arquivos${pulados ? ` (${pulados} já estavam lá)` : ''}…`;
+      bar.style.width = (feitos / arqs.length * 100) + '%';
+    });
+    txt.textContent = falhas.length ? `Pronto, mas ${falhas.length} arquivo(s) não foram: ${falhas.slice(0, 5).join(', ')}${falhas.length > 5 ? '…' : ''}. Rode de novo para tentar só os que faltam.`
+      : `Pronto: ${arqs.length} arquivo(s) na nuvem${pulados ? ` (${pulados} já estavam lá)` : ''}. O Estúdio vai recarregar.`;
+    registrar('Nuvem', 'Levou a pasta do computador para a nuvem', null, `${arqs.length - pulados - falhas.length} copiado(s), ${pulados} já estavam, ${falhas.length} falha(s)`);
+  } catch (e) { txt.textContent = 'Não consegui terminar: ' + e.message; }
+  ws = nuvem;
+  $('nvFechar').disabled = false; $('nvFechar').textContent = falhas.length ? 'Fechar' : 'Recarregar';
+  $('nvFechar').onclick = () => falhas.length ? $('dlgNuvem').close() : location.reload();
+}
+
 let savedWs = null;
 function renderWs(){
   const c = $('wsChip');
   c.classList.toggle('ok', !!ws);
-  c.innerHTML = ic('folder') + esc(ws ? ws.name : savedWs ? `Reconectar "${savedWs.name}"` : `Conectar pasta ${WEB ? 'Organizador de Fotos' : ROOT_NAME}`) + (ws ? ' ' + ic('check') : '');
-  $('cfgWsInfo').innerHTML = ws ? `Conectada: <b>${esc(ws.name)}</b>` : 'Nenhuma pasta conectada.';
+  c.innerHTML = ic(ws?.nuvem ? 'cloud' : 'folder') + esc(ws?.nuvem ? 'Nuvem' : ws ? ws.name : savedWs ? `Reconectar "${savedWs.name}"` : `Conectar pasta ${WEB ? 'Organizador de Fotos' : ROOT_NAME}`) + (ws ? ' ' + ic('check') : '');
+  $('cfgWsInfo').innerHTML = ws?.nuvem ? 'Os arquivos ficam <b>na nuvem</b> (Cloudflare): quem entra no site vê tudo, no computador ou no celular.'
+    : ws ? `Conectada: <b>${esc(ws.name)}</b>` : 'Nenhuma pasta conectada.';
+  $('cfgWsChange').textContent = ws?.nuvem ? 'Trazer os arquivos de uma pasta do computador' : 'Escolher outra pasta';
+  $('cfgWsChange').classList.toggle('hidden', !!ws?.nuvem && !('showDirectoryPicker' in window));
   renderCfgHome();
 }
 (async () => {
   if (WEB){
+    // com a nuvem ligada, a pasta de trabalho é a da nuvem: funciona em qualquer computador ou celular, só com o login
+    if (await nuvemDisponivel()){ try { await usarNuvem(); } catch (e) { toast('Não consegui abrir os arquivos da nuvem: ' + e.message, 8000); } return; }
     // no site a pasta guardada é a "Organizador de Fotos" inteira
     const raiz = await idb.get('raiz');
     savedWs = raiz; renderWs();
@@ -3265,7 +3439,7 @@ function renderWs(){
 })();
 
 async function useWorkspace(h){
-  ws = h; savedWs = h; await idb.set('ws', h);
+  ws = h; savedWs = h; if (!h.nuvem) await idb.set('ws', h);
   await sisVerifica();
   let migrou = 0;
   if (sisOk || sisDir){ try { migrou = await migrarParaSistema(); } catch (e) { toast('Não consegui mover tudo para _sistema: ' + e.message + '. Nada foi perdido; tento de novo na próxima vez.', 9000); } }
@@ -3339,7 +3513,7 @@ async function connectWs(pickNew = false){
   } catch (e) { if (e.name !== 'AbortError') toast('Não consegui abrir a pasta: ' + e.message); }
 }
 $('wsChip').onclick = () => ws ? goCfg('conexoes', 'cfgWs') : connectWs();
-$('cfgWsChange').onclick = () => connectWs(true);
+$('cfgWsChange').onclick = () => ws?.nuvem ? levarParaNuvem() : connectWs(true);
 
 // pasta das fotos de uma variação: produto / variação / data do envio
 const ud = (p, u) => [p.pasta, u.pasta, dataPasta(p.dataColecao)].filter(Boolean);
@@ -6590,6 +6764,10 @@ const ATUALIZACOES = [
     'No site, o login do Google fica guardado na Cloudflare para toda a equipe: não pede mais para entrar a cada hora',
     'Na primeira vez, cole a chave secreta do cliente (GOCSPX-…) em Configurações → Conexões → Google Drive e clique em Entrar com Google',
     'Enquanto o app do Google estiver em modo de teste, o Google pede um clique de novo a cada 7 dias'] },
+  { id: '2026-10-26-nuvem', em: '2026-10-26 15:01', titulo: 'Tudo na nuvem: funciona no celular', itens: [
+    'No site, produtos, demandas, aprovações e fotos ficam na nuvem (Cloudflare): quem entra com usuário e senha vê tudo, em qualquer computador ou celular',
+    'Não precisa mais conectar a pasta do Google Drive em cada computador',
+    'Configurações → Conexões → Pasta principal → "Trazer os arquivos de uma pasta do computador" copia a pasta Organizador de Fotos para a nuvem (uma vez só)'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
