@@ -493,6 +493,23 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 .pac.erro{border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
 @media (max-width:640px){.ppainel{right:16px;bottom:88px}.pbot{right:16px;bottom:16px}}
 .tabs .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:10px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+
+/* bolinhas "i": explicações que não precisam ficar sempre na tela (o texto aparece ao passar o mouse ou clicar) */
+.ajuda{display:none!important}
+.info-i{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;margin:0 0 0 6px;border-radius:50%;border:1px solid var(--border);background:var(--soft);color:var(--muted);vertical-align:middle;cursor:help;flex:none;font-weight:400}
+.info-i .ic{width:14px;height:14px;margin:0}
+.info-i:hover,.info-i:focus-visible,.info-i.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.info-solo{display:flex;align-items:center;gap:6px;margin-top:6px;color:var(--muted);font-size:12px}
+.info-solo .info-i{margin:0}
+#ajudaPop{position:fixed;inset:auto;margin:0;z-index:80;width:max-content;max-width:min(360px,calc(100vw - 24px));padding:10px 12px;border-radius:10px;background:var(--panel);color:var(--text);border:1px solid var(--border);box-shadow:0 10px 30px #0004;font-size:13px;line-height:1.5;font-weight:400;font-family:inherit;overflow:visible}
+#ajudaPop code{font-size:12px}
+/* lista de produtos que se esconde */
+#tab-produtos.lista-oculta .split{grid-template-columns:1fr}
+#tab-produtos.lista-oculta #plist,#tab-produtos.lista-oculta #pSearch,#tab-produtos.lista-oculta #pCat,#tab-produtos.lista-oculta #pStatus,#tab-produtos.lista-oculta #pOrdem{display:none}
+#btnLista .ic{transition:transform .15s}
+#tab-produtos.lista-oculta #btnLista .ic{transform:scaleX(-1)}
+.folder.compacta{padding:7px 12px;margin-top:12px}
+.etapa .info-i{margin-left:0}
 </style>
 </head>
 <body>
@@ -564,6 +581,7 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 <!-- ======================= PRODUTOS ======================= -->
 <section id="tab-produtos">
   <div class="pbar">
+    <button id="btnLista" type="button" aria-pressed="false" title="Esconder a lista de produtos"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><span>Esconder lista</span></button>
     <button class="primary" id="btnNovo">+ Novo produto</button>
     <input id="pSearch" placeholder="Buscar por nome ou SKU…">
     <select id="pCat"></select>
@@ -626,13 +644,13 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 
     <!-- ---------- Visão geral ---------- -->
     <div class="cfgsec" data-sec="inicio">
-      <div class="cfghead"><h2>Visão geral</h2><div class="muted">O que o app precisa para funcionar. Clique no botão ao lado do que faltar.</div></div>
+      <div class="cfghead"><h2>Visão geral</h2><div class="muted ajuda">O que o app precisa para funcionar. Clique no botão ao lado do que faltar.</div></div>
       <div class="panel" id="cfgHome"></div>
     </div>
 
     <!-- ---------- Conexões ---------- -->
     <div class="cfgsec" data-sec="conexoes">
-      <div class="cfghead"><h2>Conexões</h2><div class="muted">Onde ficam os arquivos no computador, para onde eles vão no Drive e qual IA o app usa.</div></div>
+      <div class="cfghead"><h2>Conexões</h2><div class="muted ajuda">Onde ficam os arquivos no computador, para onde eles vão no Drive e qual IA o app usa.</div></div>
 
     <div class="panel" id="cfgWs">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Pasta principal</h3>
@@ -663,7 +681,7 @@ _sistema/                          ← tudo que não é produto
       <div class="muted" id="drvClientAviso" style="color:var(--warn);margin-top:4px"></div>
       <label class="f">Chave secreta do cliente (Client secret) <span id="drvSecretOk" style="font-weight:400;color:var(--ok)"></span></label>
       <input id="drvSecret" type="password" placeholder="GOCSPX-…" autocomplete="off">
-      <div class="muted" style="margin-top:4px">Com ela o app guarda o login e não pede para entrar toda vez. Fica só neste computador (pasta _sistema), nunca no Drive.</div>
+      <div class="muted ajuda" style="margin-top:4px">Com ela o app guarda o login e não pede para entrar toda vez. Fica só neste computador (pasta _sistema), nunca no Drive.</div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="primary" id="drvLogin">Entrar com Google</button>
         <button id="drvLogout" class="hidden">Sair</button>
@@ -692,7 +710,7 @@ _sistema/                          ← tudo que não é produto
 
     <div class="panel" id="cfgAI">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg>Inteligência artificial · Gemini</h3>
-      <div class="muted">Preenche e melhora o SEO, lê os arquivos do fornecedor, escreve as descrições dos anúncios e pesquisa novidades.</div>
+      <div class="muted ajuda">Preenche e melhora o SEO, lê os arquivos do fornecedor, escreve as descrições dos anúncios e pesquisa novidades.</div>
       <div class="muted" style="margin-top:8px">Grátis: crie a chave em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> com o Gmail da loja (botão <b>Criar chave de API</b>). O plano grátis tem limite de uso por minuto e por dia, e o Google pode usar o que é enviado para melhorar os produtos dele.</div>
       <label class="f">Chave da API do Gemini</label>
       <input id="aiKey" type="password" placeholder="AIza…" autocomplete="off">
@@ -707,11 +725,11 @@ _sistema/                          ← tudo que não é produto
 
     <!-- ---------- Fotos e checklist ---------- -->
     <div class="cfgsec" data-sec="fotos">
-      <div class="cfghead"><h2>Fotos e checklist</h2><div class="muted">O que cada produto precisa ter e as regras que as fotos precisam cumprir para subir ao Drive.</div></div>
+      <div class="cfghead"><h2>Fotos e checklist</h2><div class="muted ajuda">O que cada produto precisa ter e as regras que as fotos precisam cumprir para subir ao Drive.</div></div>
 
     <div class="panel" id="cfgRegras">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>Regras de envio</h3>
-      <div class="muted">A regra mais rígida entre Mercado Livre, Shopee, Amazon, Magalu e site próprio. Foto fora da regra fica <b>bloqueada</b> no envio. Quando o problema é só proporção, tamanho ou peso, o envio oferece o botão <b>Ajustar</b>: a cópia que vai para o Drive sai no padrão e o arquivo do computador não muda.</div>
+      <div class="muted ajuda">A regra mais rígida entre Mercado Livre, Shopee, Amazon, Magalu e site próprio. Foto fora da regra fica <b>bloqueada</b> no envio. Quando o problema é só proporção, tamanho ou peso, o envio oferece o botão <b>Ajustar</b>: a cópia que vai para o Drive sai no padrão e o arquivo do computador não muda.</div>
       <div class="g2" style="max-width:480px">
         <div><label class="f">Tamanho mínimo (px)</label><input id="rgMin" type="number" min="500" max="5000" step="100"></div>
         <div><label class="f">Peso máximo por foto (MB)</label><input id="rgMax" type="number" min="0.5" max="20" step="0.5"></div>
@@ -730,19 +748,19 @@ _sistema/                          ← tudo que não é produto
 
     <div class="panel">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg>Checklist padrão</h3>
-      <div class="muted">Vem marcado em todo produto novo. A descrição entra no prompt. Produtos já cadastrados não mudam.</div>
+      <div class="muted ajuda">Vem marcado em todo produto novo. A descrição entra no prompt. Produtos já cadastrados não mudam.</div>
       <div id="tplList"></div>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
         <button class="sm" id="tplAdd">+ Adicionar item</button>
         <button class="sm" id="tplApply"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Levar as descrições aos produtos já cadastrados</button>
         <button class="sm ghost" id="tplReset">Restaurar padrão</button>
       </div>
-      <div class="muted" style="margin-top:6px">Mudou a descrição de um item (ex.: "Qualidades")? O botão do meio atualiza o mesmo item nos produtos que já existem, e os prompts passam a sair certos.</div>
+      <div class="muted ajuda" style="margin-top:6px">Mudou a descrição de um item (ex.: "Qualidades")? O botão do meio atualiza o mesmo item nos produtos que já existem, e os prompts passam a sair certos.</div>
     </div>
 
     <div class="panel">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-type"/></svg>Estilo dos prompts</h3>
-      <div class="muted">Texto que vai no fim de cada prompt copiado para a IA de imagem ou de vídeo.</div>
+      <div class="muted ajuda">Texto que vai no fim de cada prompt copiado para a IA de imagem ou de vídeo.</div>
       <label class="f">Fotos</label>
       <textarea id="cfgEstilo" rows="3"></textarea>
       <label class="f">Vídeos</label>
@@ -752,15 +770,15 @@ _sistema/                          ← tudo que não é produto
 
     <!-- ---------- Categorias ---------- -->
     <div class="cfgsec" data-sec="categorias">
-      <div class="cfghead"><h2>Categorias</h2><div class="muted">As categorias da loja. Todo produto escolhe uma delas no cadastro, e no Google Drive as pastas ficam separadas por categoria.</div></div>
+      <div class="cfghead"><h2>Categorias</h2><div class="muted ajuda">As categorias da loja. Todo produto escolhe uma delas no cadastro, e no Google Drive as pastas ficam separadas por categoria.</div></div>
     <div class="panel" id="cfgCats">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Categorias da loja</h3>
-      <div class="muted">A ordem daqui é a ordem em que aparecem no cadastro. Com pelo menos uma categoria cadastrada, ela passa a ser obrigatória para salvar e enviar ao Drive.</div>
+      <div class="muted ajuda">A ordem daqui é a ordem em que aparecem no cadastro. Com pelo menos uma categoria cadastrada, ela passa a ser obrigatória para salvar e enviar ao Drive.</div>
       <div id="catLista" style="margin-top:8px"></div>
       <div class="inrow" style="margin-top:10px;max-width:420px"><input id="catIn" placeholder="Nova categoria (ex.: Vasos decorativos)"><button type="button" class="sm" id="catAdd">Adicionar</button></div>
       <details class="sec">
         <summary style="cursor:pointer;font-weight:600">Adicionar várias de uma vez</summary>
-        <div class="muted" style="margin:6px 0">Cole a lista, uma categoria por linha. As que já existem são ignoradas.</div>
+        <div class="muted ajuda" style="margin:6px 0">Cole a lista, uma categoria por linha. As que já existem são ignoradas.</div>
         <textarea id="catLote" rows="6" placeholder="Vasos decorativos&#10;Arranjos e flores&#10;Ikebanas"></textarea>
         <button type="button" class="sm" id="catLoteAdd" style="margin-top:6px">Adicionar a lista</button>
       </details>
@@ -775,11 +793,11 @@ _sistema/                          ← tudo que não é produto
 
     <!-- ---------- SEO e nomes ---------- -->
     <div class="cfgsec" data-sec="seo">
-      <div class="cfghead"><h2>SEO e nomes</h2><div class="muted">Como os arquivos são nomeados e as opções que aparecem no cadastro do produto.</div></div>
+      <div class="cfghead"><h2>SEO e nomes</h2><div class="muted ajuda">Como os arquivos são nomeados e as opções que aparecem no cadastro do produto.</div></div>
 
     <div class="panel">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-tag"/></svg>Nome dos arquivos</h3>
-      <div class="muted">Os arquivos são renomeados sozinhos sempre que você envia uma foto ou salva um produto.</div>
+      <div class="muted ajuda">Os arquivos são renomeados sozinhos sempre que você envia uma foto ou salva um produto.</div>
       <div class="seo-prev">Exemplo: <b id="tplExample"></b></div>
       <div class="inline"><input type="checkbox" id="seoLojaOn"><label for="seoLojaOn">Terminar todo arquivo com a marca da loja</label></div>
       <input id="seoLoja" placeholder="polivenda" style="max-width:220px;margin-top:6px">
@@ -789,31 +807,31 @@ _sistema/                          ← tudo que não é produto
       <div style="margin-top:14px"><button id="cfgRenameAll">Renomear todos os arquivos com o padrão atual</button></div>
       <details class="sec">
         <summary style="cursor:pointer;font-weight:600">Avançado: modelo do nome</summary>
-        <div class="muted" style="margin-top:6px">Só mexa se souber o que está fazendo. A ordem dos campos é a ordem das palavras no nome.</div>
+        <div class="muted ajuda" style="margin-top:6px">Só mexa se souber o que está fazendo. A ordem dos campos é a ordem das palavras no nome.</div>
         <label class="f">Arquivos dos produtos</label>
         <input id="tplProd">
         <label class="f">Pastas dos produtos</label>
         <input id="tplFolder">
-        <div class="muted" style="margin-top:6px">Campos: {palavra} {produto} {tipo} {material} {cor} {variacao} {medida} {foto} {estilo} {marca} {modelo} {sku} {extra} {loja} {n}</div>
+        <div class="muted ajuda" style="margin-top:6px">Campos: {palavra} {produto} {tipo} {material} {cor} {variacao} {medida} {foto} {estilo} {marca} {modelo} {sku} {extra} {loja} {n}</div>
       </details>
     </div>
 
     <div class="panel">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Listas do cadastro</h3>
-      <div class="muted">Opções para escolher no cadastro do produto. Crescem sozinhas quando alguém usa "+ Outro".</div>
+      <div class="muted ajuda">Opções para escolher no cadastro do produto. Crescem sozinhas quando alguém usa "+ Outro".</div>
       <div id="cfgLists"></div>
     </div>
 
     <div class="panel" id="cfgDesc">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>Descrição do anúncio</h3>
-      <div class="muted">O modelo padrão é escolhido na tela de um produto: gere variações com a IA e clique em "Definir como modelo padrão". As próximas descrições seguem o mesmo estilo e tamanho.</div>
+      <div class="muted ajuda">O modelo padrão é escolhido na tela de um produto: gere variações com a IA e clique em "Definir como modelo padrão". As próximas descrições seguem o mesmo estilo e tamanho.</div>
       <div id="cfgDescPad"></div>
     </div>
     </div>
 
     <!-- ---------- Novidades de SEO ---------- -->
     <div class="cfgsec" data-sec="novidades">
-      <div class="cfghead"><h2>Novidades de SEO</h2><div class="muted">A IA lê as regras e boas práticas mais recentes dos marketplaces e do Google. Você escolhe o que aplicar.</div></div>
+      <div class="cfghead"><h2>Novidades de SEO</h2><div class="muted ajuda">A IA lê as regras e boas práticas mais recentes dos marketplaces e do Google. Você escolhe o que aplicar.</div></div>
     <div class="panel">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <button class="primary" id="newsBtn"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>Buscar novidades agora</button>
@@ -821,7 +839,7 @@ _sistema/                          ← tudo que não é produto
       </div>
       <details class="sec">
         <summary style="cursor:pointer;font-weight:600">Páginas oficiais que a IA lê (<span id="newsSrcN"></span>)</summary>
-        <div class="muted" style="margin:6px 0">A IA lê estas páginas (no plano grátis do Gemini a busca livre no Google é paga). Use só páginas públicas: as que pedem login, como a central do vendedor da Shopee e da Amazon, ela não consegue abrir.</div>
+        <div class="muted ajuda" style="margin:6px 0">A IA lê estas páginas (no plano grátis do Gemini a busca livre no Google é paga). Use só páginas públicas: as que pedem login, como a central do vendedor da Shopee e da Amazon, ela não consegue abrir.</div>
         <div id="newsSrc"></div>
         <div class="inrow" style="margin-top:8px;max-width:560px"><input id="newsSrcIn" placeholder="https://… (página pública com regras de fotos)"><button type="button" class="sm" id="newsSrcAdd">Adicionar</button></div>
         <button type="button" class="sm ghost" id="newsSrcReset" style="margin-top:6px">Voltar à lista padrão</button>
@@ -833,7 +851,7 @@ _sistema/                          ← tudo que não é produto
 
     <!-- ---------- Registro de alterações ---------- -->
     <div class="cfgsec" data-sec="registro">
-      <div class="cfghead"><h2>Registro de alterações</h2><div class="muted">Tudo o que é cadastrado, editado, enviado ou configurado fica gravado: quando, quem, onde, o quê, SKU e produto.</div></div>
+      <div class="cfghead"><h2>Registro de alterações</h2><div class="muted ajuda">Tudo o que é cadastrado, editado, enviado ou configurado fica gravado: quando, quem, onde, o quê, SKU e produto.</div></div>
     <div class="panel">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-history"/></svg>Registro</h3>
       <div class="muted">Fica em <code>_sistema\registro\registro-AAAA-MM.csv</code> (um arquivo por mês, abre no Excel).</div>
@@ -847,12 +865,12 @@ _sistema/                          ← tudo que não é produto
     </div>
     <div class="panel" id="cfgAtual">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Atualizações do app</h3>
-      <div class="muted">O que mudou no Estúdio, da mais recente para a mais antiga. Cada atualização também entra uma vez no registro acima, como "Atualização do app".</div>
+      <div class="muted ajuda">O que mudou no Estúdio, da mais recente para a mais antiga. Cada atualização também entra uma vez no registro acima, como "Atualização do app".</div>
       <div id="atuLista" style="margin-top:6px"></div>
     </div>
     <div class="panel" id="cfgEquipe">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>Equipe</h3>
-      <div class="muted">Nomes que aparecem em "Quem é você?", no topo. Cada computador escolhe quem está usando, e o nome vai para o registro.</div>
+      <div class="muted ajuda">Nomes que aparecem em "Quem é você?", no topo. Cada computador escolhe quem está usando, e o nome vai para o registro.</div>
       <div class="chips" id="equipeLista"></div>
       <div class="inrow" style="margin-top:8px;max-width:340px"><input id="equipeIn" placeholder="Nome da pessoa"><button type="button" class="sm" id="equipeAdd">Adicionar</button></div>
     </div>
@@ -890,18 +908,18 @@ _sistema/                          ← tudo que não é produto
       <div><label class="f">Modelo</label><input id="fModelo"></div>
     </div>
     <div class="dobra" data-dobra="prio"><button type="button" class="dobra-h" data-lab="Prioridade na fila"></button>
-      <div class="dobra-b"><div class="opts" id="fPrio"></div><div class="muted" style="margin-top:6px">Automática = segue as demandas que citam o produto. Com uma prioridade escolhida, o produto entra na fila mesmo sem demanda.</div></div></div>
+      <div class="dobra-b"><div class="opts" id="fPrio"></div><div class="muted ajuda" style="margin-top:6px">Automática = segue as demandas que citam o produto. Com uma prioridade escolhida, o produto entra na fila mesmo sem demanda.</div></div></div>
     <div class="dobra" data-dobra="cat"><button type="button" class="dobra-h" data-lab="Categoria"></button>
       <div class="dobra-b"><div class="opts" id="fCat"></div></div></div>
 
     <div class="sec descsec" id="fDescSec">
       <h3>Descritivo do produto <span class="muted" style="font-weight:400">· opcional, mas deixa o SEO muito melhor</span></h3>
-      <div class="muted" style="margin-bottom:6px">Cole o texto do fornecedor ou suas anotações, ou adicione os arquivos (ficha técnica, catálogo, nota). A IA lê tudo e preenche o cadastro para você.</div>
+      <div class="muted ajuda" style="margin-bottom:6px">Cole o texto do fornecedor ou suas anotações, ou adicione os arquivos (ficha técnica, catálogo, nota). A IA lê tudo e preenche o cadastro para você.</div>
       <textarea id="fDesc" rows="4" placeholder="Ex.: Vaso em vidro soprado com detalhes dourados, 30 cm de altura, acompanha arranjo de orquídea chuva de ouro artificial…"></textarea>
       <div class="anexos" id="fAnexos"></div>
       <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
         <button type="button" id="fAnexoAdd"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg>Adicionar arquivos</button>
-        <span class="muted">PDF, foto, Word (.docx), Excel (.xlsx) ou texto. Também dá para arrastar para cá ou colar (Ctrl+V).</span>
+        <span class="muted ajuda">PDF, foto, Word (.docx), Excel (.xlsx) ou texto. Também dá para arrastar para cá ou colar (Ctrl+V).</span>
       </div>
       <input type="file" id="fAnexoIn" multiple class="hidden" accept=".pdf,.txt,.csv,.md,.json,.htm,.html,.xml,.docx,.xlsx,image/*">
       <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
@@ -942,7 +960,7 @@ _sistema/                          ← tudo que não é produto
       <label class="f">Título do anúncio (o nome que o cliente vê) <span class="req">*</span> <span style="font-weight:400" id="fTituloN"></span></label>
       <div class="inrow"><input id="fTitulo" maxlength="120" placeholder="Ex.: Vaso Decorativo de Vidro Azul 30 cm para Flores Sala de Estar">
         <button type="button" class="ia sm" id="fTituloIA" title="A IA escreve o título com as palavras que o cliente busca"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg>Sugerir</button></div>
-      <div class="muted" style="margin-top:4px">Vai na descrição do anúncio, no texto das fotos e no manifesto. Não use o nome interno nem códigos. Até 60 letras cabe no título do Mercado Livre.</div>
+      <div class="muted ajuda" style="margin-top:4px">Vai na descrição do anúncio, no texto das fotos e no manifesto. Não use o nome interno nem códigos. Até 60 letras cabe no título do Mercado Livre.</div>
       <div class="dobra" data-dobra="tipo"><button type="button" class="dobra-h" data-lab="Tipo do produto" data-req="1"></button>
         <div class="dobra-b"><div class="opts" data-list="tipo"></div></div></div>
       <div class="dobra" data-dobra="material"><button type="button" class="dobra-h" data-lab="Material principal" data-req="1"></button>
@@ -952,7 +970,7 @@ _sistema/                          ← tudo que não é produto
       <div class="dobra" data-dobra="estilo"><button type="button" class="dobra-h" data-lab="Estilo / ambiente (até 2)" data-req="1"></button>
         <div class="dobra-b"><div class="opts" data-list="estilo"></div></div></div>
       <div class="dobra" data-dobra="palavra"><button type="button" class="dobra-h" data-lab="Palavra-chave principal" data-req="1"></button>
-        <div class="dobra-b"><div class="muted" style="margin-bottom:6px">O que o cliente digita na busca, com palavras simples (nunca o nome interno ou o código do produto).</div><div class="opts" id="fPalavra"></div></div></div>
+        <div class="dobra-b"><div class="muted ajuda" style="margin-bottom:6px">O que o cliente digita na busca, com palavras simples (nunca o nome interno ou o código do produto).</div><div class="opts" id="fPalavra"></div></div></div>
       <label class="f">Medida principal <span style="font-weight:400">(opcional)</span></label>
       <div class="inrow" id="fMedidaBox" style="max-width:240px"><input id="fMedida" type="number" min="0" step="0.1" placeholder="Ex.: 30">
         <select id="fMedidaUn" style="width:90px"><option>cm</option><option>mm</option><option>m</option><option>ml</option><option>L</option><option>g</option><option>kg</option></select></div>
@@ -961,7 +979,7 @@ _sistema/                          ← tudo que não é produto
 
     <div class="sec">
       <h3>O que precisa ser produzido</h3>
-      <div class="muted">Desmarque o que este produto não precisa. Vale para todas as variações.</div>
+      <div class="muted ajuda">Desmarque o que este produto não precisa. Vale para todas as variações.</div>
       <div class="dobra" data-dobra="picks"><button type="button" class="dobra-h" data-lab="Fotos e vídeos"></button>
         <div class="dobra-b">
           <div class="picks" id="fPicks"></div>
@@ -1015,7 +1033,7 @@ _sistema/                          ← tudo que não é produto
 <dialog id="dlgQuem">
   <div class="dlg-body">
     <h2>Quem está usando?</h2>
-    <div class="muted">O nome vai para o registro de alterações em tudo o que for feito neste computador. Dá para trocar a qualquer momento no botão do topo.</div>
+    <div class="muted ajuda">O nome vai para o registro de alterações em tudo o que for feito neste computador. Dá para trocar a qualquer momento no botão do topo.</div>
     <div class="opts" id="quemOpts" style="margin-top:14px"></div>
   </div>
   <div class="dlg-foot"><button id="quemFechar">Fechar</button></div>
@@ -1025,7 +1043,7 @@ _sistema/                          ← tudo que não é produto
 <dialog id="dlgDem">
   <div class="dlg-body">
     <h2 id="dTitle">Nova demanda</h2>
-    <div class="muted">Responda as perguntas: a prioridade sai sozinha do impacto e da urgência.</div>
+    <div class="muted ajuda">Responda as perguntas: a prioridade sai sozinha do impacto e da urgência.</div>
     <label class="f">O que precisa ser feito? *</label>
     <input id="dTitulo" placeholder="Ex.: Responder as perguntas sem resposta no Mercado Livre">
     <label class="f">Tipo</label><div class="opts" id="dTipo"></div>
@@ -1366,12 +1384,18 @@ async function comTrava(fn){ fsBusy++; fsGen++; try { return await fn(); } final
 // Sem o servidor novo (arquivo aberto direto do disco, ou servidor antigo ainda rodando) o app guarda tudo como
 // antes, dentro da pasta principal, para não perder nada; ao abrir pelo atalho esses arquivos são movidos sozinhos.
 let sisOk = false;
+// no site (fora do atalho) não há servidor: a pessoa escolhe a pasta "Organizador de Fotos" (no Google Drive do computador)
+// e o próprio navegador lê e grava _sistema, que fica ao lado de Estudio Polivenda
+const WEB = location.protocol !== 'file:' && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+let sisDir = null;
+const sisPartes = arq => { const p = arq.split('/'); return [p, p.pop()]; };
 const SIS_HDR = { 'X-Estudio': '1' };
 const LEGADO = { 'dados/atualizacoes.json': '_atualizacoes.json', 'dados/planejamento.json': '_planejamento.json', 'dados/organizador.json': 'organizador.json', 'dados/manifesto-seo.csv': 'manifesto-seo.csv', 'dados/configuracoes.json': '_configuracoes.json' };
 const legadoDe = arq => LEGADO[arq] || arq.replace(/^dados\/relatorios\//, '_relatorios/').replace(/^backup\/cadastro\//, '_backup/').replace(/^lixeira\//, '_lixeira/')
   .replace(/^registro\//, '_registro/').replace(/^fornecedor\/([^/]+)\//, '$1/_anexos/');
 const agora = () => new Date().toLocaleString('sv').replace(/[-:]/g, '').replace(' ', '-'); // ex.: 20261023-143005
 async function sisVerifica(){
+  if (WEB){ sisOk = false; avisoSistema(); return false; }
   try {
     const t = await (await fetch('/__estudio', { cache: 'no-store' })).text();
     sisOk = +(/^ok v(\d+)/.exec(t.trim())?.[1] || 0) >= 5;
@@ -1381,6 +1405,7 @@ async function sisVerifica(){
 }
 async function sisErro(r){ let m = ''; try { m = (await r.json()).erro; } catch {} return new Error(m || `O servidor respondeu ${r.status}.`); }
 async function sisGravar(arq, dados){
+  if (sisDir){ const [ps, n] = sisPartes(arq); return writeFile(await sub(sisDir, ...ps), n, dados); }
   if (sisOk){
     const r = await fetch('/sistema/gravar?arq=' + encodeURIComponent(arq), { method: 'POST', headers: SIS_HDR, body: dados });
     if (!r.ok) throw await sisErro(r);
@@ -1392,6 +1417,10 @@ async function sisGravar(arq, dados){
 // { texto, bytes, mtime } ou null se o arquivo não existe. O texto mantém o BOM (planilhas do Excel precisam dele).
 const UTF8 = new TextDecoder('utf-8', { ignoreBOM: true });
 async function sisLer(arq, decodificar = true){
+  if (sisDir){
+    const [ps, n] = sisPartes(arq), dir = await subIfExists(sisDir, ...ps);
+    try { const f = await (await dir.getFileHandle(n)).getFile(); return { texto: decodificar ? UTF8.decode(await f.arrayBuffer()) : '', bytes: f.size, mtime: f.lastModified }; } catch { return null; }
+  }
   if (sisOk){
     const r = await fetch('/sistema/ler?arq=' + encodeURIComponent(arq), { cache: 'no-store' });
     if (r.status === 404) return null;
@@ -1408,6 +1437,10 @@ const MIME_EXT = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', 
   txt: 'text/plain', csv: 'text/csv', md: 'text/markdown', json: 'application/json', html: 'text/html', htm: 'text/html', xml: 'application/xml',
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' };
 async function sisLerArquivo(arq, nome){
+  if (sisDir){
+    const [ps, n] = sisPartes(arq), dir = await subIfExists(sisDir, ...ps);
+    try { const f = await (await dir.getFileHandle(n)).getFile(); return new File([f], nome, { type: MIME_EXT[(nome.split('.').pop() || '').toLowerCase()] || f.type }); } catch { return null; }
+  }
   if (sisOk){
     const r = await fetch('/sistema/ler?arq=' + encodeURIComponent(arq), { cache: 'no-store' });
     if (r.status === 404) return null;
@@ -1418,19 +1451,25 @@ async function sisLerArquivo(arq, nome){
   try { return await (await dir.getFileHandle(n)).getFile(); } catch { return null; }
 }
 async function sisListar(pasta){
+  if (sisDir){
+    const dir = await subIfExists(sisDir, ...pasta.split('/')), nomes = [];
+    if (dir) for await (const [k, h] of dir.entries()) if (h.kind === 'file') nomes.push(k);
+    return nomes;
+  }
   if (sisOk){ const r = await fetch('/sistema/listar?pasta=' + encodeURIComponent(pasta), { cache: 'no-store' }); return r.ok ? r.json() : []; }
   const dir = await subIfExists(ws, ...legadoDe(pasta + '/x').split('/').slice(0, -1)), nomes = [];
   if (dir) for await (const [k, h] of dir.entries()) if (h.kind === 'file') nomes.push(k);
   return nomes;
 }
 async function sisApagar(arq){
+  if (sisDir){ const [ps, n] = sisPartes(arq); try { await (await subIfExists(sisDir, ...ps))?.removeEntry(n); } catch {} return; }
   if (sisOk){ const r = await fetch('/sistema/apagar?arq=' + encodeURIComponent(arq), { method: 'POST', headers: SIS_HDR }); if (!r.ok) throw await sisErro(r); return; }
   const partes = legadoDe(arq).split('/'), nome = partes.pop(), dir = await subIfExists(ws, ...partes);
   try { await dir?.removeEntry(nome); } catch {}
 }
 function avisoSistema(){
   const el = $('sisAviso'); if (!el) return;
-  const falta = !!ws && !sisOk;
+  const falta = !!ws && !sisOk && !sisDir;
   el.classList.toggle('hidden', !falta);
   if (falta) el.innerHTML = '<b>Atualização pendente.</b> Feche o Estúdio Polivenda e abra de novo pelo atalho da Área de Trabalho. Até lá, o cadastro continua sendo guardado dentro da pasta Estudio Polivenda; depois ele é movido sozinho para _sistema.';
 }
@@ -1579,7 +1618,7 @@ function renderCfgHome(){
     const itens = [
       { ok: !!ws, t: 'Pasta principal', d: ws ? `Conectada: ${ws.name}` : savedWs ? 'Precisa reconectar (um clique).' : 'Ainda não conectada.',
         b: ws ? 'Ver' : savedWs ? 'Reconectar' : 'Conectar', go: ws ? ['conexoes', 'cfgWs'] : 'pasta' },
-      { ok: !ws || sisOk, t: 'Dados do sistema', d: !ws || sisOk ? 'Cadastro, configurações, manifesto e backups ficam na pasta _sistema, fora dos produtos.' : 'Abra o app pelo atalho Estúdio Polivenda para guardar os dados em _sistema.', b: 'Ver', go: ['conexoes', 'cfgWs'] },
+      { ok: !ws || sisOk || !!sisDir, t: 'Dados do sistema', d: !ws || sisOk || sisDir ? 'Cadastro, configurações, manifesto e backups ficam na pasta _sistema, fora dos produtos.' : 'Abra o app pelo atalho Estúdio Polivenda para guardar os dados em _sistema.', b: 'Ver', go: ['conexoes', 'cfgWs'] },
       { ok: g, t: 'Google Drive', d: g ? 'Conectado' + (gGuardado ? ', com o login guardado neste computador.' : '.') : d.clientId ? 'Configurado, falta entrar.' : 'Ainda não configurado.',
         b: g ? 'Ver' : d.clientId ? 'Entrar' : 'Configurar', go: ['conexoes', 'cfgDrive'] },
       { ok: !!k, t: 'Inteligência artificial', d: k ? `Gemini com a chave cadastrada.` : `Falta a chave do Gemini.`, b: k ? 'Ver' : 'Cadastrar chave', go: ['conexoes', k ? 'cfgAI' : 'aiKey'] },
@@ -1726,14 +1765,65 @@ function altFor(p, u, it, i){
 }
 const MANIFEST_HEAD = ['pasta','arquivo','tipo','texto_alternativo','nome_interno','variacao','foto','sku','palavra_chave','titulo_anuncio'];
 
+// ---------- equipe: várias pessoas gravando o mesmo arquivo (pasta compartilhada no Google Drive) ----------
+// Antes de gravar, o app lê o arquivo de novo. Se alguém mudou algo desde a última leitura, junta item a item (pelo id):
+// o que eu mexi fica como eu deixei; o que não mexi fica como a outra pessoa deixou; o novo dos dois lados entra; o apagado sai.
+const sisBase = {}; // arquivo → texto da última leitura ou gravação
+const idDe = x => x.id ?? `${x.em}|${x.quem}`;
+function mesclarLista(base = [], meu = [], disco = []){
+  const B = new Map(base.map(x => [idDe(x), JSON.stringify(x)])), M = new Set(meu.map(idDe)), D = new Map(disco.map(x => [idDe(x), x]));
+  const out = [];
+  for (const x of meu){
+    const k = idDe(x), b = B.get(k), mexi = JSON.stringify(x) !== b;
+    if (D.has(k)) out.push(mexi || JSON.stringify(D.get(k)) === b ? x : D.get(k));
+    else if (!B.has(k) || mexi) out.push(x); // novo meu (ou a outra pessoa apagou, mas eu mexi: fica)
+  }
+  for (const x of disco) if (!M.has(idDe(x)) && !B.has(idDe(x))) out.push(x); // novo de outra pessoa
+  return out;
+}
+// null = ninguém mudou o arquivo; senão o objeto já juntado
+async function mesclarComDisco(arq, meu, listas){
+  const r = await sisLer(arq);
+  if (!r || sisBase[arq] === undefined || r.texto === sisBase[arq]) return null;
+  const base = JSON.parse(sisBase[arq]), disco = JSON.parse(r.texto), out = { ...disco, ...meu };
+  for (const k of listas) out[k] = mesclarLista(base[k], meu[k], disco[k]);
+  sisBase[arq] = r.texto;
+  return out;
+}
+// troca o cadastro pelo juntado, mantendo a tela aberta (só redesenha o produto aberto se outra pessoa mexeu nele)
+function aplicarPlanoMesclado(m){
+  const antes = curP();
+  plan.produtos = migrate(m).produtos;
+  store.set('plan', plan);
+  renderList();
+  if (curP() !== antes) renderDetail();
+}
+async function gravarPlano(){
+  const m = await mesclarComDisco(PLAN_FILE, plan, ['produtos']);
+  if (m) aplicarPlanoMesclado(m);
+  const txt = JSON.stringify(plan, null, 2);
+  await sisGravar(PLAN_FILE, txt);
+  sisBase[PLAN_FILE] = txt;
+}
+// a cada 20 s (com a janela aberta e nada esperando para gravar) traz o que a equipe mudou
+setInterval(async () => {
+  if (!ws || document.hidden || fsBusy || saveTimer || demTimer) return;
+  try {
+    const m = await mesclarComDisco(PLAN_FILE, plan, ['produtos']);
+    if (m) aplicarPlanoMesclado(m);
+    const d = await mesclarComDisco(DEM_FILE, dem, ['demandas', 'relatorios', 'chat']);
+    if (d){ dem = normDem(d); store.set('demandas', dem); renderDemCont(); renderList(); if (!$('tab-demandas').classList.contains('hidden')) renderDem(); }
+  } catch {}
+}, 20000);
 let saveTimer;
 function savePlan(){
   store.set('plan', plan);
   if (!ws) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
+    saveTimer = null;
     try {
-      await sisGravar(PLAN_FILE, JSON.stringify(plan, null, 2));
+      await gravarPlano();
       await writeManifest();
       for (const p of plan.produtos) await writeDescritivo(p); // só reescreve o que mudou
     } catch (e) { toast('Não consegui salvar o cadastro: ' + e.message + '. Feche o Estúdio e abra de novo pelo atalho.', 8000); }
@@ -1861,20 +1951,20 @@ function renderDetail(){
     </div>
     <div class="etapa" ${p.drive?.em ? `title="Último envio ao Drive: ${new Date(p.drive.em).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})}"` : ''}>
       <span class="st" style="--c:${etapaInfo(etapa(p))[2]}">${etapaInfo(etapa(p))[1]}</span>
-      ${etapaDica(p) ? `<span class="muted">${esc(etapaDica(p))}</span>` : ''}
+      ${etapaDica(p) ? `<span class="muted ajuda">${esc(etapaDica(p))}</span>` : ''}
       <button class="sm ghost" data-act="publicado" title="Publicado é a única etapa marcada à mão: quando o anúncio já está no ar">${p.status === 'publicado' ? ic('undo') + 'Desmarcar publicado' : ic('check') + 'Marcar como publicado'}</button>
     </div>
     ${(() => { const man = p.prioridade, dm = prioDemandas(p), ef = prioProduto(p), f = ef ? filaDe(ef) : [], pos = f.indexOf(p);
       return `<div class="pfila"><b>${ic('list')} Prioridade na fila</b>
         <div class="opts">${DM_PRIO.map(([k, l, c]) => `<button type="button" class="opt ${man === k ? 'on' : ''}" style="--c:${c}" data-act="pprio" data-v="${k}">${l}</button>`).join('')}
           <button type="button" class="opt ${man ? '' : 'on'}" data-act="pprio" data-v="" title="Segue as demandas que citam o produto">Automática${dm ? ` (${prioInfo(dm)[1]})` : ''}</button></div>
-        <div class="muted">${man ? `Definida à mão.${dm && prioIdx(dm) < prioIdx(man) ? ` <span style="color:var(--warn)">Uma demanda pede ${prioInfo(dm)[1]}.</span>` : ''}`
+        <div class="muted ajuda" data-em="b">${man ? `Definida à mão.${dm && prioIdx(dm) < prioIdx(man) ? ` <span style="color:var(--warn)">Uma demanda pede ${prioInfo(dm)[1]}.</span>` : ''}`
           : dm ? 'Segue a demanda mais urgente que cita este produto.' : 'Fora da fila: nenhuma demanda cita este produto. Escolha uma prioridade para colocar na fila.'}${ef ? ` Posição: ${pos + 1}º de ${f.length} em ${prioInfo(ef)[1]}.` : ''}</div>
         ${ef && f.length > 1 ? `<div style="display:flex;gap:6px;margin-top:6px"><button class="sm" data-act="pfila" data-d="-1" ${pos ? '' : 'disabled'}>${ic('up')}Subir na fila</button><button class="sm" data-act="pfila" data-d="1" ${pos < f.length - 1 ? '' : 'disabled'}>${ic('down')}Descer</button></div>` : ''}</div>`; })()}
     ${(() => { const ds = demandasDoProduto(p).filter(d => d.status !== 'feita').sort((a, b) => prioIdx(prioridadeDe(a)) - prioIdx(prioridadeDe(b)));
       return ds.length ? `<div class="pdem"><b>${ic('list')} Demandas deste produto</b>${ds.map(d => { const pr = prioInfo(prioridadeDe(d));
         return `<button class="pdemi" data-act="verdem" data-dm="${d.id}"><span class="lbl" style="--c:${pr[2]};margin:0">${pr[1]}</span><span>${esc(d.titulo)}</span><span class="muted">${esc(statusInfo(d.status)[1])}${prazoTxt(d) ? ' · ' + esc(prazoTxt(d)) : ''}${d.resp ? ' · ' + esc(d.resp) : ''}</span></button>`; }).join('')}</div>` : ''; })()}
-    ${seoFaltando(p).length ? `<div class="alert" style="margin-top:10px">Cadastro incompleto (falta ${esc(seoFaltando(p).join(', '))}). Sem ele o envio ao Drive fica bloqueado.
+    ${seoFaltando(p).length ? `<div class="alert" style="margin-top:10px">Cadastro incompleto (falta ${esc(seoFaltando(p).join(', '))}). <span class="ajuda">Sem ele o envio ao Drive fica bloqueado.</span>
       <span style="display:inline-flex;gap:6px;margin-left:6px;vertical-align:middle">${aiKey() ? `<button class="sm ia" data-act="editia">${ic('sparkles')}Completar com IA</button>` : ''}<button class="sm" data-act="edit">Completar</button></span></div>` : ''}
     <div class="prog"><div class="bar"><div style="width:${tot.total ? tot.done / tot.total * 100 : 0}%"></div></div>
       <span>${tot.done} de ${tot.total} itens com arquivo</span></div>
@@ -1886,25 +1976,17 @@ function renderDetail(){
       <div class="clhead">
         <button class="cltog" data-act="cltog" title="${clFechado ? 'Abrir' : 'Fechar'} o checklist">${ic('down')}</button>
         <b data-act="cltog">Checklist${u.nome ? ' · ' + esc(p.tipoVariacao) + ': ' + esc(u.nome) : ''}</b>
-        <span class="muted">${pu.done}/${pu.total}${clFechado ? '' : ' · arraste o arquivo para a linha ou copie a imagem na IA e cole aqui (Ctrl+V)'}</span>
+        <span class="muted">${pu.done}/${pu.total}</span>
+        <span class="muted ajuda" data-em="b">Arraste o arquivo para a linha, ou copie a imagem na IA e cole aqui (Ctrl+V). Também dá para usar o botão <b>Enviar foto</b>.</span>
         <button class="sm" data-act="copyall">Copiar todos os prompts</button>
       </div>
       <div class="clbody">
-      ${(() => {
-        // pendentes em cima; os que já têm arquivo ficam no grupo "Concluídos", que abre e fecha
-        const todos = p.checklist.map((it, i) => [it, i]), pend = todos.filter(([it]) => !filesOf(u, it).length), feitos = todos.filter(([it]) => filesOf(u, it).length);
-        const foco = feitos.some(([it]) => it.id === focoIid || it.id === editDica);
-        const aberto = feitosAbertos.get(p.id) ?? (!pend.length || foco);
-        if (!todos.length) return '<div class="clrow muted">Nenhum item no checklist.</div>';
-        return (pend.length ? pend.map(([it, i]) => clLinha(p, u, it, i)).join('') : `<div class="cltodos">${ic('check-circle')} Todos os itens ${u.nome ? 'desta variação ' : ''}têm arquivo.</div>`)
-          + (feitos.length ? `<button class="clgrupo ${aberto ? '' : 'fechado'}" data-act="feitostog">${ic('down')}Concluídos (${feitos.length})<span class="muted" style="font-weight:400;margin-left:auto">${aberto ? 'clique para fechar' : 'clique para ver'}</span></button>`
-            + (aberto ? feitos.map(([it, i]) => clLinha(p, u, it, i)).join('') : '') : '');
-      })()}
+      ${p.checklist.length ? p.checklist.map((it, i) => clLinha(p, u, it, i)).join('') : '<div class="clrow muted">Nenhum item no checklist.</div>'}
       <div class="addline" id="addLine"><button class="sm" data-act="addopen">+ Adicionar item ao checklist</button></div>
       </div>
     </div>
 
-    ${ws ? `<div class="folder">${ic('folder')} Os arquivos desta ${u.nome ? 'variação' : 'produto'} ficam em: <code>${esc(pathOf(p, u))}</code></div>`
+    ${ws ? `<div class="folder compacta">${ic('folder')} <b>Pasta ${u.nome ? 'da variação' : 'do produto'}</b><span class="ajuda">Os arquivos desta ${u.nome ? 'variação' : 'produto'} ficam em: <code>${esc(pathOf(p, u))}</code></span></div>`
       : `<div class="folder warn">${ic('folder')} Conecte a pasta de trabalho para poder enviar os arquivos.
         <button class="sm" data-act="connect" style="margin-left:8px">Conectar pasta</button></div>`}
     ${p.anexos?.length ? `<div class="danexos"><span class="muted">${ic('clip')} Arquivos do fornecedor:</span>${p.anexos.map((a, i) => `<button class="sm" data-act="veranexo" data-i="${i}" title="Abrir">${esc(a.nome)}</button>`).join('')}</div>` : ''}
@@ -1926,7 +2008,7 @@ function clLinha(p, u, it, i){
             : `<button class="slot" data-act="upload" title="Clique para escolher o arquivo, arraste para cá ou cole (Ctrl+V)">${ic(isVideo(it) ? 'video' : 'image', 'lg')}</button>`}</div>
         <div class="cltext">
           <div class="clname">${i + 1}. ${esc(it.nome)}${isVideo(it) ? '<span class="tag">VÍDEO</span>' : ''}${it.id === focoIid ? proxTag(fs.length) : ''}</div>
-          ${it.dica || it.dicaPropria ? `<div class="muted">${esc(it.dica)}${it.dicaPropria ? ' <span class="lbl info" title="Editada neste produto; o checklist padrão não muda">só neste produto</span>' : ''}</div>` : ''}
+          ${it.dica || it.dicaPropria ? `<div class="muted ajuda" data-em=".clname">${esc(it.dica)}${it.dicaPropria ? ' <span class="lbl info" title="Editada neste produto; o checklist padrão não muda">só neste produto</span>' : ''}</div>` : ''}
           ${fs.length ? `<div class="fname">${esc(fs[0])}${fs.length > 1 ? ` +${fs.length - 1}` : ''}</div><div class="regra"></div>` : ''}
         </div>
         <div class="clacts">
@@ -1938,9 +2020,8 @@ function clLinha(p, u, it, i){
         ${it.id === editDica ? `<div class="dicaedit">${dicaEditor(it)}</div>` : ''}
       </div>`;
 }
-// checklist fechado (vale para todos os produtos) e grupo "Concluídos" aberto/fechado por produto
+// checklist fechado (vale para todos os produtos)
 let clFechado = store.get('clFechado', false);
-const feitosAbertos = new Map();
 // histórico do produto: as últimas linhas do registro guardadas neste computador
 function histHtml(p){
   const ls = store.get('registro', []).filter(l => l.pid === p.id).reverse().slice(0, 40);
@@ -1948,7 +2029,7 @@ function histHtml(p){
   return `<details class="hist"><summary>${ic('history')} Histórico deste produto (${ls.length}${ls.length === 40 ? '+' : ''})</summary>
     <div class="logwrap"><table class="logtab"><thead><tr><th>Quando</th><th>Quem</th><th>O que</th><th>Detalhe</th></tr></thead><tbody>
     ${ls.map(l => `<tr><td style="white-space:nowrap">${esc(dataBR(l.em))}</td><td>${esc(l.quem)}</td><td>${esc(l.onde)}: ${esc(l.oque)}</td><td class="d">${esc(l.detalhe)}</td></tr>`).join('')}
-    </tbody></table></div><div class="muted" style="margin-top:4px">O registro completo fica em Configurações → Registro de alterações.</div></details>`;
+    </tbody></table></div><div class="muted ajuda" style="margin-top:4px">O registro completo fica em Configurações → Registro de alterações.</div></details>`;
 }
 // ---------- descrição do anúncio (marketplace): variações pela IA → escolher → modelo padrão ----------
 const DESC_FILE = 'descricao-anuncio.txt';
@@ -1959,10 +2040,10 @@ function descHtml(p){
   return `<div class="desc">
     <div class="deschead">
       <div style="flex:1;min-width:220px"><h3>${ic('file')}Descrição do anúncio</h3>
-        <div class="muted">Texto simples para a página do produto no marketplace. Detalhes técnicos ficam na ficha técnica.</div></div>
+        <div class="muted ajuda">Texto simples para a página do produto no marketplace. Detalhes técnicos ficam na ficha técnica.</div></div>
       <button class="ia ${p.descricao ? '' : 'solid'} sm" data-act="descgen" ${gerando ? 'disabled' : ''}>${ic(gerando ? 'loader' : 'sparkles', gerando ? 'spin' : '')}${gerando ? 'Escrevendo…' : vars.length || p.descricao ? 'Gerar novas variações' : 'Gerar variações com IA'}</button>
     </div>
-    <div class="muted" style="margin-top:8px">${pad
+    <div class="muted ajuda" data-em="h3">${pad
       ? `${ic('star', 'iac')} Modelo padrão: <b>${esc(pad.estilo)}</b> (${esc(pad.tamanho)}). As variações seguem esse modelo.`
       : `${ic('info')} Ainda sem modelo padrão: gere variações de tamanhos diferentes e marque a melhor como padrão.`}</div>
     ${vars.length ? `<div class="dvars">${vars.map((v, i) => `<div class="dvar ${v.texto === p.descricao ? 'on' : ''}">
@@ -1974,7 +2055,7 @@ function descHtml(p){
     ${p.descricao ? `<label class="f">Descrição escolhida <span style="font-weight:400" id="dDescN">· ${p.descricao.length} letras · pode editar</span></label>
       <textarea id="dDesc" rows="8">${esc(p.descricao)}</textarea>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="sm" data-act="desccopy">${ic('copy')}Copiar</button>
-        <span class="muted" style="align-self:center">Vai junto para o Drive como <b>${DESC_FILE}</b>.</span></div>` : ''}
+        <span class="muted ajuda">Vai junto para o Drive como <b>${DESC_FILE}</b>.</span></div>` : ''}
   </div>`;
 }
 const DESC_SCHEMA = {
@@ -2261,7 +2342,6 @@ $('detail').addEventListener('drop', e => {
 $('detail').addEventListener('click', async e => {
   const b = e.target.closest('button, b[data-act]');
   if (b?.dataset.act === 'cltog'){ clFechado = !clFechado; store.set('clFechado', clFechado); return renderDetail(); }
-  if (b?.dataset.act === 'feitostog'){ const p = curP(); feitosAbertos.set(p.id, b.classList.contains('fechado')); return renderDetail(); }
   if (b?.dataset.act === 'verdem'){ const d = dem.demandas.find(x => x.id === b.dataset.dm); showTab('demandas'); if (d) abrirDem(d); return; }
   if (b?.dataset.act === 'veranexo') return abrirAnexo(curP(), curP().anexos[+b.dataset.i]);
   if (!b){
@@ -2890,11 +2970,18 @@ let savedWs = null;
 function renderWs(){
   const c = $('wsChip');
   c.classList.toggle('ok', !!ws);
-  c.innerHTML = ic('folder') + esc(ws ? ws.name : savedWs ? `Reconectar "${savedWs.name}"` : `Conectar pasta ${ROOT_NAME}`) + (ws ? ' ' + ic('check') : '');
+  c.innerHTML = ic('folder') + esc(ws ? ws.name : savedWs ? `Reconectar "${savedWs.name}"` : `Conectar pasta ${WEB ? 'Organizador de Fotos' : ROOT_NAME}`) + (ws ? ' ' + ic('check') : '');
   $('cfgWsInfo').innerHTML = ws ? `Conectada: <b>${esc(ws.name)}</b>` : 'Nenhuma pasta conectada.';
   renderCfgHome();
 }
 (async () => {
+  if (WEB){
+    // no site a pasta guardada é a "Organizador de Fotos" inteira
+    const raiz = await idb.get('raiz');
+    savedWs = raiz; renderWs();
+    try { if (raiz && await raiz.queryPermission({ mode: 'readwrite' }) === 'granted' && await reachable(raiz)) await usarRaiz(raiz); } catch {}
+    return;
+  }
   savedWs = await idb.get('ws'); renderWs();
   // o Chrome lembra a permissão ("Permitir em todas as visitas"): reconecta a pasta sozinho, sem clique
   try { if (savedWs && await savedWs.queryPermission({ mode: 'readwrite' }) === 'granted' && await reachable(savedWs)) await useWorkspace(savedWs); } catch {}
@@ -2904,12 +2991,13 @@ async function useWorkspace(h){
   ws = h; savedWs = h; await idb.set('ws', h);
   await sisVerifica();
   let migrou = 0;
-  if (sisOk){ try { migrou = await migrarParaSistema(); } catch (e) { toast('Não consegui mover tudo para _sistema: ' + e.message + '. Nada foi perdido; tento de novo na próxima vez.', 9000); } }
+  if (sisOk || sisDir){ try { migrou = await migrarParaSistema(); } catch (e) { toast('Não consegui mover tudo para _sistema: ' + e.message + '. Nada foi perdido; tento de novo na próxima vez.', 9000); } }
   try {
     const r = await sisLer(PLAN_FILE);
     if (!r) throw new Error('ainda não há cadastro salvo');
     const txt = r.texto;
     await backupDiario(txt);
+    sisBase[PLAN_FILE] = txt;
     const disk = migrate(JSON.parse(txt));
     const ids = new Set(disk.produtos.map(p => p.id));
     disk.produtos.push(...plan.produtos.filter(p => !ids.has(p.id)));
@@ -2937,8 +3025,30 @@ async function useWorkspace(h){
 }
 const ROOT_NAME = 'Estudio Polivenda';
 async function reachable(h){ try { for await (const _ of h.keys()) break; return true; } catch { return false; } }
+// site: a pasta escolhida é a "Organizador de Fotos" (a do Google Drive), com Estudio Polivenda e _sistema dentro
+const RAIZ_NAME = 'Organizador de Fotos';
+async function usarRaiz(h){
+  await idb.set('raiz', h);
+  sisDir = await h.getDirectoryHandle('_sistema', { create: true });
+  await useWorkspace(await h.getDirectoryHandle(ROOT_NAME, { create: true }));
+  savedWs = h; renderWs();
+}
+async function connectRaiz(pickNew){
+  const salva = await idb.get('raiz');
+  if (salva && !pickNew && await salva.requestPermission({ mode: 'readwrite' }) === 'granted'){
+    if (await reachable(salva)) return usarRaiz(salva);
+    toast(`A pasta "${salva.name}" foi renomeada ou movida. Escolha a pasta ${RAIZ_NAME}.`, 4500);
+    await sleep(1200);
+  }
+  const h = await showDirectoryPicker({ id: 'raiz', mode: 'readwrite' });
+  if (h.name === ROOT_NAME) return toast(`Escolha a pasta de fora, "${RAIZ_NAME}" (a que tem ${ROOT_NAME} e _sistema dentro).`, 7000);
+  if (!(await subIfExists(h, ROOT_NAME)) && !(await subIfExists(h, '_sistema')))
+    return toast(`Essa pasta não é a "${RAIZ_NAME}": ela precisa ter ${ROOT_NAME} e _sistema dentro. Procure no Google Drive (G:).`, 8000);
+  await usarRaiz(h);
+}
 async function connectWs(pickNew = false){
   if (!('showDirectoryPicker' in window)) return toast('Use o Google Chrome ou o Microsoft Edge.');
+  if (WEB){ try { await connectRaiz(pickNew); } catch (e) { if (e.name !== 'AbortError') toast('Não consegui abrir a pasta: ' + e.message); } return; }
   try {
     if (savedWs && !pickNew && await savedWs.requestPermission({mode:'readwrite'}) === 'granted'){
       if (await reachable(savedWs)) return useWorkspace(savedWs);
@@ -3347,6 +3457,8 @@ const MANIFEST = 'manifesto-seo.csv';
 const MB = 1024 * 1024;
 const isFileUrl = location.protocol === 'file:';
 if (isFileUrl) $('fileWarn').style.display = 'block';
+// no site não há onde guardar a chave secreta: o login vale 1 hora e depois o Google pede um clique de novo
+if (WEB) for (const el of [$('drvSecret'), $('drvSecret').previousElementSibling, $('drvSecret').nextElementSibling]) el.classList.add('hidden');
 let gTok = null, gisLoading = null, gGuardado = false, gSegredo = false;
 try { const t = JSON.parse(sessionStorage.getItem('orgfotos:gtok')); if (t?.exp > Date.now()) gTok = t; } catch {}
 const gOk = () => !!gTok && gTok.exp > Date.now();
@@ -3359,12 +3471,12 @@ async function srv(rota, body){
 }
 const clientQ = () => '?client=' + encodeURIComponent(settings.drive.clientId);
 async function gStatus(){
-  if (isFileUrl || !settings.drive.clientId) return;
+  if (isFileUrl || WEB || !settings.drive.clientId) return;
   try { const { ok, j } = await srv('/google/status' + clientQ()); if (ok){ gGuardado = !!j.conectado; gSegredo = !!j.temSegredo; } } catch {}
 }
 // novo acesso de 1 hora a partir do login guardado (sem abrir nada)
 async function gSilent(){
-  if (isFileUrl || !settings.drive.clientId) return false;
+  if (isFileUrl || WEB || !settings.drive.clientId) return false;
   try { const { ok, j } = await srv('/google/token' + clientQ()); gGuardado = ok; if (ok) setTok(j); return ok; } catch { return false; }
 }
 const popupErro = rej => e => rej(new Error(e.type === 'popup_closed' ? 'A janela de login do Google foi fechada.'
@@ -3393,7 +3505,7 @@ async function gLoginJa(){
   await loadGis();
   const segredo = $('drvSecret').value.trim(), dica = settings.drive.email ? { login_hint: settings.drive.email } : {};
   const negado = r => new Error(r.error === 'access_denied' ? 'O acesso ao Drive não foi autorizado.' : 'Login do Google: ' + (r.error_description || r.error));
-  if (segredo || gSegredo){
+  if (!WEB && (segredo || gSegredo)){
     // com a chave secreta: janela do Google só nesta vez; o servidor guarda o login e renova sozinho
     const code = await new Promise((res, rej) => google.accounts.oauth2.initCodeClient({
       client_id: settings.drive.clientId, scope: G_SCOPE, ux_mode: 'popup', ...dica,
@@ -3506,6 +3618,7 @@ function renderDrive(){
   $('drvStatus').innerHTML = isFileUrl ? 'Este arquivo foi aberto direto do disco. Para usar o Drive, feche e abra pelo atalho <b>Estúdio Polivenda</b> na Área de Trabalho.'
     : !d.clientId ? 'Ainda não configurado. Siga o passo a passo abaixo (uma vez só).'
     : ok ? `Conectado${d.email ? ' como <b>' + esc(d.email) + '</b>' : ''}.` + (gGuardado ? ' O login fica guardado neste computador (o Google pede um clique de novo a cada 7 dias).'
+      : WEB ? ' No site o login vale 1 hora; depois o Google pede um clique de novo.'
       : ' <b>Este login vale só 1 hora.</b> Para não pedir de novo, cole a chave secreta abaixo, clique em Sair e entre de novo.')
     : `Configurado${d.email ? ' para <b>' + esc(d.email) + '</b>' : ''}. Clique em <b>Entrar com Google</b> (ou só envie: o login aparece na hora).`;
   $('drvSecretOk').innerHTML = gSegredo ? ic('check') + 'guardada neste computador' : '';
@@ -3537,7 +3650,7 @@ $('drvLogin').onclick = async () => {
 };
 $('drvLogout').onclick = async () => {
   try { google.accounts.oauth2.revoke(gTok.t, () => {}); } catch {}
-  if (!isFileUrl) await srv('/google/sair', {}).catch(() => {});
+  if (!isFileUrl && !WEB) await srv('/google/sair', {}).catch(() => {});
   gGuardado = false; gDrop(); toast('Você saiu do Google Drive neste computador.');
 };
 $('drvOpen').onclick = () => window.open('https://drive.google.com/drive/folders/' + settings.drive.pastaId, '_blank', 'noopener');
@@ -4285,13 +4398,23 @@ function salvarDem(){
   renderList(); // a etiqueta de prioridade dos produtos depende das demandas
   if (!ws) return;
   clearTimeout(demTimer);
-  demTimer = setTimeout(() => sisGravar(DEM_FILE, JSON.stringify(dem, null, 2)).catch(e => toast('Não consegui salvar as demandas: ' + e.message, 6000)), 400);
+  demTimer = setTimeout(async () => {
+    demTimer = null;
+    try {
+      const m = await mesclarComDisco(DEM_FILE, dem, ['demandas', 'relatorios', 'chat']);
+      if (m){ dem = normDem(m); store.set('demandas', dem); renderDemCont(); if (!$('tab-demandas').classList.contains('hidden')) renderDem(); }
+      const txt = JSON.stringify(dem, null, 2);
+      await sisGravar(DEM_FILE, txt);
+      sisBase[DEM_FILE] = txt;
+    } catch (e) { toast('Não consegui salvar as demandas: ' + e.message, 6000); }
+  }, 400);
 }
 // ao conectar a pasta: o arquivo de _sistema manda; o que só existe neste computador é somado
 async function carregarDem(){
   try {
     const r = await sisLer(DEM_FILE);
     if (r){
+      sisBase[DEM_FILE] = r.texto;
       const disco = normDem(JSON.parse(r.texto));
       for (const k of ['demandas', 'relatorios']){ const ids = new Set(disco[k].map(x => x.id)); disco[k].push(...dem[k].filter(x => !ids.has(x.id))); }
       dem = disco;
@@ -4664,7 +4787,7 @@ $('dPassosIA').onclick = async e => {
 function renderRels(){
   const rs = [...dem.relatorios].sort((a, b) => b.em < a.em ? -1 : 1);
   $('dmRels').innerHTML = `<h3 style="margin:0 0 4px;display:flex;align-items:center;gap:8px">${ic('file')}Relatórios</h3>
-    <div class="muted">Suba o relatório do Mercado Livre, da Shopee, de vendas… A IA resume e diz os próximos passos.</div>
+    <div class="muted ajuda">Suba o relatório do Mercado Livre, da Shopee, de vendas… A IA resume e diz os próximos passos.</div>
     <button class="ia sm" data-act="relnovo" style="margin-top:10px">${ic('sparkles')}Subir relatório</button>
     ${rs.map(r => { const ps = r.analise?.passos || [], cri = ps.filter(s => s.criada).length;
       return `<div class="dmrel" data-rel="${r.id}"><div class="h"><b title="${esc(r.nome)}">${esc(r.nome)}</b><span class="muted">${dataBR(r.em).slice(0, 5)}</span></div>
@@ -4691,7 +4814,7 @@ function renderRel(){
   if (a.novo){
     const n = a.novo;
     $('rBody').innerHTML = `<h2 style="display:flex;align-items:center;gap:8px">${ic('file', 'lg')}Subir relatório</h2>
-      <div class="muted">PDF, planilha (.xlsx, .csv), Word (.docx), print ou texto. Pode mandar mais de um arquivo do mesmo assunto.</div>
+      <div class="muted ajuda">PDF, planilha (.xlsx, .csv), Word (.docx), print ou texto. Pode mandar mais de um arquivo do mesmo assunto.</div>
       <label class="f">Sobre o quê?</label>
       <div class="opts" id="rTema">${REL_TEMAS.map(t => `<button type="button" class="opt ${t === n.tema ? 'on' : ''}" data-tema="${esc(t)}">${esc(t)}</button>`).join('')}</div>
       <div class="rdrop" id="rDrop">${ic('upload', 'lg')}<div style="margin-top:6px">Arraste os arquivos para cá, cole (Ctrl+V) ou <button type="button" class="sm" data-act="rescolher">escolha no computador</button></div></div>
@@ -4714,7 +4837,7 @@ function renderRel(){
       ${an.achados?.length ? `<h3 style="margin:16px 0 4px">O que o relatório mostra</h3>${an.achados.map(x => { const g = GRAV[x.gravidade] || GRAV.media;
         return `<div class="rachado" style="--c:${g[1]}"><b>${esc(x.titulo)}</b> <span class="lbl" style="--c:${g[1]}">${g[0]}</span><div class="muted" style="font-size:13px">${esc(x.detalhe)}</div></div>`; }).join('')}` : ''}
       <h3 style="margin:16px 0 4px">Próximos passos</h3>
-      <div class="muted">Do mais importante para o menos. "Criar demanda" abre a demanda já preenchida para você conferir.</div>
+      <div class="muted ajuda">Do mais importante para o menos. "Criar demanda" abre a demanda já preenchida para você conferir.</div>
       ${ps.map((s, i) => { const d = s.criada && dem.demandas.find(x => x.id === s.criada), pr = prioInfo(prioridadeDe(s));
         return `<div class="rpasso ${d ? 'criada' : s.ignorada ? 'ignorada' : ''}"><div class="h"><b>${i + 1}. ${esc(s.titulo)}</b><span class="lbl" style="--c:${pr[2]}">${pr[1]}</span><span class="muted">${esc(s.canal)}${s.prazo_dias ? ` · em até ${s.prazo_dias} dia(s)` : ''}</span></div>
           <div class="muted" style="font-size:13px;margin-top:4px">${esc(s.por_que)}</div>${s.produtos?.length ? `<div class="muted" style="font-size:13px">${ic('tag')} Produtos: ${esc(s.produtos.join(', '))}</div>` : ''}
@@ -5310,6 +5433,85 @@ async function asAplicar(a, m){
 document.querySelector('.tabs').addEventListener('click', () => setTimeout(() => { if (!asPainel.classList.contains('hidden')) $('asOnde').textContent = 'Você está em: ' + asOnde().texto; }, 50));
 
 // =====================================================================
+// BOLINHAS "i": o texto de explicação fica escondido e aparece ao passar o mouse ou clicar
+// Marque o texto com class="ajuda" (e data-em="seletor" para escolher onde a bolinha fica): ele vira a bolinha sozinho.
+// =====================================================================
+const ajudaTexto = new WeakMap();
+function converterAjudas(){
+  document.querySelectorAll('.ajuda:not([data-ok])').forEach(el => {
+    el.dataset.ok = '1';
+    const html = el.innerHTML.trim(); if (!html) return el.remove();
+    let alvo = el.dataset.em ? el.parentElement?.querySelector(el.dataset.em) : null;
+    const ant = el.previousElementSibling;
+    if (!alvo && ant && /^(H[1-6]|LABEL|B|SUMMARY)$/.test(ant.tagName)) alvo = ant;
+    // várias explicações no mesmo título viram uma bolinha só
+    const ja = alvo?.querySelector(':scope > .info-i');
+    if (ja){ ajudaTexto.set(ja, ajudaTexto.get(ja) + '<br><br>' + html); return el.remove(); }
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'info-i'; b.setAttribute('aria-label', 'Mais informações'); b.innerHTML = ic('info');
+    ajudaTexto.set(b, html);
+    if (alvo){ alvo.append(b); return el.remove(); }
+    if (el.tagName === 'SPAN') return el.replaceWith(b);
+    const solo = document.createElement('div'); solo.className = 'info-solo';
+    solo.append(b, 'Ajuda'); el.replaceWith(solo);
+  });
+}
+const ajudaPop = document.createElement('div');
+ajudaPop.id = 'ajudaPop'; ajudaPop.setAttribute('popover', 'manual'); ajudaPop.setAttribute('role', 'tooltip');
+document.body.append(ajudaPop);
+let ajudaBtn = null, ajudaFixa = false;
+function mostrarAjuda(btn){
+  ajudaBtn = btn; ajudaPop.innerHTML = ajudaTexto.get(btn) || '';
+  if (!ajudaPop.matches(':popover-open')) ajudaPop.showPopover(); // fica por cima até dos formulários abertos
+  const r = btn.getBoundingClientRect(), w = ajudaPop.offsetWidth, h = ajudaPop.offsetHeight;
+  const x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  let y = r.bottom + 8; if (y + h > innerHeight - 8) y = Math.max(8, r.top - h - 8);
+  ajudaPop.style.left = x + 'px'; ajudaPop.style.top = y + 'px';
+  btn.classList.add('on'); btn.setAttribute('aria-expanded', 'true');
+}
+function fecharAjuda(){
+  if (!ajudaBtn) return;
+  ajudaBtn.classList.remove('on'); ajudaBtn.removeAttribute('aria-expanded'); ajudaBtn = null; ajudaFixa = false;
+  try { ajudaPop.hidePopover(); } catch {}
+}
+document.addEventListener('mouseover', e => {
+  const b = e.target.closest?.('.info-i');
+  if (b && !ajudaFixa && matchMedia('(hover: hover)').matches) mostrarAjuda(b);
+});
+document.addEventListener('mouseout', e => {
+  const b = e.target.closest?.('.info-i');
+  if (b && b === ajudaBtn && !ajudaFixa && !b.contains(e.relatedTarget)) fecharAjuda();
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest?.('.info-i');
+  if (b){
+    e.preventDefault(); e.stopPropagation(); // a bolinha não aciona o que está em volta (título que abre e fecha, rótulo…)
+    if (ajudaBtn === b && ajudaFixa) return fecharAjuda();
+    mostrarAjuda(b); ajudaFixa = true; return;
+  }
+  if (ajudaBtn && !ajudaPop.contains(e.target)) fecharAjuda();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && ajudaBtn) fecharAjuda(); }, true);
+addEventListener('scroll', () => { if (ajudaBtn && !ajudaFixa) fecharAjuda(); }, true);
+let ajudaTimer = 0;
+new MutationObserver(() => {
+  if (ajudaBtn && !ajudaBtn.isConnected) fecharAjuda();
+  clearTimeout(ajudaTimer); ajudaTimer = setTimeout(converterAjudas, 0); // setTimeout (e não requestAnimationFrame): funciona também com a janela em segundo plano
+}).observe(document.body, { childList: true, subtree: true });
+converterAjudas();
+
+// ---------- lista de produtos: botão para esconder / mostrar ----------
+function aplicarLista(){
+  const oculta = !!store.get('listaOculta', false);
+  $('tab-produtos').classList.toggle('lista-oculta', oculta);
+  $('btnLista').setAttribute('aria-pressed', String(oculta));
+  $('btnLista').title = oculta ? 'Mostrar a lista de produtos' : 'Esconder a lista de produtos';
+  $('btnLista').querySelector('span').textContent = oculta ? 'Mostrar lista' : 'Esconder lista';
+}
+$('btnLista').onclick = () => { store.set('listaOculta', !store.get('listaOculta', false)); aplicarLista(); };
+aplicarLista();
+
+// =====================================================================
 // ATUALIZAÇÕES DO APP: cada versão instalada entra uma vez no registro de alterações
 // =====================================================================
 // REGRA para quem editar este arquivo (pessoa ou IA): toda mudança instalada ganha uma entrada NO FIM desta lista,
@@ -5359,6 +5561,12 @@ const ATUALIZACOES = [
   { id: '2026-10-23-assistente-p', em: '2026-10-26 07:24', titulo: 'Assistente "P" em todo o app', itens: [
     'Botão flutuante com o P da logo em todas as telas (ou Ctrl+K)', 'A IA responde sobre produtos, demandas, relatórios, configurações e registro, sabendo em que tela você está',
     'Ajustes pedidos em texto (prioridade, cadastro, demandas, categorias, equipe) aparecem para conferir e só acontecem com Aplicar', 'Tudo o que o assistente aplica vai para o registro'] },
+  { id: '2026-10-26-bolinhas-info', em: '2026-10-26 08:07', quem: 'Claude (outra sessão)', titulo: 'Menos texto na tela: bolinhas "i", lista que se esconde e checklist único', itens: [
+    'As explicações e instruções agora ficam numa bolinha "i" ao lado do título: passe o mouse ou clique para ler', 'Botão "Esconder lista" na aba Produtos libera a tela para o produto (a escolha fica guardada)', 'O checklist voltou a mostrar todos os itens juntos, na ordem do padrão, sem separar os concluídos'] },
+  { id: '2026-10-26-site-equipe', em: '2026-10-26 10:30', titulo: 'App no site para a equipe', itens: [
+    'O app também abre como site, sem o atalho: escolha a pasta "Organizador de Fotos" do Google Drive e ele grava tudo nela (produtos e _sistema)',
+    'Várias pessoas ao mesmo tempo: antes de salvar, o app junta o que cada um mudou no cadastro e nas demandas, produto por produto',
+    'A cada 20 segundos o app traz o que a equipe mudou', 'No site o login do Google vale 1 hora; pelo atalho continua guardado'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
