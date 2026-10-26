@@ -146,6 +146,7 @@ dialog::backdrop{background:#0006}
 .dlg-body{padding:22px 24px;max-height:calc(100vh - 160px);overflow:auto}
 .dlg-body h2{margin:0 0 4px}
 .dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 24px;border-top:1px solid var(--border)}
+dialog.pergunta{width:min(460px,calc(100vw - 32px))}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.g2 .full{grid-column:1/-1}
 .sec{margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
 .sec h3{font-size:14px;margin:0 0 8px}
@@ -1170,6 +1171,10 @@ _sistema/                          ← tudo que não é produto
 </dialog>
 
 <!-- ======================= DIÁLOGO: ENVIAR AO DRIVE ======================= -->
+<dialog id="dlgPergunta" class="pergunta">
+  <div class="dlg-body" id="pgTexto"></div>
+  <div class="dlg-foot"><button id="pgNao" type="button">Cancelar</button><button id="pgSim" type="button" class="primary">OK</button></div>
+</dialog>
 <dialog id="dlgNuvem">
   <div class="dlg-body">
     <h2>Levando os arquivos para a nuvem</h2>
@@ -1287,6 +1292,22 @@ const store = {
   set(k, v){ try{ localStorage.setItem('orgfotos:'+k, JSON.stringify(v)); }catch{} }
 };
 let toastTimer;
+// "Tem certeza?" do próprio app. A janelinha do navegador (confirm) pode ser bloqueada pelo Chrome depois de
+// várias seguidas, e aí ela responde "não" sozinha, sem aparecer: parecia que o botão não fazia nada.
+let pgResolver = null;
+function confirmar(texto, sim = 'OK', nao = 'Cancelar'){
+  pgResolver?.(false);
+  const [titulo, ...resto] = String(texto).split('\n\n');
+  $('pgTexto').innerHTML = `<b>${esc(titulo)}</b>${resto.length ? `<div class="muted" style="margin-top:8px;white-space:pre-line">${esc(resto.join('\n\n'))}</div>` : ''}`;
+  $('pgSim').textContent = sim; $('pgNao').textContent = nao;
+  if (!$('dlgPergunta').open) $('dlgPergunta').showModal();
+  $('pgSim').focus();
+  return new Promise(r => { pgResolver = r; });
+}
+function pgFim(v){ const r = pgResolver; pgResolver = null; if ($('dlgPergunta').open) $('dlgPergunta').close(); r?.(v); }
+$('pgSim').onclick = () => pgFim(true);
+$('pgNao').onclick = () => pgFim(false);
+$('dlgPergunta').addEventListener('cancel', e => { e.preventDefault(); pgFim(false); });
 function toast(msg, ms = 2800){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms); }
 if (!('showDirectoryPicker' in window)) $('warn').style.display = 'block';
 // impede o navegador de abrir um arquivo solto fora da área certa
@@ -2478,7 +2499,7 @@ async function uploadFiles(p, u, item, files){
   const video = isVideo(item);
   const ok = files.filter(f => video ? VID_EXT.test(f.name) || IMG_EXT.test(f.name) : IMG_EXT.test(f.name));
   if (!ok.length) return toast(video ? 'Envie um vídeo (.mp4, .mov, .webm).' : 'Envie uma imagem (.jpg, .png, .webp).');
-  if (p.dataColecao && prog(p).done && p.dataColecao !== hojeIso() && confirm(`As fotos atuais são do envio de ${dataPasta(p.dataColecao)}.\n\nOK: começar um NOVO envio (subpasta ${dataPasta()}; o checklist recomeça).\nCancelar: juntar estas fotos ao envio de ${dataPasta(p.dataColecao)}.`)){
+  if (p.dataColecao && prog(p).done && p.dataColecao !== hojeIso() && await confirmar(`As fotos atuais são do envio de ${dataPasta(p.dataColecao)}.\n\nOK: começar um NOVO envio (subpasta ${dataPasta()}; o checklist recomeça).\nCancelar: juntar estas fotos ao envio de ${dataPasta(p.dataColecao)}.`)){
     novaColecao(p); registrar('Checklist', 'Começou um novo envio de fotos', p, `subpasta ${dataPasta()}`);
   }
   // primeira foto de uma coleção criada em outro dia (pasta ainda vazia): a data passa a ser a de hoje
@@ -2660,7 +2681,7 @@ $('detail').addEventListener('click', async e => {
   const u = curU(p);
   const item = p.checklist.find(c => c.id === b.closest('.clrow')?.dataset.iid);
   if (act === 'novacolecao'){
-    if (!confirm(`Começar um novo envio de fotos?\n\nO envio atual (${dataPasta(p.dataColecao)}) fica guardado na pasta e no Drive, e o checklist recomeça vazio. As próximas fotos vão para uma subpasta nova, com a data do dia em que entrarem.`)) return;
+    if (!await confirmar(`Começar um novo envio de fotos?\n\nO envio atual (${dataPasta(p.dataColecao)}) fica guardado na pasta e no Drive, e o checklist recomeça vazio. As próximas fotos vão para uma subpasta nova, com a data do dia em que entrarem.`)) return;
     const antiga = dataPasta(p.dataColecao); novaColecao(p); mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail();
     registrar('Checklist', 'Começou um novo envio de fotos', p, `o anterior fica em ${antiga}`);
     return toast('Novo envio iniciado. As fotos vão para uma subpasta com a data de hoje.', 4500);
@@ -2685,7 +2706,7 @@ $('detail').addEventListener('click', async e => {
     upTarget = { p, u, acv: true }; $('upIn').accept = 'image/*';
     $('upIn').value = ''; $('upIn').click();
   }
-  if (act === 'acvrm' && confirm(`Tirar "${b.dataset.f}" do arquivo?\n\nEla vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
+  if (act === 'acvrm' && await confirmar(`Tirar "${b.dataset.f}" do arquivo?\n\nEla vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
     await comTrava(async () => {
       try { await paraLixeira(await sub(ws, ...ud(p, u), ACV_DIR), b.dataset.f, ...ud(p, u), ACV_DIR); }
       catch (e) { if (e.name !== 'NotFoundError') return toast('Não consegui mover para a lixeira: ' + e.message, 6000); }
@@ -2699,7 +2720,7 @@ $('detail').addEventListener('click', async e => {
     $('upIn').accept = isVideo(item) ? 'video/*,image/*' : 'image/*';
     $('upIn').value = ''; $('upIn').click();
   }
-  if (act === 'rmfile' && confirm(`Tirar o arquivo "${b.dataset.f}" deste item?\n\nEle vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
+  if (act === 'rmfile' && await confirmar(`Tirar o arquivo "${b.dataset.f}" deste item?\n\nEle vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
     let falhou = false;
     await comTrava(async () => {
       try { await paraLixeira(await sub(ws, ...ud(p, u)), b.dataset.f, ...ud(p, u)); }
@@ -2715,7 +2736,7 @@ $('detail').addEventListener('click', async e => {
   if (act === 'copyall'){ await copyText(p.checklist.map((c, i) => `${i + 1}. ${c.nome}\n${promptFor(p, u, c)}`).join('\n\n')); toast(`${p.checklist.length} prompts copiados.`); }
   if (act === 'rm'){
     if (units(p).some(x => filesOf(x, item).length)) return toast('Este item tem arquivos enviados. Remova os arquivos antes.', 3500);
-    if (!confirm(`Remover "${item.nome}" do checklist${p.temVariacao ? ' de todas as variações' : ''}?`)) return;
+    if (!await confirmar(`Remover "${item.nome}" do checklist${p.temVariacao ? ' de todas as variações' : ''}?`)) return;
     p.checklist = p.checklist.filter(c => c !== item);
     autoStatus(p); savePlan(); renderList(); renderDetail(); if (ws) writeDescritivo(p);
     registrar('Checklist', 'Removeu um item do checklist', p, item.nome);
@@ -2745,7 +2766,7 @@ let fAbertas = new Set();
 // retrato do formulário: fechar com alteração não salva pede confirmação
 const F_CAMPOS = ['fNome', 'fTitulo', 'fSku', 'fMarca', 'fModelo', 'fDesc', 'fExtra', 'fPrompt', 'fMedida', 'fMedidaUn', 'fTipo'];
 const fEstado = () => JSON.stringify([F_CAMPOS.map(id => $(id).value), fTem, fVars, fSeo, fPicks.map(c => c.on + c.nome), fAnexos.map(a => a.nome)]);
-const fDescartar = () => fEstado() === fSnap || confirm('Fechar sem salvar? As alterações deste produto (inclusive o que a IA preencheu) serão perdidas.');
+const fDescartar = async () => fEstado() === fSnap || await confirmar('Fechar sem salvar?\n\nAs alterações deste produto (inclusive o que a IA preencheu) serão perdidas.', 'Fechar sem salvar');
 function openForm(p){
   editing = p;
   fSeo = { prioridade: p?.prioridade || '', categoria: p?.categoria || '', tipo: p?.tipo || '', material: p?.material || '', cor: p?.cor || '', estilo: [...(p?.estilo || [])], palavra: p?.palavra || '' };
@@ -3205,10 +3226,14 @@ function addPick(){
 }
 $('fPickAdd').onclick = addPick;
 $('fPickIn').onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); addPick(); } };
-$('fCancel').onclick = () => { if (!fDescartar()) return; reopenReview = null; $('dlgProd').close(); };
-$('dlgProd').addEventListener('cancel', e => { if (!fDescartar()) e.preventDefault(); else reopenReview = null; });
-$('fDel').onclick = () => {
-  if (!confirm(`Excluir "${editing.nome}" do app? As pastas e arquivos no computador não são apagados.`)) return;
+$('fCancel').onclick = async () => { if (!await fDescartar()) return; reopenReview = null; $('dlgProd').close(); };
+$('dlgProd').addEventListener('cancel', async e => {
+  if (fEstado() === fSnap){ reopenReview = null; return; }
+  e.preventDefault();
+  if (await fDescartar()){ reopenReview = null; $('dlgProd').close(); }
+});
+$('fDel').onclick = async () => {
+  if (!await confirmar(`Excluir "${editing.nome}" do app? As pastas e arquivos no computador não são apagados.`)) return;
   plan.produtos = plan.produtos.filter(x => x !== editing); current = null;
   for (const d of dem.demandas) if (d.produtos?.includes(editing.id)) d.produtos = d.produtos.filter(x => x !== editing.id);
   salvarDem();
@@ -3245,7 +3270,7 @@ $('fSave').onclick = async () => {
     if (usados.length) return toast('Um item desmarcado tem arquivos enviados. Remova os arquivos antes.', 3500);
     const sai = editing.variacoes.filter(v => !fTem || !fVars.some(n => n.toLowerCase() === v.nome.toLowerCase()))
       .filter(v => Object.values(v.arquivos).some(a => a.length));
-    if (sai.length && !confirm(`A variação "${sai.map(v => v.nome).join(', ')}" tem arquivos. Eles continuam na pasta, mas saem do app. Continuar?`)) return;
+    if (sai.length && !await confirmar(`A variação "${sai.map(v => v.nome).join(', ')}" tem arquivos. Eles continuam na pasta, mas saem do app. Continuar?`)) return;
   }
   const p = editing || { id: uid(), status: 'produzir', variacoes: [], arquivos: {}, notas: '', pasta: '' };
   const antes = editing ? chaveDrive(editing) : '', fotoAntes = editing ? pFoto(editing) : null, comIA = !!fIaAntes;
@@ -3482,7 +3507,7 @@ async function levarParaNuvem(){
   const raizes = [];
   for (const n of [ROOT_NAME, '_sistema']){ const d = await subIfExists(h, n); if (d) raizes.push([n, d]); }
   if (!raizes.length) return toast(`Essa pasta não é a "${RAIZ_NAME}": ela precisa ter ${ROOT_NAME} e _sistema dentro. Procure no Google Drive (G:).`, 8000);
-  if (!confirm(`Copiar a pasta "${h.name}" para a nuvem?\n\nO cadastro, as demandas e o registro da nuvem passam a ser os do computador, e as fotos são copiadas. Nada é apagado do computador. Pode levar alguns minutos: deixe esta janela aberta.`)) return;
+  if (!await confirmar(`Copiar a pasta "${h.name}" para a nuvem?\n\nO cadastro, as demandas e o registro da nuvem passam a ser os do computador, e as fotos são copiadas. Nada é apagado do computador. Pode levar alguns minutos: deixe esta janela aberta.`)) return;
   const nuvem = ws, txt = $('nvTxt'), bar = $('nvBar');
   ws = null; clearTimeout(saveTimer); clearTimeout(demTimer); // nada grava na nuvem enquanto copia
   $('nvFechar').disabled = true; $('nvFechar').textContent = 'Copiando…'; $('dlgNuvem').showModal();
@@ -3804,9 +3829,9 @@ $('tplList').addEventListener('click', e => {
   saveSettings(); renderConfig();
 });
 $('tplAdd').onclick = () => { settings.checklist.push({id: 'c-' + uid(), nome: '', dica: '', tipo: 'foto'}); saveSettings(); renderConfig(); $('tplList').lastElementChild.querySelector('input').focus(); };
-$('tplReset').onclick = () => { if (confirm('Voltar ao checklist padrão?')){ settings.checklist = structuredClone(DEFAULT_CHECKLIST); saveSettings(); renderConfig(); } };
+$('tplReset').onclick = async () => { if (await confirmar('Voltar ao checklist padrão?')){ settings.checklist = structuredClone(DEFAULT_CHECKLIST); saveSettings(); renderConfig(); } };
 // os produtos guardam a própria cópia do checklist: este botão leva a descrição (e foto/vídeo) do padrão para eles, pelo nome do item
-$('tplApply').onclick = () => {
+$('tplApply').onclick = async () => {
   const muda = []; let proprias = 0;
   for (const p of plan.produtos) for (const it of p.checklist){
     const d = settings.checklist.find(c => c.nome.trim().toLowerCase() === it.nome.trim().toLowerCase());
@@ -3818,7 +3843,7 @@ $('tplApply').onclick = () => {
   const aviso = proprias ? `\n\n${proprias} item(ns) com descrição própria do produto ficam como estão.` : '';
   if (!muda.length) return toast('Os produtos já usam as descrições do checklist padrão.' + (proprias ? ` (${proprias} com descrição própria ficaram como estão.)` : ''), 4500);
   const prods = new Set(muda.map(x => x[0]));
-  if (!confirm(`Atualizar ${muda.length} item(ns) em ${prods.size} produto(s)?\n\n${[...new Set(muda.map(x => x[1].nome))].join(', ')}\n\nOs prompts passam a usar a descrição do checklist padrão. As fotos já enviadas não mudam.${aviso}`)) return;
+  if (!await confirmar(`Atualizar ${muda.length} item(ns) em ${prods.size} produto(s)?\n\n${[...new Set(muda.map(x => x[1].nome))].join(', ')}\n\nOs prompts passam a usar a descrição do checklist padrão. As fotos já enviadas não mudam.${aviso}`)) return;
   for (const [, it, d] of muda){ it.dica = d.dica; it.tipo = d.tipo || 'foto'; }
   savePlan(); renderDetail(); if (ws) prods.forEach(writeDescritivo);
   toast(`${muda.length} item(ns) atualizado(s).`);
@@ -3859,8 +3884,8 @@ function renderDescPad(){
         <div class="acts"><button type="button" class="sm" id="cfgDescLimpar">${ic('x')}Remover modelo padrão</button>
           <span class="muted">Definido em ${new Date(pad.em).toLocaleDateString('pt-BR')}.</span></div></div>`
     : `<div class="alert info">${ic('info')} Ainda sem modelo padrão.</div>`;
-  $('cfgDescLimpar')?.addEventListener('click', () => {
-    if (!confirm('Remover o modelo padrão? As próximas gerações voltam a trazer variações de tamanhos diferentes.')) return;
+  $('cfgDescLimpar')?.addEventListener('click', async () => {
+    if (!await confirmar('Remover o modelo padrão? As próximas gerações voltam a trazer variações de tamanhos diferentes.')) return;
     delete settings.descPadrao; saveSettings(); renderDescPad(); renderDetail();
   });
 }
@@ -3913,14 +3938,14 @@ function addCats(nomes){
 $('catAdd').onclick = () => { addCats([$('catIn').value]); $('catIn').value = ''; $('catIn').focus(); };
 $('catIn').onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); $('catAdd').click(); } };
 $('catLoteAdd').onclick = () => { addCats($('catLote').value.split(/\r?\n/)); $('catLote').value = ''; };
-$('catLista').onclick = e => {
+$('catLista').onclick = async e => {
   const act = e.target.closest('[data-act]')?.dataset.act; if (!act) return;
   const i = +e.target.closest('.catrow').dataset.i, l = settings.categorias, c = l[i];
   if (act === 'up') [l[i - 1], l[i]] = [l[i], l[i - 1]];
   if (act === 'down') [l[i + 1], l[i]] = [l[i], l[i + 1]];
   if (act === 'rm'){
     const n = plan.produtos.filter(p => sameTxt(p.categoria, c)).length;
-    if (!confirm(`Remover a categoria "${c}" da lista?` + (n ? `\n\n${n} produto(s) usam esta categoria e continuam com ela até alguém escolher outra no cadastro.` : ''))) return;
+    if (!await confirmar(`Remover a categoria "${c}" da lista?` + (n ? `\n\n${n} produto(s) usam esta categoria e continuam com ela até alguém escolher outra no cadastro.` : ''))) return;
     l.splice(i, 1);
   }
   saveSettings(); renderCatsCfg(); renderList();
@@ -3987,7 +4012,7 @@ $('acLista').addEventListener('click', async e => {
       acSenhaDe = null; registrar('Acessos', 'Trocou a senha de um acesso', null, u); toast(u === conta.usuario ? 'Sua senha foi trocada.' : `Senha de ${u} trocada.`);
     }
     if (a === 'remover'){
-      if (!confirm(`Tirar o acesso de ${b.dataset.n} (${u})? A pessoa não consegue mais entrar no Estúdio.`)) return;
+      if (!await confirmar(`Tirar o acesso de ${b.dataset.n} (${u})? A pessoa não consegue mais entrar no Estúdio.`)) return;
       await contaPedir('remover', { usuario: u });
       registrar('Acessos', 'Removeu um acesso', null, `${b.dataset.n} (${u})`); toast('Acesso removido.');
     }
@@ -4411,14 +4436,14 @@ $('drvLogin').onclick = async () => {
   renderDrive();
 };
 $('drvLogout').onclick = async () => {
-  if (WEB && gGuardado && !confirm('Sair do Google Drive para toda a equipe? Depois alguém precisa clicar em Entrar com Google de novo.')) return;
+  if (WEB && gGuardado && !await confirmar('Sair do Google Drive para toda a equipe? Depois alguém precisa clicar em Entrar com Google de novo.')) return;
   try { google.accounts.oauth2.revoke(gTok.t, () => {}); } catch {}
   if (gGuarda()) await srv('/google/sair', {}).catch(() => {});
   gGuardado = false; gDrop(); toast(WEB && conta ? 'O Google Drive foi desligado no site.' : 'Você saiu do Google Drive neste computador.');
 };
 $('drvOpen').onclick = () => window.open('https://drive.google.com/drive/folders/' + settings.drive.pastaId, '_blank', 'noopener');
 $('drvNew').onclick = async () => {
-  if (!confirm(`Criar uma pasta nova "${DRIVE_ROOT}" no Drive para os próximos envios? A pasta atual continua lá, intacta.`)) return;
+  if (!await confirmar(`Criar uma pasta nova "${DRIVE_ROOT}" no Drive para os próximos envios? A pasta atual continua lá, intacta.`)) return;
   settings.drive.pastaId = ''; saveSettings();
   try { await ensureRoot(); toast('Pasta nova criada no Drive.'); } catch (e) { toast(e.message, 5000); }
 };
@@ -5103,11 +5128,11 @@ Já conhecidas (não repita): ${n0.itens.map(x => x.titulo).slice(-40).join(' | 
   } catch (e) { toast(e.message, 5000); }
   b.disabled = false; b.innerHTML = ic('search') + 'Buscar novidades agora';
 };
-$('tab-config').addEventListener('click', e => {
+$('tab-config').addEventListener('click', async e => {
   const b = e.target.closest('[data-news]'); if (!b) return;
   const x = settings.novidades.itens.find(i => i.id === b.dataset.id); if (!x) return;
   if (b.dataset.news === 'aplicar'){
-    if (!confirm(`Mudar o ${RULE_LABEL[x.ajuste_campo]} de ${settings.regras[x.ajuste_campo]} para ${x.ajuste_valor}?`)) return;
+    if (!await confirmar(`Mudar o ${RULE_LABEL[x.ajuste_campo]} de ${settings.regras[x.ajuste_campo]} para ${x.ajuste_valor}?`)) return;
     settings.regras[x.ajuste_campo] = x.ajuste_valor; x.estado = 'aplicada';
   }
   if (b.dataset.news === 'guardar') x.estado = 'guardada';
@@ -5530,8 +5555,8 @@ $('dPassoAdd').onclick = addPasso;
 $('dPassoIn').onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); addPasso(); } };
 $('dCancel').onclick = () => $('dlgDem').close();
 $('dlgDem').addEventListener('close', () => { aposCriarDem = null; });
-$('dDel').onclick = () => {
-  if (!confirm(`Excluir a demanda "${dmEdit.titulo}"?`)) return;
+$('dDel').onclick = async () => {
+  if (!await confirmar(`Excluir a demanda "${dmEdit.titulo}"?`)) return;
   dem.demandas = dem.demandas.filter(x => x !== dmEdit);
   for (const r of dem.relatorios) for (const s of r.analise?.passos || []) if (s.criada === dmEdit.id) delete s.criada;
   registrar('Demandas', 'Excluiu uma demanda', prodDe(dmEdit), dmEdit.titulo);
@@ -5713,7 +5738,7 @@ $('dlgRel').addEventListener('click', async e => {
     return toast(`${n} demanda(s) criada(s). Ajuste responsável e prazo na lista.`, 4500);
   }
   if (act === 'rexcluir'){
-    if (!confirm(`Excluir o relatório "${r.nome}"? As demandas criadas a partir dele continuam.`)) return;
+    if (!await confirmar(`Excluir o relatório "${r.nome}"? As demandas criadas a partir dele continuam.`)) return;
     for (const f of r.arquivos) try { await sisApagar(`${REL_DIR}/${r.id}/${f.nome}`); } catch {}
     dem.relatorios = dem.relatorios.filter(x => x !== r);
     registrar('Demandas', 'Excluiu um relatório', null, r.nome);
@@ -5893,8 +5918,8 @@ async function perguntar(q){
 $('chEnviar').onclick = () => perguntar($('chIn').value);
 $('chIn').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); perguntar($('chIn').value); } };
 $('chFocoSel').onchange = () => { chFoco = $('chFocoSel').value; };
-$('chLimpar').onclick = () => {
-  if (!confirm('Limpar a conversa com a IA? As demandas criadas a partir dela continuam.')) return;
+$('chLimpar').onclick = async () => {
+  if (!await confirmar('Limpar a conversa com a IA? As demandas criadas a partir dela continuam.')) return;
   dem.chat = []; salvarDem(); renderChat();
 };
 $('dmChat').addEventListener('click', e => {
@@ -6090,7 +6115,7 @@ function asAbrir(abrir = true){
 }
 asBtn.onclick = () => asAbrir(asPainel.classList.contains('hidden'));
 $('asFechar').onclick = () => asAbrir(false);
-$('asLimpar').onclick = () => { if (!asMsgs.length || !confirm('Limpar a conversa com o assistente?')) return; asMsgs = []; store.set('assistente', asMsgs); renderAssist(); };
+$('asLimpar').onclick = async () => { if (!asMsgs.length || !await confirmar('Limpar a conversa com o assistente?')) return; asMsgs = []; store.set('assistente', asMsgs); renderAssist(); };
 addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !document.querySelector('dialog[open]')){ e.preventDefault(); asAbrir(asPainel.classList.contains('hidden')); }
   if (e.key === 'Escape' && !asPainel.classList.contains('hidden') && asPainel.contains(document.activeElement)) asAbrir(false);
@@ -6429,7 +6454,7 @@ $('olEntrar').onclick = async () => {
   } catch (e) { w?.close(); toast(e.message, 6000); }
 };
 $('olSair').onclick = async () => {
-  if (!confirm('Desligar o Olist ERP para toda a equipe? Depois é preciso entrar de novo.')) return;
+  if (!await confirmar('Desligar o Olist ERP para toda a equipe? Depois é preciso entrar de novo.')) return;
   try { await olistPedir('sair', { method: 'POST' }); registrar('Olist ERP', 'Desligou o Olist ERP'); } catch (e) { toast(e.message, 5000); }
   renderOlist();
 };
@@ -6911,6 +6936,9 @@ const ATUALIZACOES = [
     'Ao adicionar uma foto, ela aparece na hora no checklist, apagada, com um círculo girando e a porcentagem do envio',
     'Uma barrinha no topo da tela mostra quando algo está sendo gravado na nuvem',
     'A foto já sobe com o nome SEO final: na nuvem não é mais copiada duas vezes para renomear, então o envio ficou mais rápido'] },
+  { id: '2026-10-26-pergunta-do-app', em: '2026-10-26 16:20', titulo: 'Perguntas de confirmação do próprio app', itens: [
+    'As perguntas "tem certeza?" (remover foto, excluir, sair…) agora são do próprio app',
+    'Antes eram as do navegador, que o Chrome pode bloquear depois de várias seguidas: aí o botão parecia não fazer nada (ex.: remover arquivo)'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
