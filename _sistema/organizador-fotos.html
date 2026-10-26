@@ -1344,6 +1344,8 @@ function normSettings(raw){
   s.seo = { loja: 'polivenda', usarLoja: true, ...s.seo };
   s.listas = { ...structuredClone(DEFAULT_LISTAS), ...s.listas };
   s.drive = { clientId: '', email: '', pastaId: '', pastaNome: '', ...s.drive };
+  // ID do cliente do Google da Polivenda (não é segredo): todo computador já vem com ele
+  if (!s.drive.clientId) s.drive.clientId = '396843345657-lnqcr576qf0jpjrrkg49b6t9jr4imn1m.apps.googleusercontent.com';
   s.novidades = { data: '', itens: [], ...s.novidades };
   // v6: SEO pela busca do cliente (sai o nome interno do produto do nome dos arquivos)
   if (!s.v6){ if ([OLD_TPL_PROD, V3_TPL_PROD, V4_TPL_PROD].includes(s.tplProd)) s.tplProd = DEFAULT_TPL_PROD; s.v6 = true; }
@@ -6577,6 +6579,8 @@ const ATUALIZACOES = [
     'O nome de quem entrou vai sozinho para o registro de alterações (não precisa mais escolher "Quem é você?")',
     'Configurações → Acessos: criar, trocar senha e remover acessos; o botão com o seu nome no topo troca a senha ou sai',
     'Com o login, o Olist funciona sem digitar a senha da equipe em cada computador'] },
+  { id: '2026-10-26-client-id-fixo', em: '2026-10-26 15:05', titulo: 'Google Drive já configurado em todo computador', itens: [
+    'O ID do cliente do Google da Polivenda já vem preenchido: é só clicar em Entrar com Google'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
