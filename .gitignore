@@ -1,0 +1,11 @@
+# Só o código do app vai para o GitHub.
+# Fotos, dados, chaves (google-acesso.json, configuracoes.json), backups e registros ficam fora.
+/*
+!/.gitignore
+!/README.md
+!/_sistema/
+/_sistema/*
+!/_sistema/organizador-fotos.html
+!/_sistema/servidor.js
+!/_sistema/abrir-estudio.vbs
+!/_sistema/estudio-polivenda.ico
