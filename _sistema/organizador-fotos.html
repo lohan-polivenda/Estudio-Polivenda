@@ -512,6 +512,70 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 #tab-produtos.lista-oculta #btnLista .ic{transform:scaleX(-1)}
 .folder.compacta{padding:7px 12px;margin-top:12px}
 .etapa .info-i{margin-left:0}
+/* ---------- resumo e aprovação ---------- */
+.rsbar h2,.aphead h2{margin:0}
+.rsbar h2{margin-right:auto}
+.rsbar select,#rsDatas input{width:auto}
+#rsDatas{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+#rsDatas.hidden{display:none}
+.rsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.rsm{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:14px 16px;border-radius:12px;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--c,var(--accent));font:inherit;color:inherit}
+button.rsm{cursor:pointer}
+button.rsm:hover{box-shadow:0 0 0 3px var(--accent-soft)}
+.rsm b{font-size:28px;line-height:1.15}
+.rsm span{font-size:13px}
+.rsm small{font-size:11px;color:var(--muted)}
+.rspers{margin-bottom:14px}
+.rspers h3{margin:0 0 4px}
+.rspers .grupo{margin:12px 0 6px;font-weight:600;font-size:13px}
+.rspers label{display:inline-flex;align-items:center;gap:6px;margin:0 16px 6px 0;font-size:13px;font-weight:400;cursor:pointer}
+.rspers input{width:auto;margin:0}
+.rsfunilw{margin-bottom:6px}
+.rsfunil{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--soft);margin:6px 0 8px}
+.rsfunil i{background:var(--c);min-width:4px}
+.rsleg{display:flex;flex-wrap:wrap;gap:6px 16px}
+.rsleg button{border:0;background:none;padding:0;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text);cursor:pointer}
+.rsleg button::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+.apwrap{margin-top:16px}
+.aphead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.aphead .apvista{margin-left:auto}
+.apvista button{flex:none;font-size:13px}
+.apvista button b{margin-left:4px}
+.apgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;align-items:start}
+.apcard{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:var(--panel);overflow:hidden;text-align:left;padding:0;font:inherit;color:inherit;cursor:pointer}
+.apcard:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.apcard .capa{aspect-ratio:3/4;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.apcard .capa img{width:100%;height:100%;object-fit:cover}
+.apcard .info{padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.apcard .info b{font-size:14px}
+.apcard .muted{font-size:12px}
+.apcard .tit,.apcard .mot{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apcard .mot{color:var(--danger)}
+.apcard .lbl,.apcard .st{margin:2px 4px 0 0}
+.apaberto{grid-column:1/-1;border:1px solid var(--accent);border-radius:12px;padding:16px;background:var(--panel);box-shadow:0 0 0 3px var(--accent-soft)}
+.apaberto .topo{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.apaberto .topo .t{flex:1;min-width:220px}
+.apaberto h3{margin:0 0 2px}
+.apaberto .topo .lbl{vertical-align:2px}
+.apvar{margin-top:14px;font-weight:600;font-size:13px}
+.apfotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:8px}
+.apfoto{position:relative;display:flex;flex-direction:column;gap:3px;font-size:12px;min-width:0}
+.apfoto .img{aspect-ratio:3/4;border-radius:8px;border:2px solid var(--border);overflow:hidden;background:var(--soft);cursor:zoom-in;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.apfoto img{width:100%;height:100%;object-fit:cover}
+.apaberto.reprovar .apfoto .img{cursor:pointer}
+.apfoto.marcada .img{border-color:var(--danger)}
+.apfoto .refazer{position:absolute;top:6px;left:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--danger);color:#fff}
+.apfoto .lbl{align-self:flex-start;margin:0}
+.apdesc{margin-top:12px;font-size:13px}
+.apdesc summary{cursor:pointer;font-weight:600}
+.apmotivo{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.apmotivo textarea{width:100%;min-height:70px}
+.apacoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button.aprovar{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+button.reprovar{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
+button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:600}
+.tabs .cnt.aprov{background:var(--accent)}
+@media (max-width:600px){.rsgrid,.apgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rsm{padding:10px 12px}.rsm b{font-size:22px}.tabs{max-width:100%;overflow-x:auto}.tabs button{flex:none}}
 </style>
 </head>
 <body>
@@ -567,6 +631,7 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 <header>
   <div class="brand"><span class="logo" role="img" aria-label="Polivenda"></span><span class="sub">Estúdio de Fotos</span></div>
   <nav class="tabs">
+    <button data-tab="resumo"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg>Resumo</button>
     <button data-tab="produtos" class="on">Produtos</button>
     <button data-tab="demandas"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Demandas</button>
     <button data-tab="config"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>Configurações</button>
@@ -580,6 +645,25 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 
 <main>
 <div id="sisAviso" class="alert hidden" style="margin:0 0 14px"></div>
+<!-- ======================= RESUMO (números da equipe e aprovação dos produtos) ======================= -->
+<section id="tab-resumo" class="hidden">
+  <div class="pbar rsbar">
+    <h2>Resumo</h2>
+    <select id="rsPeriodo" title="Período dos números que contam o que aconteceu"></select>
+    <span id="rsDatas" class="hidden"><input type="date" id="rsDe"> até <input type="date" id="rsAte"></span>
+    <button id="rsPers" type="button"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>Personalizar</button>
+  </div>
+  <div class="panel hidden" id="rsPersBox"></div>
+  <div class="rsgrid" id="rsMetricas"></div>
+  <div id="rsFunil"></div>
+  <div class="panel apwrap" id="apWrap">
+    <div class="aphead"><h2>Aprovação</h2>
+      <span class="muted ajuda">Produtos com todas as fotos e o cadastro completo esperam aqui. Clique no card para ver as fotos. Aprovado, ele sobe sozinho para o Google Drive; reprovado, volta para a equipe com o que precisa ser feito.</span>
+      <div class="yn apvista" id="apVista"></div></div>
+    <div class="apgrid" id="apCards"></div>
+  </div>
+</section>
+
 <!-- ======================= PRODUTOS ======================= -->
 <section id="tab-produtos">
   <div class="pbar">
@@ -1591,12 +1675,13 @@ async function emParalelo(itens, n, fn){
 
 // ---------- abas ----------
 function showTab(t){
-  ['produtos','demandas','config'].forEach(k => $('tab-' + k).classList.toggle('hidden', k !== t));
+  ['resumo','produtos','demandas','config'].forEach(k => $('tab-' + k).classList.toggle('hidden', k !== t));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   store.set('tab', t);
   if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); }
   if (t === 'demandas') renderDem();
   if (t === 'produtos'){ renderList(); renderDetail(); }
+  if (t === 'resumo') renderResumo();
 }
 document.querySelector('.tabs').onclick = e => { const t = e.target.closest('button')?.dataset.tab; if (t) showTab(t); };
 
@@ -1717,21 +1802,25 @@ function autoStatus(p){
   else if (done === 0 && ['gerando','pronto'].includes(p.status)) p.status = 'produzir';
 }
 // etapa que o app calcula sozinho: o que falta para o produto chegar ao Drive. Só "Publicado" é marcado à mão.
+// Completo (fotos + cadastro), o produto espera aprovação na aba Resumo; só depois de aprovado vai para o Drive.
 // (p.status continua sendo gravado como antes, para a versão anterior do app ler o mesmo cadastro)
 const ETAPAS = [
   ['produzir', 'A produzir', '#64748b'], ['gerando', 'Em produção', '#ea580c'], ['seo', 'Falta o SEO', '#b45309'],
-  ['pronto', 'Pronto para enviar', '#5d6ec8'], ['drive', 'No Drive', '#16a34a'], ['publicado', 'Publicado', '#7c3aed'],
+  ['aprovacao', 'Aguardando aprovação', '#0891b2'], ['reprovado', 'Reprovado', '#dc2626'],
+  ['pronto', 'Aprovado, falta enviar', '#5d6ec8'], ['drive', 'No Drive', '#16a34a'], ['publicado', 'Publicado', '#7c3aed'],
 ];
 const etapaInfo = k => ETAPAS.find(x => x[0] === k) || ETAPAS[0];
 // mudou algo que vai para o Drive (arquivos, nomes, SEO, descrição) depois do último envio?
 const mudouDepoisDoEnvio = p => !!(p.drive?.em && p.alterado && new Date(p.alterado) > new Date(p.drive.em));
 function etapa(p){
   if (p.status === 'publicado') return 'publicado';
+  if (reprovado(p)) return 'reprovado';
   const { done, total } = prog(p);
   if (!done) return 'produzir';
   if (done < total) return 'gerando';
   if (seoFaltando(p).length) return 'seo';
-  return p.drive?.em && !mudouDepoisDoEnvio(p) ? 'drive' : 'pronto';
+  if (p.drive?.em && !mudouDepoisDoEnvio(p)) return 'drive';
+  return aprovValida(p) ? 'pronto' : 'aprovacao';
 }
 // frase curta do que falta (ou de quando foi enviado)
 function etapaDica(p){
@@ -1739,7 +1828,9 @@ function etapaDica(p){
   if (e === 'gerando') return `faltam ${total - done} foto(s)`;
   if (e === 'seo') return `complete o cadastro para enviar (falta ${seoFaltando(p).join(', ')})`;
   if (e === 'drive') return `enviado em ${dia(p.drive.em)}`;
-  if (e === 'pronto') return mudouDepoisDoEnvio(p) ? `mudou depois do envio de ${dia(p.drive.em)}: envie de novo` : 'tudo certo para o Drive';
+  if (e === 'aprovacao') return mudouDepoisDoEnvio(p) ? `mudou depois do envio de ${dia(p.drive.em)}: precisa de nova aprovação` : 'esperando aprovação (aba Resumo)';
+  if (e === 'reprovado') return `reprovado por ${p.aprovacao.por}: ${p.aprovacao.motivo}`;
+  if (e === 'pronto') return `aprovado por ${p.aprovacao.por} em ${dia(p.aprovacao.em)}: falta subir ao Drive`;
   if (e === 'publicado') return p.drive?.em ? `enviado ao Drive em ${dia(p.drive.em)}` : '';
   return '';
 }
@@ -1815,6 +1906,7 @@ function aplicarPlanoMesclado(m){
   plan.produtos = migrate(m).produtos;
   store.set('plan', plan);
   renderList();
+  if (!$('tab-resumo').classList.contains('hidden') && !apRep) renderResumo();
   if (curP() !== antes) renderDetail();
 }
 async function gravarPlano(){
@@ -1874,7 +1966,7 @@ function renderCatFiltro(){
 }
 
 function renderList(){
-  renderCatFiltro();
+  renderCatFiltro(); renderResumoCont();
   const q = slug($('pSearch').value), st = $('pStatus').value, cat = $('pCat').value;
   let list = plan.produtos.filter(p => (!st || etapa(p) === st) && (!cat || (cat === '-' ? !p.categoria : p.categoria === cat))
     && (!q || slug(p.nome + ' ' + p.titulo + ' ' + p.sku + ' ' + p.marca + ' ' + p.categoria).includes(q)));
@@ -1951,7 +2043,7 @@ function renderDetail(){
             <li><b>Cadastre o produto</b> e informe se ele tem variações (cores, tamanhos…).</li>
             <li>Para cada item do checklist: <b>copie o prompt</b>, gere a imagem na IA, copie a imagem e <b>cole no app (Ctrl+V)</b>. Também dá para arrastar o arquivo ou usar o botão <b>Enviar foto</b>.</li>
             <li>O app salva o arquivo com <b>nome otimizado para SEO</b> e marca o item como feito.</li>
-            <li>Clique em <b>Enviar ao Drive</b>: o app confere formato, tamanho e nome, a IA sugere melhorias e as fotos sobem em JPG.</li>
+            <li>Com tudo pronto, o produto vai para a <b>aprovação</b> na aba Resumo. Aprovado, o app confere formato, tamanho e nome e as fotos sobem sozinhas em JPG para o Drive.</li>
           </ol>
           <button class="primary" data-act="novo">+ Cadastrar primeiro produto</button>
         </div>`;
@@ -1966,13 +2058,17 @@ function renderDetail(){
         <div class="titanu">${p.titulo ? `${ic('tag')} <b>${esc(p.titulo)}</b> <span class="muted">· título do anúncio</span>` : `<span class="lbl warn">${ic('alert')}Sem título do anúncio</span>`}</div>
         ${meta ? `<div class="muted">${esc(meta)}</div>` : ''}</div>
       <button data-act="edit">${ic('pencil')}Editar</button>
-      <button class="primary" data-act="drive">${ic('upload')}${etapa(p) === 'drive' || etapa(p) === 'publicado' ? 'Enviar de novo' : 'Enviar ao Drive'}</button>
+      ${podeEnviar(p) ? `<button class="primary" data-act="drive">${ic('upload')}${p.drive?.em && !mudouDepoisDoEnvio(p) ? 'Enviar de novo' : 'Enviar ao Drive'}</button>`
+        : etapa(p) === 'aprovacao' ? `<button class="primary" data-act="veraprov">${ic('check')}Ir para a aprovação</button>`
+        : `<button class="primary" disabled title="O envio ao Drive acontece depois da aprovação (aba Resumo)">${ic('upload')}Enviar ao Drive</button>`}
     </div>
     <div class="etapa" ${p.drive?.em ? `title="Último envio ao Drive: ${new Date(p.drive.em).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})}"` : ''}>
       <span class="st" style="--c:${etapaInfo(etapa(p))[2]}">${etapaInfo(etapa(p))[1]}</span>
       ${etapaDica(p) ? `<span class="muted ajuda">${esc(etapaDica(p))}</span>` : ''}
       <button class="sm ghost" data-act="publicado" title="Publicado é a única etapa marcada à mão: quando o anúncio já está no ar">${p.status === 'publicado' ? ic('undo') + 'Desmarcar publicado' : ic('check') + 'Marcar como publicado'}</button>
     </div>
+    ${reprovado(p) ? `<div class="alert block"><b>Reprovado por ${esc(p.aprovacao.por)} em ${esc(dtBR(p.aprovacao.em))}:</b> ${esc(p.aprovacao.motivo)}${p.aprovacao.fotos?.length ? `<br>Refazer: ${esc(p.aprovacao.fotos.join(' · '))}` : ''}
+      <div style="margin-top:8px"><button class="sm primary" data-act="pediraprov">${ic('refresh')}Corrigido: pedir nova aprovação</button></div></div>` : ''}
     ${(() => { const man = p.prioridade, dm = prioDemandas(p), ef = prioProduto(p), f = ef ? filaDe(ef) : [], pos = f.indexOf(p);
       return `<div class="pfila"><b>${ic('list')} Prioridade na fila</b>
         <div class="opts">${DM_PRIO.map(([k, l, c]) => `<button type="button" class="opt ${man === k ? 'on' : ''}" style="--c:${c}" data-act="pprio" data-v="${k}">${l}</button>`).join('')}
@@ -2459,7 +2555,7 @@ $('detail').addEventListener('click', async e => {
   if (act === 'pfila') return moverNaFila(p, +b.dataset.d);
   if (act === 'publicado'){
     if (p.status === 'publicado'){ p.status = 'produzir'; autoStatus(p); toast('Desmarcado. A etapa volta a ser calculada pelo app.'); registrar('Produto', 'Desmarcou "publicado"', p); }
-    else { p.status = 'publicado'; toast('Marcado como publicado.'); registrar('Produto', 'Marcou como publicado', p); }
+    else { p.status = 'publicado'; p.publicadoEm = new Date().toISOString(); toast('Marcado como publicado.'); registrar('Produto', 'Marcou como publicado', p); }
     savePlan(); renderList(); return renderDetail();
   }
   if (act === 'editdica'){ editDica = item.id; renderDetail(); const inp = $('dicaIn'); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); return; }
@@ -2467,6 +2563,8 @@ $('detail').addEventListener('click', async e => {
   if (act === 'dicapadrao') return salvarDica(p, item, dicaPadrao(item).dica);
   if (act === 'dicacancel'){ editDica = null; return renderDetail(); }
   if (act === 'drive') openReview(p);
+  if (act === 'veraprov') return apIrProduto(p);
+  if (act === 'pediraprov') return pedirAprovacao(p);
   if (act === 'acvup'){
     if (!ws) return toast('Conecte a pasta de trabalho primeiro (botão no topo).');
     upTarget = { p, u, acv: true }; $('upIn').accept = 'image/*';
@@ -4069,13 +4167,17 @@ let rv = null; // revisão aberta: { p, step, us, jobs, sugs, … }
 const jobBlocked = j => j.a.issues.some(x => x.lvl === 'block');
 const rvBlocks = () => rv.jobs.filter(jobBlocked).length + (seoFaltando(rv.p).length ? 1 : 0) + (rv.jobs.length ? 0 : 1);
 function freeJobs(){ rv?.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url)); }
-async function openReview(p){
+// auto: aberto pela aprovação; sem bloqueio na conferência, sobe direto (sem as sugestões da IA nem outro clique)
+async function openReview(p, { auto = false } = {}){
   if (!ws) return toast('Conecte a pasta principal primeiro (botão no topo).');
-  rv = { p, step: 1, us: [], jobs: [], log: '', ajustes: new Set(), modos: new Map() };
+  if (!auto && !podeEnviar(p)) return toast(reprovado(p) ? 'Este produto foi reprovado: corrija e peça nova aprovação antes de enviar.' : 'Antes do Drive, o produto precisa ser aprovado na aba Resumo.', 5000);
+  const valia = aprovValida(p);
+  rv = { p, step: 1, us: [], jobs: [], log: '', ajustes: new Set(), modos: new Map(), auto, aprovado: valia };
   $('dlgDrive').showModal();
   rv.loading = 'Atualizando os nomes SEO…'; renderRv();
-  try { await syncNames(p); savePlan(); renderDetail(); } catch {}
+  try { await syncNames(p); manterAprovacao(p, valia); savePlan(); renderDetail(); } catch {}
   await loadJobs();
+  if (auto && rv?.p === p && !rv.loading && !rvBlocks()){ rv.step = 3; renderRv(); sendToDrive(); }
 }
 async function loadJobs(msg){
   const base = msg || 'Conferindo formato, tamanho, proporção e nome de cada arquivo…';
@@ -4094,7 +4196,7 @@ const RV_STEPS = ['Conferência', 'Sugestões da IA', 'Envio'];
 function renderRv(){
   if (!rv) return;
   $('dvBody').innerHTML = `<h2 style="display:flex;align-items:center;gap:8px">${ic('upload', 'lg')}Enviar ao Google Drive</h2><div class="muted">${esc(rv.p.nome)}</div>
-    <div class="steps3">${RV_STEPS.map((s, i) => `<span class="${i + 1 === rv.step ? 'on' : i + 1 < rv.step ? 'done' : ''}">${i + 1 < rv.step ? ic('check') : i + 1 + '.'} ${s}</span>`).join('')}</div>`
+    <div class="steps3">${(rv.auto ? ['Conferência', 'Aprovado', 'Envio'] : RV_STEPS).map((s, i) => `<span class="${i + 1 === rv.step ? 'on' : i + 1 < rv.step ? 'done' : ''}">${i + 1 < rv.step ? ic('check') : i + 1 + '.'} ${s}</span>`).join('')}</div>`
     + (rv.loading ? `<div class="alert info">${esc(rv.loading)}</div>` : rv.step === 1 ? rvStep1() : rv.step === 2 ? rvStep2() : rvStep3());
   renderRvFoot();
 }
@@ -4104,7 +4206,7 @@ function renderRvFoot(){
   if (rv.loading) h = btn('close', 'Cancelar');
   else if (rv.step === 1){
     const n = rvBlocks();
-    h = btn('close', 'Cancelar') + btn('recheck', ic('refresh') + 'Conferir de novo') + btn('next', n ? ic('ban') + `Resolva ${n} bloqueio(s) para continuar` : 'Próximo: sugestões da IA →', 'primary', n > 0);
+    h = btn('close', 'Cancelar') + btn('recheck', ic('refresh') + 'Conferir de novo') + btn('next', n ? ic('ban') + `Resolva ${n} bloqueio(s) para continuar` : rv.auto ? ic('upload') + 'Enviar ao Drive' : 'Próximo: sugestões da IA →', 'primary', n > 0);
   } else if (rv.step === 2){
     if (rv.iaLoading) h = btn('back', '← Voltar', '', true) + btn('wait', ic('loader', 'spin') + 'Revisando…', 'primary', true);
     else if (rv.iaErr) h = btn('back', '← Voltar') + btn('iaretry', ic('refresh') + 'Tentar de novo') + btn('skip', 'Pular →', 'primary');
@@ -4126,7 +4228,8 @@ function rvStep1(){
   const bad = jobs.filter(jobBlocked).length, conv = jobs.filter(j => j.a.converted).length;
   const ajust = jobs.filter(j => j.a.ajustada).length, podem = jobs.filter(j => jobBlocked(j) && j.a.ajustavel).length;
   const vazios = rv.us.flatMap(u => p.checklist.filter(it => !filesOf(u, it).length).map(it => (u.nome ? u.nome + ': ' : '') + it.nome));
-  let h = `<div class="sum"><b>${jobs.length} arquivo(s)</b><b style="color:var(--ok)">${ic('check')} ${jobs.length - bad} ok</b>`
+  let h = (rv.auto ? `<div class="alert ok"><b>Aprovado.</b> Resolva o que está bloqueado abaixo e o produto sobe para o Drive.</div>` : '')
+    + `<div class="sum"><b>${jobs.length} arquivo(s)</b><b style="color:var(--ok)">${ic('check')} ${jobs.length - bad} ok</b>`
     + (bad ? `<b style="color:var(--danger)">${ic('ban')} ${bad} bloqueado(s)</b>` : '') + (ajust ? `<b style="color:var(--ia)">${ic('sparkles')} ${ajust} ajustada(s) no envio</b>` : '')
     + (conv ? `<b style="color:var(--accent)">${ic('refresh')} ${conv} vira(m) JPG</b>` : '') + '</div>';
   if (falta.length) h += `<div class="alert block"><b>Cadastro incompleto:</b> falta ${esc(falta.join(", "))}. Sem isso o nome dos arquivos fica pobre para a busca e o app não sabe em que pasta do Drive colocar.
@@ -4234,7 +4337,7 @@ async function applySugs(){
   if (rv.sugs.length) registrar('Envio ao Drive', ok.length ? `Aplicou ${ok.length} sugestão(ões) de SEO da IA` : 'Recusou as sugestões de SEO da IA', p,
     rv.sugs.map(s => `${s.ok ? 'aceita' : 'recusada'}: ${SUG_LABEL[s.campo]}${s.campo === 'variacao' ? ' «' + s.alvo + '»' : ''} ${fmtV(s.atual)} → ${fmtV(s.sugerido)}`).join('; '));
   if (ok.length){
-    await syncNames(p); autoStatus(p); savePlan(); renderList(); renderDetail(); writeDescritivo(p);
+    await syncNames(p); manterAprovacao(p, rv.aprovado); autoStatus(p); savePlan(); renderList(); renderDetail(); writeDescritivo(p);
     await loadJobs('Aplicando as sugestões e renomeando os arquivos…');
     if (!rv) return;
     if (rvBlocks()){ rv.step = 1; renderRv(); return toast('Depois das mudanças apareceu um bloqueio. Confira.'); }
@@ -4374,8 +4477,8 @@ $('dlgDrive').addEventListener('click', async e => {
   }
   if (act === 'completaria'){ const p = rv.p; reopenReview = p.id; $('dlgDrive').close(); openForm(p); return iaSeo($('fIaSeo')); }
   if (act === 'recheck') return loadJobs();
-  if (act === 'next'){ rv.step = 2; renderRv(); if (rv.sugs === undefined) runIA(); return; }
-  if (act === 'back'){ rv.step--; rv.result = null; return renderRv(); }
+  if (act === 'next'){ if (rv.auto){ rv.step = 3; renderRv(); return sendToDrive(); } rv.step = 2; renderRv(); if (rv.sugs === undefined) runIA(); return; }
+  if (act === 'back'){ rv.step = rv.auto && rv.step === 3 ? 1 : rv.step - 1; rv.result = null; return renderRv(); }
   if (act === 'skip'){ rv.step = 3; return renderRv(); }
   if (act === 'iaretry') return runIA();
   if (act === 'cfgai'){ $('dlgDrive').close(); return goCfg('conexoes', 'aiKey'); }
@@ -4412,7 +4515,7 @@ $('rvIn').onchange = async () => {
       thumbCache.delete(`${ud(p, j.u).join('/')}/${j.local}`);
       await syncNames(p);
     });
-    mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail();
+    mexeu(p); manterAprovacao(p, rv.aprovado); autoStatus(p); savePlan(); renderList(); renderDetail();
     registrar('Envio ao Drive', 'Trocou um arquivo na conferência', p, `${j.it.nome}${j.u.nome ? ' · ' + j.u.nome : ''}: ${j.local} → ${f.name} (o antigo foi para a _lixeira)`);
     toast('Arquivo trocado. Conferindo de novo…');
     await loadJobs();
@@ -5397,7 +5500,7 @@ function setPrioProduto(p, v){
 }
 function alternarPublicado(p){
   if (p.status === 'publicado'){ p.status = 'produzir'; autoStatus(p); toast('Desmarcado. A etapa volta a ser calculada pelo app.'); registrar('Produto', 'Desmarcou "publicado"', p); }
-  else { p.status = 'publicado'; toast('Marcado como publicado.'); registrar('Produto', 'Marcou como publicado', p); }
+  else { p.status = 'publicado'; p.publicadoEm = new Date().toISOString(); toast('Marcado como publicado.'); registrar('Produto', 'Marcou como publicado', p); }
   savePlan(); renderList(); renderDetail();
 }
 $('plist').addEventListener('contextmenu', e => {
@@ -5762,6 +5865,314 @@ $('btnLista').onclick = () => { store.set('listaOculta', !store.get('listaOculta
 aplicarLista();
 
 // =====================================================================
+// RESUMO: números da equipe (cada pessoa escolhe quais) e aprovação dos produtos antes do Drive
+// =====================================================================
+// p.aprovacao = { status: 'aprovado' | 'reprovado', em, por, alterado (aprovado), motivo e fotos (reprovado) }
+// p.aprovHist = aprovado / reprovado / reenviado, para os números do período
+// a aprovação vale para o produto como estava: qualquer mudança depois (mexeu) pede aprovação de novo
+// (funções declaradas: a lista e a tela do produto usam antes deste trecho carregar)
+function aprovValida(p){ return p.aprovacao?.status === 'aprovado' && (p.aprovacao.alterado || '') === (p.alterado || ''); }
+function reprovado(p){ return p.aprovacao?.status === 'reprovado'; }
+// vai ao Drive: aprovado, ou igual ao que já foi enviado (mandar de novo o mesmo conteúdo)
+function podeEnviar(p){ return aprovValida(p) || !!(p.drive?.em && !mudouDepoisDoEnvio(p)); }
+// mudança feita dentro de um envio aprovado (renomear, sugestão aceita, troca na conferência) não derruba a aprovação
+function manterAprovacao(p, valia){ if (valia && p.aprovacao?.status === 'aprovado') p.aprovacao.alterado = p.alterado || ''; }
+function histAprov(p, status, extra = {}){
+  const x = { status, em: new Date().toISOString(), por: quem(), ...extra };
+  p.aprovHist = [...(p.aprovHist || []), x].slice(-30);
+  return x;
+}
+// reprovação anterior ainda sem aprovação depois (mostra para quem vai aprovar de novo)
+function reprovacaoAnterior(p){
+  const h = p.aprovHist || [], r = h.findLastIndex(x => x.status === 'reprovado');
+  return r >= 0 && !h.slice(r).some(x => x.status === 'aprovado') ? h[r] : null;
+}
+function dtBR(iso){ return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); }
+const AP_MOTIVOS = ['Fundo', 'Iluminação', 'Enquadramento', 'Cor diferente do produto', 'Foto cortada ou distorcida', 'Qualidade baixa', 'Falta foto', 'Título ou SEO'];
+
+async function aprovarProduto(p){
+  if (etapa(p) !== 'aprovacao') return toast('Este produto não está esperando aprovação.');
+  const x = histAprov(p, 'aprovado');
+  p.aprovacao = { status: 'aprovado', em: x.em, por: x.por, alterado: p.alterado || '' };
+  apFechar(false); savePlan(); renderList(); renderResumo();
+  registrar('Aprovação', 'Aprovou o produto', p, 'O envio ao Google Drive começa em seguida');
+  if (!ws) return toast('Aprovado. Conecte a pasta para o envio ao Drive começar.', 5000);
+  if (isFileUrl || !settings.drive.clientId) return toast('Aprovado. O Google Drive ainda não está configurado: depois de conectar, envie em Aprovação → Aprovados.', 7000);
+  // o login do Google abre uma janela: precisa ser agora, ainda no clique
+  if (!gOk()) try { await gLogin(); } catch {}
+  openReview(p, { auto: true });
+}
+function reprovarProduto(p){
+  const r = apRep, texto = r.texto.trim(), mot = [...r.motivos];
+  if (!mot.length && !texto) return toast('Diga o que precisa ser feito: escolha um motivo ou escreva.', 4000);
+  const motivo = mot.join(', ') + (texto ? (mot.length ? ': ' : '') + texto : ''), fotos = [...r.fotos];
+  p.aprovacao = histAprov(p, 'reprovado', { motivo, fotos });
+  registrar('Aprovação', 'Reprovou o produto', p, motivo + (fotos.length ? ` · refazer: ${fotos.join(', ')}` : ''));
+  apFechar(false); savePlan(); renderList(); renderResumo();
+  toast('Reprovado. A equipe vê o motivo na tela do produto.', 4000);
+}
+function pedirAprovacao(p){
+  delete p.aprovacao; histAprov(p, 'reenviado');
+  registrar('Aprovação', 'Pediu nova aprovação', p);
+  savePlan(); renderList(); renderDetail();
+  if (!$('tab-resumo').classList.contains('hidden')){ apFechar(false); renderResumo(); }
+  toast(etapa(p) === 'aprovacao' ? 'O produto voltou para a aprovação.' : `Ele volta para a aprovação quando estiver completo (agora: ${etapaInfo(etapa(p))[1]}).`, 5000);
+}
+
+// ---------- números ----------
+const RS_PERIODOS = [['hoje', 'Hoje'], ['7', 'Últimos 7 dias'], ['30', 'Últimos 30 dias'], ['mes', 'Este mês'], ['mesant', 'Mês passado'], ['tudo', 'Desde o início'], ['datas', 'Escolher datas']];
+// data local (AAAA-MM-DD) de um ISO ou de uma data já curta
+const diaDe = s => !s ? '' : /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : new Date(s).toLocaleDateString('sv');
+function rsIntervalo(){
+  const k = store.get('rsPeriodo', '30'), hoje = hojeSv(), d = new Date();
+  if (k === 'hoje') return [hoje, hoje];
+  if (k === '7' || k === '30') return [somaDias(1 - k), hoje];
+  if (k === 'mes') return [hoje.slice(0, 8) + '01', hoje];
+  if (k === 'mesant') return [new Date(d.getFullYear(), d.getMonth() - 1, 1).toLocaleDateString('sv'), new Date(d.getFullYear(), d.getMonth(), 0).toLocaleDateString('sv')];
+  if (k === 'datas') return [store.get('rsDe', '') || '0000', store.get('rsAte', '') || '9999'];
+  return ['0000', '9999'];
+}
+function rsPeriodoNome(){
+  const k = store.get('rsPeriodo', '30');
+  if (k !== 'datas') return RS_PERIODOS.find(x => x[0] === k)?.[1].toLowerCase() || '';
+  const br = s => s.split('-').reverse().join('/'), [de, ate] = rsIntervalo();
+  return `${de === '0000' ? 'início' : br(de)} a ${ate === '9999' ? 'hoje' : br(ate)}`;
+}
+// data de cadastro: o id começa com a hora da criação
+const criadoEm = p => { const t = parseInt(String(p.id).slice(0, 8), 36); return t > 1.6e12 && t < 4e12 ? new Date(t).toISOString() : ''; };
+function rsCtx(){
+  const [de, ate] = rsIntervalo(), noP = s => { const d = diaDe(s); return !!d && d >= de && d <= ate; };
+  const et = Object.fromEntries(ETAPAS.map(e => [e[0], 0])), ev = st => plan.produtos.flatMap(p => (p.aprovHist || []).filter(x => x.status === st && noP(x.em)));
+  plan.produtos.forEach(p => et[etapa(p)]++);
+  const ab = dem.demandas.filter(d => d.status !== 'feita');
+  // aprovados de primeira: aprovações do período sem reprovação desde a aprovação anterior
+  const aps = plan.produtos.flatMap(p => (p.aprovHist || []).map((x, i, h) => x.status === 'aprovado' && noP(x.em)
+    ? !h.slice(0, i).slice(h.slice(0, i).findLastIndex(y => y.status === 'aprovado') + 1).some(y => y.status === 'reprovado') : null).filter(v => v !== null));
+  return { noP, et, ev, ab, aps };
+}
+const irDem = f => { dmFiltro = f; showTab('demandas'); };
+function irProdutos(st = ''){
+  if (store.get('listaOculta', false)){ store.set('listaOculta', false); aplicarLista(); }
+  $('pStatus').value = st; showTab('produtos');
+}
+// cada número: k, grupo, rótulo, cor, conta, se depende do período e aonde vai no clique
+const corEt = k => etapaInfo(k)[2];
+const RS_METRICAS = [
+  ...['aprovacao', 'reprovado', 'pronto', 'produzir', 'gerando', 'seo', 'drive', 'publicado'].map(k => ({ k, g: 'Produtos agora', l: { reprovado: 'Reprovados (a corrigir)', pronto: 'Aprovados, falta enviar' }[k] || etapaInfo(k)[1], c: corEt(k), n: x => x.et[k],
+    ir: () => k === 'aprovacao' ? apIr('aguardando') : k === 'reprovado' ? apIr('reprovados') : k === 'pronto' ? apIr('aprovados') : irProdutos(k) })),
+  { k: 'total', g: 'Produtos agora', l: 'Produtos cadastrados', c: '#475569', n: () => plan.produtos.length, ir: () => irProdutos() },
+  { k: 'fila', g: 'Produtos agora', l: 'Na fila de prioridade', c: '#dc2626', n: () => plan.produtos.filter(p => prioProduto(p)).length,
+    ir: () => { $('pOrdem').value = 'demanda'; store.set('pOrdem', 'demanda'); irProdutos(); } },
+  { k: 'fotosFalta', g: 'Produtos agora', l: 'Fotos faltando', c: '#ea580c', n: () => plan.produtos.filter(p => p.status !== 'publicado').reduce((t, p) => { const x = prog(p); return t + x.total - x.done; }, 0) },
+  { k: 'aprovados', g: 'No período', per: 1, l: 'Aprovações', c: '#16a34a', n: x => x.ev('aprovado').length, ir: () => apIr('aprovados') },
+  { k: 'reprovacoes', g: 'No período', per: 1, l: 'Reprovações', c: '#dc2626', n: x => x.ev('reprovado').length },
+  { k: 'primeira', g: 'No período', per: 1, l: 'Aprovados de primeira', c: '#0891b2', n: x => x.aps.length ? Math.round(x.aps.filter(Boolean).length / x.aps.length * 100) + '%' : '–' },
+  { k: 'enviados', g: 'No período', per: 1, l: 'Enviados ao Drive', c: '#16a34a', n: x => plan.produtos.filter(p => x.noP(p.drive?.em)).length },
+  { k: 'novos', g: 'No período', per: 1, l: 'Produtos cadastrados', c: '#475569', n: x => plan.produtos.filter(p => x.noP(criadoEm(p))).length },
+  { k: 'publicadosP', g: 'No período', per: 1, l: 'Publicados', c: '#7c3aed', n: x => plan.produtos.filter(p => p.status === 'publicado' && x.noP(p.publicadoEm)).length },
+  { k: 'dAbertas', g: 'Demandas', l: 'Demandas em aberto', c: '#5d6ec8', n: x => x.ab.length, ir: () => irDem('') },
+  { k: 'dUrg', g: 'Demandas', l: 'Demandas urgentes', c: '#dc2626', n: x => x.ab.filter(d => prioridadeDe(d) === 'urgente').length, ir: () => irDem('urgentes') },
+  { k: 'dAtras', g: 'Demandas', l: 'Demandas atrasadas', c: '#dc2626', n: x => x.ab.filter(atrasada).length, ir: () => irDem('atrasadas') },
+  { k: 'dNovas', g: 'Demandas', per: 1, l: 'Demandas criadas', c: '#5d6ec8', n: x => dem.demandas.filter(d => x.noP(d.criada)).length },
+  { k: 'dFeitas', g: 'Demandas', per: 1, l: 'Demandas concluídas', c: '#16a34a', n: x => dem.demandas.filter(d => d.status === 'feita' && x.noP(d.feitaEm)).length },
+];
+const RS_PADRAO = ['aprovacao', 'reprovado', 'gerando', 'aprovados', 'enviados', 'dAbertas', 'dAtras', 'dFeitas'];
+const rsSel = () => store.get('rsMetricas', RS_PADRAO).filter(k => RS_METRICAS.some(m => m.k === k));
+
+// número no botão da aba: produtos esperando aprovação
+function renderResumoCont(){
+  const n = plan.produtos.filter(p => etapa(p) === 'aprovacao').length, b = document.querySelector('.tabs button[data-tab="resumo"]');
+  if (b) b.innerHTML = ic('grid') + 'Resumo' + (n ? `<span class="cnt aprov" title="${n} produto(s) esperando aprovação">${n}</span>` : '');
+}
+function renderResumo(){
+  renderResumoCont();
+  const per = store.get('rsPeriodo', '30');
+  $('rsPeriodo').innerHTML = RS_PERIODOS.map(([k, l]) => `<option value="${k}" ${k === per ? 'selected' : ''}>${l}</option>`).join('');
+  $('rsDatas').classList.toggle('hidden', per !== 'datas');
+  $('rsDe').value = store.get('rsDe', ''); $('rsAte').value = store.get('rsAte', '');
+  const x = rsCtx(), pn = rsPeriodoNome();
+  $('rsMetricas').innerHTML = rsSel().map(k => RS_METRICAS.find(m => m.k === k)).map(m => {
+    const tag = m.ir ? 'button' : 'div';
+    return `<${tag} ${m.ir ? 'type="button"' : ''} class="rsm" data-rsm="${m.k}" style="--c:${m.c}"><b>${m.n(x)}</b><span>${esc(m.l)}</span><small>${m.per ? esc(pn) : 'agora'}</small></${tag}>`;
+  }).join('') || '<div class="muted">Nenhum número escolhido. Clique em Personalizar.</div>';
+  // barra com quantos produtos há em cada etapa
+  const tot = plan.produtos.length;
+  $('rsFunil').innerHTML = store.get('rsFunil', true) && tot ? `<div class="panel rsfunilw"><b>Produtos por etapa</b> <span class="muted">· ${tot} no total</span>
+    <div class="rsfunil">${ETAPAS.filter(e => x.et[e[0]]).map(([k, l, c]) => `<i style="--c:${c};flex:${x.et[k]}" title="${l}: ${x.et[k]}"></i>`).join('')}</div>
+    <div class="rsleg">${ETAPAS.filter(e => x.et[e[0]]).map(([k, l, c]) => `<button type="button" data-rsm="${k}" style="--c:${c}">${l} <b>${x.et[k]}</b></button>`).join('')}</div></div>` : '';
+  if (!$('rsPersBox').classList.contains('hidden')) renderRsPers();
+  renderAprov();
+}
+function renderRsPers(){
+  const sel = new Set(rsSel()), grupos = [...new Set(RS_METRICAS.map(m => m.g))];
+  $('rsPersBox').innerHTML = `<div class="rspers"><h3>Personalizar o resumo</h3>
+    <span class="muted ajuda">Marque os números que quer ver. "No período" segue o período escolhido no topo. A escolha fica guardada neste computador.</span>
+    ${grupos.map(g => `<div class="grupo">${g}</div>` + RS_METRICAS.filter(m => m.g === g).map(m => `<label><input type="checkbox" data-rsk="${m.k}" ${sel.has(m.k) ? 'checked' : ''}>${esc(m.l)}</label>`).join('')).join('')}
+    <div class="grupo">Outros</div><label><input type="checkbox" id="rsFunilOn" ${store.get('rsFunil', true) ? 'checked' : ''}>Barra com os produtos por etapa</label>
+    <div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="sm" data-rs="padrao">${ic('undo')}Voltar ao padrão</button><button type="button" class="sm primary" data-rs="fechar">Pronto</button></div></div>`;
+}
+$('rsPers').onclick = () => { $('rsPersBox').classList.toggle('hidden'); renderResumo(); };
+$('rsPersBox').addEventListener('change', e => {
+  if (e.target.id === 'rsFunilOn') store.set('rsFunil', e.target.checked);
+  const k = e.target.dataset.rsk;
+  // guarda na ordem da lista de números
+  if (k){ const s = new Set(rsSel()); e.target.checked ? s.add(k) : s.delete(k); store.set('rsMetricas', RS_METRICAS.map(m => m.k).filter(x => s.has(x))); }
+  renderResumo();
+});
+$('rsPersBox').addEventListener('click', e => {
+  const a = e.target.closest('[data-rs]')?.dataset.rs;
+  if (a === 'padrao'){ store.set('rsMetricas', RS_PADRAO); store.set('rsFunil', true); }
+  if (a === 'fechar') $('rsPersBox').classList.add('hidden');
+  if (a) renderResumo();
+});
+$('rsPeriodo').onchange = () => { store.set('rsPeriodo', $('rsPeriodo').value); renderResumo(); if ($('rsPeriodo').value === 'datas' && !$('rsDe').value) $('rsDe').focus(); };
+$('rsDe').onchange = () => { store.set('rsDe', $('rsDe').value); renderResumo(); };
+$('rsAte').onchange = () => { store.set('rsAte', $('rsAte').value); renderResumo(); };
+const rsClique = e => { const k = e.target.closest('[data-rsm]')?.dataset.rsm; if (!k) return; RS_METRICAS.find(m => m.k === k)?.ir?.(); };
+$('rsMetricas').onclick = rsClique;
+$('rsFunil').onclick = rsClique;
+
+// ---------- cards de aprovação ----------
+let apVista = store.get('apVista', 'aguardando'), apAberto = null, apRep = null, apFotos = null;
+const apCapas = new Map();
+function apListas(){
+  const { noP } = rsCtx(), quando = p => p.aprovacao?.em || '';
+  return {
+    aguardando: plan.produtos.filter(p => etapa(p) === 'aprovacao')
+      .sort((a, b) => prioIdx(prioProduto(a)) - prioIdx(prioProduto(b)) || (a.alterado || '').localeCompare(b.alterado || '')),
+    reprovados: plan.produtos.filter(reprovado).sort((a, b) => quando(b).localeCompare(quando(a))),
+    // aprovados que ainda não subiram ficam no topo, mesmo fora do período
+    aprovados: plan.produtos.filter(p => etapa(p) === 'pronto' || (p.aprovacao?.status === 'aprovado' && noP(p.aprovacao.em)))
+      .sort((a, b) => (etapa(b) === 'pronto') - (etapa(a) === 'pronto') || quando(b).localeCompare(quando(a))),
+  };
+}
+const rotFoto = j => { const fs = filesOf(j.u, j.it); return (j.u.nome ? j.u.nome + ' · ' : '') + j.it.nome + (fs.length > 1 ? ' ' + (fs.indexOf(j.local) + 1) : ''); };
+const nFotos = p => units(p).reduce((t, u) => t + p.checklist.reduce((s, it) => s + filesOf(u, it).length, 0), 0);
+function apCard(p, vista){
+  const e = etapa(p), [, lab, col] = etapaInfo(e), pp = prioProduto(p), cv = apCapas.get(p.id), a = p.aprovacao;
+  const sub = vista === 'aguardando' ? (p.alterado ? `atualizado em ${dtBR(p.alterado)}` : '') : a ? `${vista === 'reprovados' ? 'reprovado' : 'aprovado'} por ${a.por} · ${dtBR(a.em)}` : '';
+  return `<button type="button" class="apcard" data-ap="${p.id}">
+    <div class="capa">${cv ? `<img src="${cv.url}" alt="">` : ic('image', 'lg')}</div>
+    <div class="info"><b>${esc(p.nome)}</b>${p.titulo ? `<span class="muted tit" title="${esc(p.titulo)}">${esc(p.titulo)}</span>` : ''}
+      <span class="muted">${esc([p.categoria, `${nFotos(p)} foto(s)`].filter(Boolean).join(' · '))}</span>
+      ${pp || vista === 'aprovados' ? `<span>${pp ? `<span class="lbl" style="--c:${prioInfo(pp)[2]}">${prioInfo(pp)[1]}</span>` : ''}${vista === 'aprovados' ? `<span class="st" style="--c:${col}">${lab}</span>` : ''}</span>` : ''}
+      ${vista === 'reprovados' ? `<span class="muted mot" title="${esc(a.motivo)}">${esc(a.motivo)}</span>` : ''}
+      ${sub ? `<span class="muted">${esc(sub)}</span>` : ''}</div></button>`;
+}
+function apAbertoHtml(p, vista){
+  const rep = apRep?.pid === p.id ? apRep : null, f = apFotos?.pid === p.id ? apFotos : null, a = p.aprovacao;
+  const ult = vista === 'aguardando' ? reprovacaoAnterior(p) : null, blq = f && !f.carregando ? f.jobs.filter(jobBlocked).length : 0;
+  let fotos;
+  if (!ws) fotos = '<div class="alert">Conecte a pasta (botão no topo) para ver as fotos.</div>';
+  else if (!f || f.carregando) fotos = `<div class="muted" style="padding:12px 0">${ic('loader', 'spin')} Carregando as fotos…</div>`;
+  else fotos = f.us.map(u => {
+    const uj = f.jobs.filter(j => j.u === u); if (!uj.length) return '';
+    return (u.nome ? `<div class="apvar">${esc(p.tipoVariacao)}: ${esc(u.nome)}</div>` : '') + `<div class="apfotos">${uj.map(j => {
+      const i = f.jobs.indexOf(j), marc = rep?.fotos.has(rotFoto(j)), bl = j.a.issues.filter(x => x.lvl === 'block');
+      return `<div class="apfoto ${marc ? 'marcada' : ''}" data-apf="${i}"><div class="img" title="${rep ? 'Clique para marcar: refazer esta foto' : 'Clique para ver grande'}">${j.url ? `<img src="${j.url}" alt="">` : ic(j.a.video ? 'video' : 'ban', 'lg')}</div>
+        ${marc ? '<span class="refazer">Refazer</span>' : ''}<span>${esc(j.it.nome)}</span>
+        ${bl.length ? `<span class="lbl block" title="${esc(bl.map(x => x.msg).join('; '))}">${ic('ban')}Fora da regra</span>` : ''}</div>`; }).join('')}</div>`;
+  }).join('') || '<div class="muted">Este produto não tem fotos.</div>';
+  const acoes = vista === 'aguardando'
+    ? rep ? '' : `<button type="button" class="aprovar" data-apact="aprovar">${ic('check')}Aprovar e enviar ao Drive</button><button type="button" class="reprovar" data-apact="reprovar">${ic('x')}Reprovar</button>`
+    : vista === 'reprovados' ? `<button type="button" class="primary" data-apact="reenviar">${ic('refresh')}Corrigido: voltar para a aprovação</button>`
+    : etapa(p) === 'pronto' ? `<button type="button" class="primary" data-apact="enviar">${ic('upload')}Enviar ao Drive agora</button>` : '';
+  return `<div class="apaberto ${rep ? 'reprovar' : ''}" data-apopen="${p.id}">
+    <div class="topo"><div class="t"><h3>${esc(p.nome)} <span class="lbl info">nome interno</span></h3>
+      ${p.titulo ? `<div>${ic('tag')} <b>${esc(p.titulo)}</b> <span class="muted">· título do anúncio</span></div>` : ''}
+      <div class="muted">${esc([p.sku && 'SKU ' + p.sku, p.marca, p.categoria, p.temVariacao ? `${p.variacoes.length} ${p.variacoes.length > 1 ? 'variações' : 'variação'}` : ''].filter(Boolean).join(' · '))}</div></div>
+      <button type="button" class="sm" data-apact="abrir">${ic('external')}Abrir produto</button>
+      <button type="button" class="sm ghost" data-apact="fechar" title="Fechar">${ic('x')}</button></div>
+    ${vista === 'reprovados' && a ? `<div class="alert block"><b>Reprovado por ${esc(a.por)} em ${esc(dtBR(a.em))}:</b> ${esc(a.motivo)}${a.fotos?.length ? `<br>Refazer: ${esc(a.fotos.join(' · '))}` : ''}</div>` : ''}
+    ${vista === 'aprovados' && a?.status === 'aprovado' ? `<div class="alert ok">Aprovado por <b>${esc(a.por)}</b> em ${esc(dtBR(a.em))}. ${etapa(p) === 'pronto' ? 'Ainda não subiu para o Drive.' : esc(etapaDica(p))}</div>` : ''}
+    ${ult ? `<div class="alert"><b>Já foi reprovado antes</b> (${esc(ult.por)}, ${esc(dtBR(ult.em))}): ${esc(ult.motivo)}${ult.fotos?.length ? ` · refazer: ${esc(ult.fotos.join(', '))}` : ''}</div>` : ''}
+    ${blq && vista === 'aguardando' ? `<div class="alert block">${blq} foto(s) fora da regra de envio. Se aprovar, o envio para na conferência até ajustar ou trocar.</div>` : ''}
+    ${fotos}
+    ${p.descricao?.trim() ? `<details class="apdesc"><summary>Descrição do anúncio</summary><div class="muted" style="white-space:pre-wrap;margin-top:6px">${esc(p.descricao.trim())}</div></details>` : ''}
+    ${rep ? `<div class="apmotivo"><b>O que precisa ser feito?</b>
+      <div class="opts" style="margin:8px 0">${AP_MOTIVOS.map(m => `<button type="button" class="opt ${rep.motivos.has(m) ? 'on' : ''}" data-apmot="${esc(m)}">${esc(m)}</button>`).join('')}</div>
+      <textarea id="apTexto" placeholder="Explique para a equipe (ex.: trocar o fundo da capa por branco; a cor da foto 3 está diferente do produto)">${esc(rep.texto)}</textarea>
+      <div class="muted" style="margin-top:4px">${rep.fotos.size ? `${rep.fotos.size} foto(s) marcada(s) para refazer.` : 'Clique nas fotos que precisam ser refeitas (opcional).'}</div>
+      <div class="apacoes"><button type="button" class="reprovar solid" data-apact="confrep">${ic('x')}Confirmar reprovação</button><button type="button" data-apact="cancrep">Cancelar</button></div></div>` : ''}
+    ${acoes ? `<div class="apacoes">${acoes}</div>` : ''}
+  </div>`;
+}
+function renderAprov(){
+  const L = apListas();
+  $('apVista').innerHTML = [['aguardando', 'Aguardando'], ['reprovados', 'Reprovados'], ['aprovados', 'Aprovados']]
+    .map(([k, l]) => `<button type="button" data-apv="${k}" class="${apVista === k ? 'on' : ''}">${l}<b>${L[k].length}</b></button>`).join('');
+  const lista = L[apVista];
+  if (apAberto && !lista.some(p => p.id === apAberto)) apFechar(false);
+  const vazio = { aguardando: 'Nenhum produto esperando aprovação. Quando um produto tiver todas as fotos e o cadastro completo, ele aparece aqui.',
+    reprovados: 'Nenhum produto reprovado.', aprovados: `Nenhuma aprovação em: ${rsPeriodoNome()}.` }[apVista];
+  $('apCards').innerHTML = lista.length ? lista.map(p => p.id === apAberto ? apAbertoHtml(p, apVista) : apCard(p, apVista)).join('')
+    : `<div class="muted" style="grid-column:1/-1">${esc(vazio)}</div>`;
+  apCarregarCapas(lista);
+}
+async function apCarregarCapas(lista){
+  if (!ws) return;
+  for (const p of lista){
+    if (p.id === apAberto) continue;
+    try {
+      const f = await capaDoProduto(p); if (!f) continue;
+      let c = apCapas.get(p.id);
+      if (!c || c.nome !== f.name || c.mod !== f.lastModified){
+        if (c) URL.revokeObjectURL(c.url);
+        c = { nome: f.name, mod: f.lastModified, url: (await lerFoto(f, 360)).mini }; apCapas.set(p.id, c);
+      }
+      const el = document.querySelector(`.apcard[data-ap="${p.id}"] .capa`);
+      if (el && !el.querySelector('img')) el.innerHTML = `<img src="${c.url}" alt="">`;
+    } catch {}
+  }
+}
+// abre o card: lê todas as fotos (com a mesma conferência do envio, para avisar o que está fora da regra)
+async function apAbrir(pid){
+  apFechar(false); apAberto = pid; renderAprov();
+  document.querySelector('.apaberto')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  const p = plan.produtos.find(x => x.id === pid); if (!p || !ws) return;
+  const f = apFotos = { pid, jobs: [], us: [], carregando: true };
+  try { Object.assign(f, await buildJobs(p)); } catch (e) { toast('Não consegui ler as fotos: ' + e.message, 5000); }
+  f.carregando = false;
+  if (apFotos !== f) return f.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url));
+  renderAprov();
+}
+function apFechar(render = true){
+  apFotos?.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url));
+  apFotos = apAberto = apRep = null;
+  if (render) renderAprov();
+}
+function apIr(vista){
+  apVista = vista; store.set('apVista', vista); apFechar(false);
+  showTab('resumo'); $('apWrap').scrollIntoView({ behavior: 'smooth' });
+}
+function apIrProduto(p){ apIr('aguardando'); apAbrir(p.id); }
+$('apVista').onclick = e => { const b = e.target.closest('[data-apv]'); if (!b) return; apVista = b.dataset.apv; store.set('apVista', apVista); apFechar(); };
+$('apCards').addEventListener('click', e => {
+  const card = e.target.closest('.apcard'); if (card) return apAbrir(card.dataset.ap);
+  const box = e.target.closest('.apaberto'); if (!box) return;
+  const p = plan.produtos.find(x => x.id === box.dataset.apopen); if (!p) return apFechar();
+  const mot = e.target.closest('[data-apmot]');
+  if (mot && apRep){ const m = mot.dataset.apmot; apRep.motivos.has(m) ? apRep.motivos.delete(m) : apRep.motivos.add(m); return renderAprov(); }
+  const fo = e.target.closest('.apfoto');
+  if (fo && apFotos?.pid === p.id){
+    const j = apFotos.jobs[+fo.dataset.apf]; if (!j) return;
+    if (apRep){ const l = rotFoto(j); apRep.fotos.has(l) ? apRep.fotos.delete(l) : apRep.fotos.add(l); return renderAprov(); }
+    const lista = apFotos.jobs.filter(x => x.url).map(x => ({ titulo: rotFoto(x), nome: x.local, url: x.url, size: x.a.size }));
+    return abrirVisor(lista, lista.findIndex(x => x.url === j.url));
+  }
+  const a = e.target.closest('[data-apact]')?.dataset.apact; if (!a) return;
+  if (a === 'fechar') return apFechar();
+  if (a === 'abrir'){ current = p.id; currentVar = null; return showTab('produtos'); }
+  if (a === 'aprovar') return aprovarProduto(p);
+  if (a === 'reprovar'){ apRep = { pid: p.id, motivos: new Set(), fotos: new Set(), texto: '' }; renderAprov(); return $('apTexto')?.focus(); }
+  if (a === 'cancrep'){ apRep = null; return renderAprov(); }
+  if (a === 'confrep') return reprovarProduto(p);
+  if (a === 'reenviar') return pedirAprovacao(p);
+  if (a === 'enviar') return openReview(p, { auto: true });
+});
+$('apCards').addEventListener('input', e => { if (e.target.id === 'apTexto' && apRep) apRep.texto = e.target.value; });
+
+// =====================================================================
 // ATUALIZAÇÕES DO APP: cada versão instalada entra uma vez no registro de alterações
 // =====================================================================
 // REGRA para quem editar este arquivo (pessoa ou IA): toda mudança instalada ganha uma entrada NO FIM desta lista,
@@ -5817,6 +6228,12 @@ const ATUALIZACOES = [
     'O app também abre como site, sem o atalho: escolha a pasta "Organizador de Fotos" do Google Drive e ele grava tudo nela (produtos e _sistema)',
     'Várias pessoas ao mesmo tempo: antes de salvar, o app junta o que cada um mudou no cadastro e nas demandas, produto por produto',
     'A cada 20 segundos o app traz o que a equipe mudou', 'No site o login do Google vale 1 hora; pelo atalho continua guardado'] },
+  { id: '2026-10-26-resumo-aprovacao', em: '2026-10-26 11:32', titulo: 'Aba Resumo e aprovação antes do Drive', itens: [
+    'Nova aba Resumo, antes de Produtos: números da equipe (produtos por etapa, aprovações, envios ao Drive, demandas) com o período que você escolher',
+    'Botão Personalizar: cada pessoa escolhe quais números aparecem (fica guardado no computador)',
+    'Cards de aprovação: clique no produto para ver todas as fotos e aprovar ou reprovar',
+    'Aprovado, o produto sobe sozinho para o Google Drive; reprovado, volta para a equipe com o motivo e as fotos a refazer',
+    'O envio ao Drive só acontece depois da aprovação. Qualquer mudança num produto aprovado pede aprovação de novo'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -5870,12 +6287,12 @@ try {
   addEventListener('pagehide', () => canal.postMessage('tchau'));
 } catch {}
 current = plan.produtos[0]?.id || null;
-renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont();
+renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); renderResumoCont();
 // primeira vez neste computador: pergunta quem está usando (vai para o registro de alterações)
 if (!quemUsa()) setTimeout(() => { if (!quemUsa() && !document.querySelector('dialog[open]')){ renderQuem(); $('dlgQuem').showModal(); } }, 1500);
 // entra no Google sozinho se já tiver login guardado neste computador
 gStatus().then(() => gGuardado ? gSilent() : false).then(ok => { renderDrive(); if (ok && !settings.drive.email) gWho().catch(() => {}); });
-showTab(['produtos','demandas','config'].includes(store.get('tab')) ? store.get('tab') : 'produtos');
+showTab(['resumo','produtos','demandas','config'].includes(store.get('tab')) ? store.get('tab') : 'resumo');
 </script>
 </body>
 </html>
