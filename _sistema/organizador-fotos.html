@@ -7053,6 +7053,8 @@ const ATUALIZACOES = [
     'Fotos que estão na pasta do produto mas tinham saído da lista voltam sozinhas para o item certo',
     'O app não tira mais fotos da lista quando a pasta do produto mudou de nome em outro aparelho',
     'Produto apagado pela equipe não volta mais por causa de um navegador com dados antigos'] },
+  { id: '2026-10-27-inicio-resumo', em: '2026-10-27 07:20', titulo: 'O app abre sempre no Resumo', itens: [
+    'Ao entrar, a primeira tela é sempre a aba Resumo (antes abria na última aba usada)'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -7111,7 +7113,8 @@ renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); rend
 if (!quemUsa()) setTimeout(() => { if (!quemUsa() && !conta && !document.querySelector('dialog[open]')){ renderQuem(); $('dlgQuem').showModal(); } }, 1500);
 // entra no Google sozinho se já tiver login guardado neste computador
 gStatus().then(() => gGuardado ? gSilent() : false).then(ok => { renderDrive(); if (ok && !settings.drive.email) gWho().catch(() => {}); });
-showTab(['resumo','produtos','demandas','config'].includes(store.get('tab')) ? store.get('tab') : 'resumo');
+// a tela inicial é sempre o Resumo
+showTab('resumo');
 </script>
 </body>
 </html>
