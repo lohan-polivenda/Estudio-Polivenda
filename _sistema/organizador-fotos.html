@@ -202,6 +202,14 @@ body.abrindo main > section{display:none !important}
 body.abrindo #nvStatus{display:none}
 #pcAviso{position:fixed;right:16px;bottom:16px;z-index:60;border-radius:20px;box-shadow:0 6px 18px #0002;font-weight:600}
 #pcAviso.hidden{display:none}
+#colFormato{margin:4px 0 10px}
+#colFotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin:12px 0;max-height:220px;overflow:auto}
+#colFotos button{position:relative;padding:0;aspect-ratio:3/4;border-radius:8px;overflow:hidden;border:2px solid transparent;background:var(--soft)}
+#colFotos button img{width:100%;height:100%;object-fit:cover;display:block}
+#colFotos button.on{border-color:var(--accent)}
+#colFotos button b{position:absolute;top:4px;left:4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--accent);color:var(--accent-text);font-size:12px;display:flex;align-items:center;justify-content:center}
+#colPrevia{display:flex;justify-content:center;background:var(--soft);border-radius:10px;padding:10px;min-height:120px;align-items:center}
+#colPrevia canvas{max-width:100%;max-height:46vh;display:block}
 #recCorpo h3{margin:16px 0 6px;font-size:14px}
 #recCorpo .recl{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
 #recCorpo .recl:last-child{border-bottom:0}
@@ -1233,6 +1241,16 @@ _sistema/                          ← tudo que não é produto
   <div class="dlg-foot"><button id="nvFechar" class="primary" disabled>Copiando…</button></div>
 </dialog>
 <dialog id="dlgAp" class="dlgap"><div id="amBody"></div></dialog>
+<dialog id="dlgCol" class="wide">
+  <div class="dlg-body">
+    <h2>Colagem das fotos</h2>
+    <div class="opts" id="colFormato"></div>
+    <div class="muted ajuda">As fotos ficam coladas umas nas outras, sem margem, na ordem em que você clicar. Cada foto ocupa um espaço 3:4 (as que forem de outro formato são cortadas no centro).</div>
+    <div id="colFotos"></div>
+    <div id="colPrevia"></div>
+  </div>
+  <div class="dlg-foot"><span class="muted" id="colInfo" style="margin-right:auto"></span><button id="colFechar">Fechar</button><button id="colBaixar" class="primary" disabled>Baixar colagem</button></div>
+</dialog>
 <dialog id="dlgRec" class="wide">
   <div class="dlg-body">
     <h2>Recuperar produtos e fotos</h2>
@@ -2383,6 +2401,7 @@ function renderDetail(){
         <b data-act="cltog">Checklist${u.nome ? ' · ' + esc(p.tipoVariacao) + ': ' + esc(u.nome) : ''}</b>
         <span class="muted">${pu.done}/${pu.total}</span>
         <span class="muted ajuda" data-em="b">Arraste o arquivo para a linha, ou copie a imagem na IA e cole aqui (Ctrl+V). Também dá para usar o botão <b>Enviar foto</b>.</span>
+        ${p.checklist.some(it => filesOf(u, it).some(f => IMG_EXT.test(f))) ? `<button class="sm" data-act="colagem" title="Juntar as fotos numa imagem só (3 × 2 ou 4 × 2)">${ic('grid')}Colagem</button>` : ''}
         <button class="sm" data-act="copyall">Copiar todos os prompts</button>
       </div>
       <div class="clbody">
@@ -2896,6 +2915,7 @@ $('detail').addEventListener('click', async e => {
   if (b?.dataset.act === 'cltog'){ clFechado = !clFechado; store.set('clFechado', clFechado); return renderDetail(); }
   if (b?.dataset.act === 'verdem'){ const d = dem.demandas.find(x => x.id === b.dataset.dm); showTab('demandas'); if (d) abrirDem(d); return; }
   if (b?.dataset.act === 'veranexo') return abrirAnexo(curP(), curP().anexos[+b.dataset.i]);
+  if (b?.dataset.act === 'colagem') return abrirColagem(curP(), curU(curP()));
   if (!b){
     const p = curP(); if (!p) return;
     const ai = e.target.closest('img[data-af]');
@@ -3849,6 +3869,85 @@ $('pcDesligar').onclick = async () => {
   $('pcAviso').classList.add('hidden'); renderPc();
 };
 (async () => { if (pcPode()){ pcPasta = await idb.get('copiaPc') || null; pcFeitos = await idb.get('copiaPcFeitos') || {}; } renderPc(); })();
+// ---------- colagem: as fotos da variação coladas numa imagem só (3 × 2 ou 4 × 2), sem margem ----------
+const COL_FORMATOS = [[3, 2], [4, 2]], COL_CEL = [900, 1200]; // cada foto num espaço 3:4 de 900 × 1200
+let col = null;
+async function abrirColagem(p, u){
+  if (!ws) return toast('Conecte a pasta primeiro.');
+  const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) return toast('Não achei a pasta das fotos deste produto.');
+  const fotos = p.checklist.flatMap(it => filesOf(u, it).filter(f => IMG_EXT.test(f)).map(nome => ({ nome, item: it.nome })));
+  col = { p, u, dir, fotos, formato: store.get('colFormato', '3x2'), ordem: [], imgs: new Map(), vez: 0 };
+  const [c, l] = col.formato.split('x').map(Number);
+  col.ordem = fotos.slice(0, c * l).map(f => f.nome);
+  renderColagem(); $('dlgCol').showModal();
+  // miniaturas para escolher
+  emParalelo(fotos, 4, async f => {
+    try { f.mini = (await lerFotoDe(dir, f.nome, 144)).mini; const el = $('colFotos').querySelector(`[data-col="${CSS.escape(f.nome)}"]`); if (el && !el.querySelector('img')) el.insertAdjacentHTML('afterbegin', `<img src="${f.mini}" alt="">`), el.classList.remove('carregando'); } catch {}
+  });
+  montarColagem();
+}
+function renderColagem(){
+  const [c, l] = col.formato.split('x').map(Number), n = c * l;
+  $('colFormato').innerHTML = COL_FORMATOS.map(([a, b]) => `<button type="button" class="opt ${col.formato === a + 'x' + b ? 'on' : ''}" data-colf="${a}x${b}">${a} × ${b} (${a * b} fotos)</button>`).join('');
+  $('colFotos').innerHTML = col.fotos.map(f => { const i = col.ordem.indexOf(f.nome);
+    return `<button type="button" class="${i >= 0 ? 'on' : ''} ${f.mini ? '' : 'carregando'}" data-col="${esc(f.nome)}" title="${esc(f.item)}">${f.mini ? `<img src="${f.mini}" alt="">` : ''}${i >= 0 ? `<b>${i + 1}</b>` : ''}</button>`; }).join('');
+  const falta = n - col.ordem.length;
+  $('colInfo').textContent = `${col.ordem.length} de ${n} fotos` + (falta > 0 ? ` · faltam ${falta} (o espaço fica branco)` : '');
+}
+async function fotoInteira(nome){
+  if (!col.imgs.has(nome)) col.imgs.set(nome, (async () => createImageBitmap(await (await col.dir.getFileHandle(nome)).getFile()))());
+  return col.imgs.get(nome);
+}
+// desenha a colagem (a prévia é o próprio arquivo, em tamanho menor na tela)
+async function montarColagem(){
+  const vez = ++col.vez, [c, l] = col.formato.split('x').map(Number), [W, H] = COL_CEL;
+  $('colBaixar').disabled = true;
+  if (!$('colPrevia').querySelector('canvas')) $('colPrevia').innerHTML = `<div class="muted">${ic('loader', 'spin')} Montando a colagem…</div>`;
+  const cv = document.createElement('canvas'); cv.width = c * W; cv.height = l * H;
+  const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+  try {
+    const imgs = await comBarra(() => Promise.all(col.ordem.slice(0, c * l).map(fotoInteira)));
+    if (vez !== col.vez) return;
+    imgs.forEach((im, i) => {
+      // preenche o espaço 3:4 cortando o que sobra no centro
+      const s = Math.max(W / im.width, H / im.height), w = W / s, h = H / s;
+      g.drawImage(im, (im.width - w) / 2, (im.height - h) / 2, w, h, (i % c) * W, Math.floor(i / c) * H, W, H);
+    });
+  } catch (e) { if (vez === col.vez) $('colPrevia').innerHTML = `<div class="muted">Não consegui abrir uma das fotos: ${esc(e.message)}</div>`; return; }
+  $('colPrevia').innerHTML = ''; $('colPrevia').append(cv);
+  col.canvas = cv; $('colBaixar').disabled = !col.ordem.length;
+}
+$('colFormato').onclick = e => {
+  const f = e.target.closest('[data-colf]')?.dataset.colf; if (!f) return;
+  col.formato = f; store.set('colFormato', f);
+  const [c, l] = f.split('x').map(Number);
+  // completa com as próximas fotos (ou corta o que passou do novo tamanho)
+  for (const x of col.fotos) if (col.ordem.length < c * l && !col.ordem.includes(x.nome)) col.ordem.push(x.nome);
+  col.ordem = col.ordem.slice(0, c * l);
+  renderColagem(); montarColagem();
+};
+$('colFotos').onclick = e => {
+  const nome = e.target.closest('[data-col]')?.dataset.col; if (!nome) return;
+  const [c, l] = col.formato.split('x').map(Number), i = col.ordem.indexOf(nome);
+  if (i >= 0) col.ordem.splice(i, 1);
+  else if (col.ordem.length < c * l) col.ordem.push(nome);
+  else return toast(`A colagem ${c} × ${l} já tem ${c * l} fotos. Tire uma (clique nela) para pôr outra.`);
+  renderColagem(); montarColagem();
+};
+$('colFechar').onclick = () => $('dlgCol').close();
+$('dlgCol').addEventListener('close', () => { col?.imgs.forEach(pr => pr.then(b => b.close?.()).catch(() => {})); col = null; $('colPrevia').innerHTML = ''; });
+$('colBaixar').onclick = () => {
+  if (!col?.canvas) return;
+  const { p, u, formato } = col, base = (p.palavra ? prodBase({ ...seoInfo(p, u), foto: 'colagem' }, 1) : (p.titulo || p.nome).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-colagem');
+  $('colBaixar').disabled = true; $('colBaixar').textContent = 'Gerando…';
+  col.canvas.toBlob(b => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${base.replace(/-0*1$/, '')}-${formato}.jpg`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    $('colBaixar').disabled = false; $('colBaixar').textContent = 'Baixar colagem';
+    registrar('Colagem', 'Baixou uma colagem das fotos', p, `${formato}${u.nome ? ' · ' + u.nome : ''}`);
+  }, 'image/jpeg', 0.9);
+};
+
 // ---------- recuperar: produtos que sumiram do cadastro (pelas cópias) e fotos soltas nas pastas ----------
 let rec = null;
 const recData = n => { const m = n.match(/(\d{4})-(\d{2})-(\d{2})(?:-(\d{2}))?/); return m ? `${m[3]}/${m[2]}${m[4] ? ` às ${+m[4]}h` : ''}` : n; };
@@ -7466,6 +7565,9 @@ const ATUALIZACOES = [
     'Configurações → Conexões → Recuperar: mostra os produtos que estão nas cópias do cadastro mas sumiram, para trazer de volta',
     'Mostra também as fotos que estão na pasta de um produto mas fora da lista, com a miniatura e o item onde recolocar',
     'O cadastro agora é copiado a cada hora (últimas 48 horas), além da cópia diária'] },
+  { id: '2026-10-27-colagem', em: '2026-10-27 16:30', titulo: 'Colagem das fotos', itens: [
+    'Botão "Colagem" no checklist do produto: junta as fotos numa imagem só, 3 × 2 (6 fotos) ou 4 × 2 (8 fotos), sem margem',
+    'Escolha as fotos e a ordem clicando nelas; a prévia mostra como fica e "Baixar colagem" salva o JPG'] },
   { id: '2026-10-27-endereco-unico', em: '2026-10-27 15:30', titulo: 'Um endereço só para a equipe', itens: [
     'Quem abrir o endereço antigo (estudio-polivenda…workers.dev) vai direto para estudio-polivenda.pages.dev, que tem o login e a nuvem da equipe'] },
 ];
