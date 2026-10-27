@@ -196,6 +196,8 @@ button.icon .ic,.chip button .ic,.fthumb button .ic,.check .ic,.ckic .ic{margin-
 #carregandoApp b{font-size:17px}
 body.abrindo main > section{display:none !important}
 body.abrindo #nvStatus{display:none}
+#pcAviso{position:fixed;right:16px;bottom:16px;z-index:60;border-radius:20px;box-shadow:0 6px 18px #0002;font-weight:600}
+#pcAviso.hidden{display:none}
 /* foto ainda chegando: bloco cinza com brilho passando */
 @keyframes brilho{from{background-position:150% 0}to{background-position:-50% 0}}
 .fthumb img:not([src]),#plist img.cv:not([src]),.apcard .capa.carregando,.amft .img.carregando{background:linear-gradient(100deg,var(--soft) 35%,color-mix(in srgb,var(--panel) 75%,var(--soft)) 50%,var(--soft) 65%) var(--soft);background-size:200% 100%;animation:brilho 1.3s linear infinite}
@@ -677,6 +679,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
   <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
 </svg>
 <div id="nvBarra" aria-hidden="true"></div>
+<button id="pcAviso" type="button" class="hidden" title="O navegador pede permissão de novo ao abrir o site"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Liberar a cópia no computador</button>
 <div id="nvStatus" class="hidden" role="status" aria-live="polite"><svg class="ic spin" aria-hidden="true"><use href="#i-loader"/></svg><span>Carregando…</span></div>
 <div id="warn">Este navegador não permite acessar pastas. Abra este arquivo no <b>Google Chrome</b> ou no <b>Microsoft Edge</b>.</div>
 <header>
@@ -791,6 +794,13 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
     <!-- ---------- Conexões ---------- -->
     <div class="cfgsec" data-sec="conexoes">
       <div class="cfghead"><h2>Conexões</h2><div class="muted ajuda">Onde ficam os arquivos no computador, para onde eles vão no Drive e qual IA o app usa.</div></div>
+
+    <div class="panel" id="cfgPc">
+      <h3><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Cópia no computador</h3>
+      <div class="muted" id="pcInfo"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button id="pcEscolher">Escolher pasta</button><button id="pcAgora" class="hidden">Copiar agora</button><button id="pcDesligar" class="ghost hidden">Desligar</button></div>
+      <div class="muted ajuda">Toda foto inserida no Estúdio (por qualquer pessoa, até pelo celular) é baixada para a pasta escolhida enquanto o site estiver aberto neste computador. Renomear e remover também acompanham. Cada pessoa liga no próprio computador. O Drive e o ERP só recebem as fotos depois da aprovação.</div>
+    </div>
 
     <div class="panel" id="cfgWs">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Pasta principal</h3>
@@ -2093,8 +2103,10 @@ setInterval(async () => {
     if (m) aplicarPlanoMesclado(m);
     const d = await mesclarComDisco(DEM_FILE, dem, ['demandas', 'relatorios', 'chat']);
     if (d){ dem = normDem(d); store.set('demandas', dem); renderDemCont(); renderList(); if (!$('tab-demandas').classList.contains('hidden')) renderDem(); }
+    if (m) pcAgendar(500); // a equipe mexeu: traz as fotos novas para o computador
   } catch {}
 }, 20000);
+setInterval(() => { if (!document.hidden) copiarParaPc(); }, 120000); // e confere a pasta inteira a cada 2 min
 let saveTimer;
 function savePlan(){
   store.set('plan', plan);
@@ -2104,6 +2116,7 @@ function savePlan(){
     saveTimer = null;
     try {
       await gravarPlano();
+      pcAgendar();
       await writeManifest();
       for (const p of plan.produtos) await writeDescritivo(p); // só reescreve o que mudou
     } catch (e) { toast('Não consegui salvar o cadastro: ' + e.message + '. Feche o Estúdio e abra de novo pelo atalho.', 8000); }
@@ -3519,11 +3532,12 @@ function nvGuardarBlob(cam, etag, file){
 // barrinha no topo e aviso fixo: aparecem quando algo com a nuvem passa de meio segundo
 // ("Salvando…" se tiver gravação no meio; senão "Carregando…")
 let nvAtivos = 0, nvLendo = 0, nvAvisoT = 0;
+let pcTxt = ''; // "Copiando para o computador…" (aparece no aviso quando nada mais está acontecendo)
 function nvAviso(){
-  const algo = nvAtivos + nvLendo > 0;
+  const algo = nvAtivos + nvLendo > 0 || !!pcTxt;
   if (!algo){ clearTimeout(nvAvisoT); nvAvisoT = 0; $('nvBarra').classList.remove('on'); $('nvStatus').classList.add('hidden'); return; }
-  $('nvStatus').querySelector('span').textContent = nvAtivos ? 'Salvando…' : 'Carregando…';
-  nvAvisoT ||= setTimeout(() => { nvAvisoT = 0; if (nvAtivos + nvLendo > 0){ $('nvBarra').classList.add('on'); $('nvStatus').classList.remove('hidden'); } }, 500);
+  $('nvStatus').querySelector('span').textContent = nvAtivos ? 'Salvando…' : nvLendo || !pcTxt ? 'Carregando…' : pcTxt;
+  nvAvisoT ||= setTimeout(() => { nvAvisoT = 0; if (nvAtivos + nvLendo > 0 || pcTxt){ $('nvBarra').classList.add('on'); $('nvStatus').classList.remove('hidden'); } }, 500);
 }
 async function comBarra(fn){
   nvAtivos++; nvAviso();
@@ -3633,6 +3647,102 @@ class NuvemArquivo {
     this.caminho = para; this.name = novo;
   }
 }
+// ---------- cópia no computador: as fotos da nuvem também ficam numa pasta deste computador ----------
+// A pasta é escolhida por computador (fica guardada neste navegador). Só mexe nos arquivos que ela mesma pôs lá.
+let pcPasta = null, pcFeitos = {}, pcRodando = false, pcDeNovo = false, pcTimer = 0, pcUltima = '';
+const pcPode = () => 'showDirectoryPicker' in window;
+async function pcLiberada(pedir){
+  if (!pcPasta) return false;
+  if (await pcPasta.queryPermission({ mode: 'readwrite' }) === 'granted') return true;
+  return pedir && await pcPasta.requestPermission({ mode: 'readwrite' }).catch(() => '') === 'granted';
+}
+function pcAgendar(ms = 2000){ if (!pcPasta) return; clearTimeout(pcTimer); pcTimer = setTimeout(() => copiarParaPc(), ms); }
+async function copiarParaPc(pedir = false){
+  if (!pcPasta || !ws?.nuvem) return;
+  if (pcRodando){ pcDeNovo = true; return; }
+  if (!await pcLiberada(pedir)){ $('pcAviso').classList.remove('hidden'); renderPc(); return; }
+  $('pcAviso').classList.add('hidden');
+  pcRodando = true; renderPc();
+  let novos = 0, tirados = 0, falhas = 0;
+  try {
+    const { itens } = await (await nvPedir('arvore', { c: ROOT_NAME }, { quieto: true })).json();
+    const raiz = pcPasta.name === ROOT_NAME ? pcPasta : await pcPasta.getDirectoryHandle(ROOT_NAME, { create: true });
+    const nuvem = new Map(itens.filter(i => !i.k.endsWith('/') && !/(^|\/)tmp-[^/]*$/.test(i.k)).map(i => [i.k, i]));
+    const pastaLocal = async (k, criar) => { let d = raiz; for (const n of k.split('/').slice(0, -1)) d = await d.getDirectoryHandle(n, { create: criar }); return d; };
+    const nomeDe = k => k.slice(k.lastIndexOf('/') + 1);
+    // o que a nuvem tem e o computador ainda não (ou mudou)
+    const falta = [];
+    for (const [k, it] of nuvem){
+      if (pcFeitos[k] === it.etag) continue;
+      try { const f = await (await (await pastaLocal(k, false)).getFileHandle(nomeDe(k))).getFile(); if (f.size === it.tamanho){ pcFeitos[k] = it.etag; continue; } } catch {}
+      falta.push(it);
+    }
+    let feitos = 0;
+    const mostrar = () => { pcTxt = falta.length && feitos < falta.length ? `Copiando para o computador (${feitos} de ${falta.length})…` : ''; nvAviso(); };
+    mostrar();
+    await emParalelo(falta, 3, async it => {
+      try {
+        const r = await nvPedir('arquivo', { c: juntarCam(ROOT_NAME, it.k) }, { quieto: true });
+        if (r.ok){
+          const w = await (await (await pastaLocal(it.k, true)).getFileHandle(nomeDe(it.k), { create: true })).createWritable();
+          await w.write(await r.blob()); await w.close();
+          pcFeitos[it.k] = it.etag; novos++;
+        }
+      } catch { falhas++; }
+      feitos++; mostrar();
+    });
+    // o que saiu da nuvem (renomeado, removido) sai do computador também — só o que a cópia pôs lá
+    for (const k of Object.keys(pcFeitos)){
+      if (nuvem.has(k)) continue;
+      delete pcFeitos[k];
+      try {
+        const ps = k.split('/').slice(0, -1), dirs = [raiz];
+        for (const n of ps) dirs.push(await dirs.at(-1).getDirectoryHandle(n));
+        await dirs.at(-1).removeEntry(nomeDe(k)); tirados++;
+        // pasta que ficou vazia sai junto (ex.: produto renomeado)
+        for (let i = ps.length; i > 0; i--){
+          let vazia = true; for await (const _ of dirs[i].keys()){ vazia = false; break; }
+          if (!vazia) break;
+          await dirs[i - 1].removeEntry(ps[i - 1]);
+        }
+      } catch {}
+    }
+    await idb.set('copiaPcFeitos', pcFeitos);
+    pcUltima = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    if (novos || tirados) registrar('Computador', 'Copiou fotos para a pasta do computador', null, `${novos} nova(s), ${tirados} tirada(s)${falhas ? `, ${falhas} falha(s)` : ''}`);
+  } catch (e) {
+    if (e?.name === 'NotAllowedError') $('pcAviso').classList.remove('hidden');
+    else if (pedir) toast('Não consegui copiar para o computador: ' + e.message, 7000);
+  } finally {
+    pcTxt = ''; nvAviso(); pcRodando = false; renderPc();
+    if (pcDeNovo){ pcDeNovo = false; pcAgendar(500); }
+  }
+  if (pedir) toast(falhas ? `Cópia no computador: ${falhas} foto(s) não vieram; tento de novo em seguida.` : 'Fotos copiadas para o computador.');
+}
+function renderPc(){
+  const pode = pcPode();
+  $('pcInfo').innerHTML = !pode ? 'Disponível no Chrome ou no Edge do computador (no celular não há pasta para copiar).'
+    : !pcPasta ? 'Desligada neste computador.'
+    : `Copiando para a pasta <b>${esc(pcPasta.name)}</b>${pcPasta.name === ROOT_NAME ? '' : ` (dentro dela, em ${esc(ROOT_NAME)})`}${pcRodando ? ' · copiando agora…' : pcUltima ? ` · conferido às ${pcUltima}` : ''}.`;
+  $('pcEscolher').classList.toggle('hidden', !pode);
+  $('pcEscolher').textContent = pcPasta ? 'Trocar pasta' : 'Escolher pasta';
+  $('pcAgora').classList.toggle('hidden', !pcPasta);
+  $('pcDesligar').classList.toggle('hidden', !pcPasta);
+}
+$('pcEscolher').onclick = async () => {
+  let h; try { h = await showDirectoryPicker({ id: 'copiaPc', mode: 'readwrite' }); } catch { return; }
+  if (!pcPasta || !await pcPasta.isSameEntry(h)) pcFeitos = {}; // pasta nova: confere tudo de novo
+  pcPasta = h; await idb.set('copiaPc', h); await idb.set('copiaPcFeitos', pcFeitos);
+  renderPc(); copiarParaPc(true);
+};
+$('pcAgora').onclick = () => copiarParaPc(true);
+$('pcAviso').onclick = () => copiarParaPc(true);
+$('pcDesligar').onclick = async () => {
+  if (!await confirmar('Desligar a cópia no computador?\n\nAs fotos que já estão na pasta continuam lá; só as novas deixam de chegar.')) return;
+  pcPasta = null; pcFeitos = {}; await idb.set('copiaPc', null); await idb.set('copiaPcFeitos', {});
+  $('pcAviso').classList.add('hidden'); renderPc();
+};
+(async () => { if (pcPode()){ pcPasta = await idb.get('copiaPc') || null; pcFeitos = await idb.get('copiaPcFeitos') || {}; } renderPc(); })();
 const nuvemNoAr = () => !!ws?.nuvem;
 async function nuvemDisponivel(){ if (!WEB) return false; try { return (await fetch('/nuvem/estado', { cache: 'no-store' })).ok; } catch { return false; } }
 async function usarNuvem(){
@@ -3641,6 +3751,7 @@ async function usarNuvem(){
   // tudo o que a abertura vai olhar, de uma vez: fotos, dados e miniaturas
   await Promise.all([nvArvore(ROOT_NAME), nvArvore('_sistema/dados'), nvArvore(MINI_DIR)].map(x => x.catch(() => {})));
   await useWorkspace(new NuvemPasta(ROOT_NAME));
+  pcAgendar(1500); // cópia no computador, por trás
 }
 // uma vez só: copia a pasta "Organizador de Fotos" do computador (Google Drive) para a nuvem
 async function levarParaNuvem(){
@@ -7121,6 +7232,12 @@ const ATUALIZACOES = [
   { id: '2026-10-27-rolagem-aprovacao', em: '2026-10-27 11:00', titulo: 'Rolagem na janela de aprovação', itens: [
     'Dá para rolar as fotos enquanto elas ainda estão chegando (antes a janela voltava para o topo a cada foto)',
     'Aprovar ou reprovar uma foto não volta mais a janela para o topo'] },
+  { id: '2026-10-27-copia-no-computador', em: '2026-10-27 11:30', titulo: 'Cópia das fotos no computador', itens: [
+    'Configurações → Conexões → Cópia no computador: cada pessoa escolhe uma pasta do próprio computador',
+    'Toda foto inserida no Estúdio (por qualquer pessoa, até pelo celular) é baixada para essa pasta enquanto o site estiver aberto',
+    'Renomear e remover fotos também acompanham na pasta (só mexe nas fotos que a própria cópia pôs lá)',
+    'Ao abrir o site, se o navegador pedir, aparece o botão "Liberar a cópia no computador"',
+    'O Drive e o ERP (Olist) continuam recebendo as fotos só depois da aprovação'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
