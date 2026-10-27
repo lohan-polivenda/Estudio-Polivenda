@@ -28,7 +28,11 @@ async function copiar(b, de, para){
   return true;
 }
 
-export async function onRequest({ request, env, params }){
+export async function onRequest(ctx){
+  try { return await rotas(ctx); }
+  catch (e) { return erro('Erro na nuvem: ' + (e?.message || e), 500); } // aparece no aviso do app (ajuda a achar o problema)
+}
+async function rotas({ request, env, params }){
   const b = env.ARQUIVOS;
   const rota = [].concat(params.rota || []).join('/'), q = new URL(request.url).searchParams, m = request.method, c = q.get('c') ?? '';
   if (!env.OLIST || !await usuarioDaSessao(request, env)) return erro('Entre no Estúdio de novo.', 401);
@@ -77,15 +81,19 @@ export async function onRequest({ request, env, params }){
     // "novo" = o arquivo não existia; "*" = de propósito por cima). Sem isso, uma janela antiga apagava o trabalho dos outros.
     const se = request.headers.get('If-Match');
     if (PROTEGIDOS.test(c) && !se) return erro('Esta janela do Estúdio está desatualizada. Aperte F5 para carregar a versão nova (nada foi gravado).', 428);
-    let onlyIf;
+    const tipo = { contentType: request.headers.get('Content-Type') || 'application/octet-stream' };
     if (se && se !== '*'){
+      const corpo = await request.arrayBuffer(); // arquivo pequeno (cadastro/demandas): lido inteiro antes de conferir
       const atual = await b.head(c);
       if (se === 'novo' ? !!atual : atual?.httpEtag !== se) return erro('Outra pessoa salvou antes.', 412);
-      // a conferência e a gravação num passo só no R2: duas pessoas salvando no mesmo instante não passam uma por cima da outra
-      if (atual) onlyIf = { etagMatches: atual.etag };
+      // conferência e gravação num passo só (duas pessoas no mesmo instante); se o R2 recusar o formato, grava sem ela
+      let o;
+      try { o = await b.put(c, corpo, { httpMetadata: tipo, ...(atual ? { onlyIf: { etagMatches: atual.etag } } : {}) }); }
+      catch { o = await b.put(c, corpo, { httpMetadata: tipo }); }
+      if (!o) return erro('Outra pessoa salvou antes.', 412);
+      return json({ tamanho: o.size, mod: o.uploaded.getTime(), etag: o.httpEtag });
     }
-    const o = await b.put(c, request.body, { httpMetadata: { contentType: request.headers.get('Content-Type') || 'application/octet-stream' }, ...(onlyIf ? { onlyIf } : {}) });
-    if (!o) return erro('Outra pessoa salvou antes.', 412);
+    const o = await b.put(c, request.body, { httpMetadata: tipo });
     return json({ tamanho: o.size, mod: o.uploaded.getTime(), etag: o.httpEtag });
   }
   if (m !== 'POST') return erro('Rota desconhecida.', 404);
