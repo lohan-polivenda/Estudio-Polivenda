@@ -198,6 +198,16 @@ body.abrindo main > section{display:none !important}
 body.abrindo #nvStatus{display:none}
 #pcAviso{position:fixed;right:16px;bottom:16px;z-index:60;border-radius:20px;box-shadow:0 6px 18px #0002;font-weight:600}
 #pcAviso.hidden{display:none}
+#recCorpo h3{margin:16px 0 6px;font-size:14px}
+#recCorpo .recl{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+#recCorpo .recl:last-child{border-bottom:0}
+#recCorpo .recl > span{flex:1;min-width:0}
+#recCorpo .recl .muted{font-size:12px;display:block}
+#recCorpo .recl img,#recCorpo .recl .mini{width:44px;height:58px;object-fit:cover;border-radius:6px;background:var(--soft);flex:none}
+#recCorpo .recl select{max-width:240px}
+#recCorpo .recl input[type=checkbox]{width:18px;height:18px;flex:none;margin:0}
+#recCorpo .recl select{width:auto;flex:none}
+#recCorpo .recvazio{padding:6px 0}
 /* foto ainda chegando: bloco cinza com brilho passando */
 @keyframes brilho{from{background-position:150% 0}to{background-position:-50% 0}}
 .fthumb img:not([src]),#plist img.cv:not([src]),.apcard .capa.carregando,.amft .img.carregando{background:linear-gradient(100deg,var(--soft) 35%,color-mix(in srgb,var(--panel) 75%,var(--soft)) 50%,var(--soft) 65%) var(--soft);background-size:200% 100%;animation:brilho 1.3s linear infinite}
@@ -795,6 +805,13 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
     <div class="cfgsec" data-sec="conexoes">
       <div class="cfghead"><h2>Conexões</h2><div class="muted ajuda">Onde ficam os arquivos no computador, para onde eles vão no Drive e qual IA o app usa.</div></div>
 
+    <div class="panel" id="cfgRec">
+      <h3><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg>Recuperar produtos e fotos</h3>
+      <div class="muted">Traz de volta produtos que sumiram do cadastro (pelas cópias guardadas) e fotos que estão na pasta mas saíram da lista.</div>
+      <div style="margin-top:10px"><button id="recAbrir">Recuperar</button></div>
+      <div class="muted ajuda">O cadastro é copiado a cada hora (últimas 48 horas) e uma vez por dia (últimos 15 dias), em _sistema/backup/cadastro. As fotos nunca são apagadas por esta tela.</div>
+    </div>
+
     <div class="panel" id="cfgPc">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Cópia no computador</h3>
       <div class="muted" id="pcInfo"></div>
@@ -1212,6 +1229,13 @@ _sistema/                          ← tudo que não é produto
   <div class="dlg-foot"><button id="nvFechar" class="primary" disabled>Copiando…</button></div>
 </dialog>
 <dialog id="dlgAp" class="dlgap"><div id="amBody"></div></dialog>
+<dialog id="dlgRec" class="wide">
+  <div class="dlg-body">
+    <h2>Recuperar produtos e fotos</h2>
+    <div id="recCorpo"></div>
+  </div>
+  <div class="dlg-foot"><button id="recFechar">Fechar</button><button id="recOk" class="primary" disabled>Recuperar o que está marcado</button></div>
+</dialog>
 <dialog id="dlgDrive" class="wide">
   <div class="dlg-body" id="dvBody"></div>
   <div class="dlg-foot" id="dvFoot"></div>
@@ -1749,6 +1773,29 @@ async function backupDiario(texto){
     for (const k of antigos) await sisApagar(`${BACKUP_DIR}/${k}`);
   } catch {}
 }
+// cópia de hora em hora (guarda as últimas 48): se alguém apagar algo, dá para recuperar quase tudo.
+// A cópia da hora acompanha as alterações (no máximo a cada 2 min), mas nunca quando o cadastro encolheu
+// (menos produtos ou menos fotos): uma perda não passa por cima da cópia boa.
+let backupHoraUlt = { nome: '', em: 0, prod: 0, fotos: 0 };
+async function backupHora(texto){
+  const h = new Date(), nome = `organizador-${h.toLocaleDateString('sv')}-${String(h.getHours()).padStart(2, '0')}.json`;
+  let prod = 0, fotos = 0;
+  try { const d = JSON.parse(texto); prod = d.produtos.length; for (const p of d.produtos) fotos += nFotos(p); } catch { return; }
+  const u = backupHoraUlt, mesma = u.nome === nome;
+  if (mesma && (Date.now() - u.em < 120000 || prod < u.prod || fotos < u.fotos)) return;
+  backupHoraUlt = { nome, em: Date.now(), prod, fotos };
+  try {
+    const todos = await sisListar(BACKUP_DIR);
+    // abriu no meio da hora e já há cópia desta hora (de outra pessoa): não troca por uma menor
+    if (!mesma && todos.includes(nome)){
+      try { const d = JSON.parse((await sisLer(`${BACKUP_DIR}/${nome}`)).texto); let f = 0; for (const p of d.produtos) f += nFotos(p);
+        if (prod < d.produtos.length || fotos < f){ backupHoraUlt = { nome, em: Date.now(), prod: d.produtos.length, fotos: f }; return; } } catch {}
+    }
+    await sisGravar(`${BACKUP_DIR}/${nome}`, texto);
+    const antigos = [...new Set([...todos, nome])].filter(k => /^organizador-\d{4}-\d{2}-\d{2}-\d{2}\.json$/.test(k)).sort().slice(0, -48);
+    for (const k of antigos) await sisApagar(`${BACKUP_DIR}/${k}`);
+  } catch {}
+}
 // primeira vez com o servidor novo: leva para _sistema tudo que estava dentro da pasta Estudio Polivenda.
 // Cada arquivo é copiado, conferido (mesmo tamanho) e só então tirado da pasta principal.
 async function migrarParaSistema(){
@@ -2135,6 +2182,7 @@ function aplicarPlanoMesclado(m){
 }
 async function gravarPlano(){
   await gravarJunto(PLAN_FILE, () => plan, ['produtos'], aplicarPlanoMesclado);
+  if (sisBase[PLAN_FILE]) backupHora(sisBase[PLAN_FILE]);
 }
 // a cada 10 s (com a janela aberta e nada esperando para gravar) traz o que a equipe mudou;
 // e na hora em que a pessoa volta para a aba do Estúdio
@@ -3797,6 +3845,111 @@ $('pcDesligar').onclick = async () => {
   $('pcAviso').classList.add('hidden'); renderPc();
 };
 (async () => { if (pcPode()){ pcPasta = await idb.get('copiaPc') || null; pcFeitos = await idb.get('copiaPcFeitos') || {}; } renderPc(); })();
+// ---------- recuperar: produtos que sumiram do cadastro (pelas cópias) e fotos soltas nas pastas ----------
+let rec = null;
+const recData = n => { const m = n.match(/(\d{4})-(\d{2})-(\d{2})(?:-(\d{2}))?/); return m ? `${m[3]}/${m[2]}${m[4] ? ` às ${+m[4]}h` : ''}` : n; };
+async function recFotosDe(p, u){
+  const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) return { dir: null, nomes: [] };
+  const nomes = []; for await (const k of dir.keys()) if ((IMG_EXT.test(k) || VID_EXT.test(k)) && !/^tmp-/.test(k)) nomes.push(k);
+  return { dir, nomes };
+}
+async function abrirRecuperar(){
+  if (!ws) return toast('Conecte a pasta (ou entre na nuvem) primeiro.');
+  rec = { produtos: [], soltas: [], orfas: [], carregando: true };
+  $('recOk').disabled = true; renderRec(); $('dlgRec').showModal();
+  try {
+    await comBarra(async () => {
+      if (ws.nuvem) await nvArvore(ROOT_NAME);
+      // 1) produtos que estão em alguma cópia e não estão no cadastro de agora (a cópia mais nova de cada um)
+      const ids = new Set(plan.produtos.map(p => p.id));
+      const copias = (await sisListar(BACKUP_DIR)).filter(n => /^organizador-[\d-]+\.json$/.test(n))
+        .sort((a, b) => b.replace(/(\d{2})\.json$/, '$1-00.json').localeCompare(a.replace(/(\d{2})\.json$/, '$1-00.json'))); // mais nova primeiro (a diária é feita na 1ª abertura do dia)
+      const achados = new Map();
+      for (const n of copias){
+        try {
+          const d = migrate(JSON.parse((await sisLer(`${BACKUP_DIR}/${n}`)).texto));
+          for (const p of d.produtos) if (!ids.has(p.id) && !achados.has(p.id)) achados.set(p.id, { p, de: n });
+        } catch {}
+      }
+      for (const { p, de } of achados.values()){
+        let fotos = 0; for (const u of units(p)) fotos += (await recFotosDe(p, u)).nomes.length;
+        rec.produtos.push({ p, de, fotos, marcado: true });
+      }
+      // 2) fotos na pasta de um produto que não estão em nenhum item
+      for (const p of plan.produtos){
+        if (!p.pasta) continue;
+        for (const u of units(p)){
+          const { dir, nomes } = await recFotosDe(p, u); if (!dir) continue;
+          const usadas = new Set(p.checklist.flatMap(it => filesOf(u, it)));
+          for (const nome of nomes.filter(n => !usadas.has(n))){
+            const it = p.checklist.find(it => padraoDoItem(p, u, it).test(nome.replace(/\.[^.]+$/, ''))) || p.checklist.find(it => !filesOf(u, it).length);
+            rec.soltas.push({ p, u, dir, nome, item: it?.id || '' });
+          }
+        }
+      }
+      // 3) pastas na nuvem que não são de nenhum produto (nem dos que vão voltar)
+      const pastas = new Set([...plan.produtos, ...[...achados.values()].map(x => x.p)].map(p => p.pasta).filter(Boolean));
+      for await (const [k, h] of ws.entries()) if (h.kind === 'directory' && !pastas.has(k)) rec.orfas.push(k);
+    });
+  } catch (e) { toast('Não consegui procurar tudo: ' + e.message, 7000); }
+  rec.carregando = false; renderRec();
+  // miniaturas das fotos soltas, por trás
+  emParalelo(rec.soltas, 3, async s => {
+    try { s.url = (await lerFotoDe(s.dir, s.nome, 96)).mini; const el = document.querySelector(`#recCorpo [data-solta="${rec.soltas.indexOf(s)}"] .mini`); if (el) el.outerHTML = `<img src="${s.url}" alt="">`; } catch {}
+  });
+}
+function renderRec(){
+  if (!rec) return;
+  if (rec.carregando){ $('recCorpo').innerHTML = `<div class="muted amvazio">${ic('loader', 'spin')} Procurando nas cópias do cadastro e nas pastas…</div>`; return; }
+  const optItens = (p, sel) => `<option value="">Deixar fora da lista</option>` + p.checklist.map(it => `<option value="${esc(it.id)}" ${it.id === sel ? 'selected' : ''}>${esc(it.nome)}</option>`).join('');
+  $('recCorpo').innerHTML = `
+    <h3>Produtos que sumiram do cadastro (${rec.produtos.length})</h3>
+    ${rec.produtos.length ? rec.produtos.map((x, i) => `<label class="recl"><input type="checkbox" data-recp="${i}" ${x.marcado ? 'checked' : ''}>
+      <span><b>${esc(x.p.nome)}</b><span class="muted">da cópia de ${esc(recData(x.de))} · ${x.fotos} foto(s) na pasta${x.p.aprovacao?.status ? ' · ' + esc(apSituacao(x.p)) : ''}</span></span></label>`).join('')
+      : '<div class="muted recvazio">Nenhum: todos os produtos das cópias estão no cadastro.</div>'}
+    <div class="muted ajuda">Desmarque o que foi apagado de propósito.</div>
+    <h3>Fotos na pasta que saíram da lista (${rec.soltas.length})</h3>
+    ${rec.soltas.length ? rec.soltas.map((s, i) => `<div class="recl" data-solta="${i}">${s.url ? `<img src="${s.url}" alt="">` : '<span class="mini carregando"></span>'}
+      <span><b>${esc(s.p.nome)}${s.u.nome ? ' · ' + esc(s.u.nome) : ''}</b><span class="muted">${esc(s.nome)}</span></span>
+      <select data-recs="${i}">${optItens(s.p, s.item)}</select></div>`).join('')
+      : '<div class="muted recvazio">Nenhuma: toda foto das pastas está em algum item.</div>'}
+    ${rec.orfas.length ? `<h3>Pastas sem produto (${rec.orfas.length})</h3>
+      <div class="muted">${rec.orfas.map(esc).join(' · ')}</div>
+      <div class="muted ajuda">Estas pastas não estão no cadastro nem nas cópias. As fotos continuam guardadas nelas; cadastre o produto com o mesmo nome de pasta para usá-las.</div>` : ''}`;
+  const n = rec.produtos.filter(x => x.marcado).length + rec.soltas.filter(s => s.item).length;
+  $('recOk').disabled = !n;
+  $('recOk').textContent = n ? `Recuperar ${n} ${n === 1 ? 'item' : 'itens'}` : 'Nada marcado';
+}
+$('recCorpo').addEventListener('change', e => {
+  const p = e.target.dataset.recp, s = e.target.dataset.recs;
+  if (p !== undefined) rec.produtos[+p].marcado = e.target.checked;
+  if (s !== undefined) rec.soltas[+s].item = e.target.value;
+  renderRec();
+});
+$('recAbrir').onclick = abrirRecuperar;
+$('recFechar').onclick = () => $('dlgRec').close();
+$('recOk').onclick = async () => {
+  const voltam = rec.produtos.filter(x => x.marcado), soltas = rec.soltas.filter(s => s.item);
+  if (!await confirmar(`Recuperar ${voltam.length} produto(s) e ${soltas.length} foto(s)?\n\nOs produtos voltam como estavam na cópia; as fotos voltam para o item escolhido. Nada é apagado.`, 'Recuperar')) return;
+  $('recOk').disabled = true; $('recOk').textContent = 'Recuperando…';
+  const ids = new Set(plan.produtos.map(p => p.id));
+  for (const { p, de } of voltam){
+    if (ids.has(p.id)) continue;
+    plan.produtos.push(structuredClone(p));
+    registrar('Recuperar', 'Trouxe de volta um produto que tinha sumido', p, `da cópia de ${recData(de)}`);
+  }
+  for (const s of soltas){
+    const p = plan.produtos.find(x => x.id === s.p.id); if (!p) continue;
+    const u = units(p).find(x => x.id === s.u.id) || units(p)[0];
+    if (!filesOf(u, { id: s.item }).includes(s.nome)) u.arquivos[s.item] = [...filesOf(u, { id: s.item }), s.nome].sort();
+    registrar('Recuperar', 'Recolocou uma foto que estava fora da lista', p, s.nome);
+  }
+  plan.produtos.forEach(autoStatus);
+  savePlan(); renderList(); renderDetail(); if (!$('tab-resumo').classList.contains('hidden')) renderResumo();
+  $('dlgRec').close();
+  toast(`Recuperado: ${voltam.length} produto(s) e ${soltas.length} foto(s).`, 5000);
+  setTimeout(() => verifyFiles(true), 1500); // confere as pastas dos que voltaram
+};
 const nuvemNoAr = () => !!ws?.nuvem;
 async function nuvemDisponivel(){ if (!WEB) return false; try { return (await fetch('/nuvem/estado', { cache: 'no-store' })).ok; } catch { return false; } }
 async function usarNuvem(){
@@ -7305,6 +7458,10 @@ const ATUALIZACOES = [
     'Se a leitura do cadastro falha ao abrir (internet), o app não grava mais a cópia velha do navegador por cima da nuvem',
     'Mudança da equipe chegando no meio de um envio de fotos não tira mais a foto nova do cadastro',
     'Antes de tirar uma foto da lista, o app confere a pasta na nuvem de novo'] },
+  { id: '2026-10-27-recuperar', em: '2026-10-27 13:30', titulo: 'Recuperar produtos e fotos', itens: [
+    'Configurações → Conexões → Recuperar: mostra os produtos que estão nas cópias do cadastro mas sumiram, para trazer de volta',
+    'Mostra também as fotos que estão na pasta de um produto mas fora da lista, com a miniatura e o item onde recolocar',
+    'O cadastro agora é copiado a cada hora (últimas 48 horas), além da cópia diária'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
