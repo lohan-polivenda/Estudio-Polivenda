@@ -185,6 +185,21 @@ button.icon .ic,.chip button .ic,.fthumb button .ic,.check .ic,.ckic .ic{margin-
 /* barrinha no topo enquanto algo é gravado na nuvem */
 #nvBarra{position:fixed;top:0;left:0;right:0;height:3px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,transparent,var(--accent),transparent) no-repeat;background-size:40% 100%;animation:nvbarra 1.1s linear infinite}
 #nvBarra.on{opacity:1}
+/* aviso fixo: aparece quando algo demora mais de meio segundo */
+#nvStatus{position:fixed;left:16px;bottom:16px;z-index:60;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:20px;background:var(--panel);border:1px solid var(--border);box-shadow:0 6px 18px #0002;font-size:13px;font-weight:600}
+#nvStatus.hidden{display:none}
+#nvStatus .ic{width:16px;height:16px;margin:0;color:var(--accent)}
+/* abertura: no lugar das telas vazias (Resumo zerado, lista vazia) */
+#carregandoApp{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:50vh;text-align:center}
+#carregandoApp.hidden{display:none}
+#carregandoApp .ic{width:34px;height:34px;color:var(--accent);margin:0}
+#carregandoApp b{font-size:17px}
+body.abrindo main > section{display:none !important}
+body.abrindo #nvStatus{display:none}
+/* foto ainda chegando: bloco cinza com brilho passando */
+@keyframes brilho{from{background-position:150% 0}to{background-position:-50% 0}}
+.fthumb img:not([src]),#plist img.cv:not([src]),.apcard .capa.carregando,.amft .img.carregando{background:linear-gradient(100deg,var(--soft) 35%,color-mix(in srgb,var(--panel) 75%,var(--soft)) 50%,var(--soft) 65%) var(--soft);background-size:200% 100%;animation:brilho 1.3s linear infinite}
+.apcard .capa.carregando .ic{display:none}
 @keyframes nvbarra{from{background-position:-60% 0}to{background-position:160% 0}}
 .ckic .ic{width:16px;height:16px;stroke-width:2.4}
 /* cada tipo de aviso ganha o seu ícone */
@@ -662,6 +677,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
   <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
 </svg>
 <div id="nvBarra" aria-hidden="true"></div>
+<div id="nvStatus" class="hidden" role="status" aria-live="polite"><svg class="ic spin" aria-hidden="true"><use href="#i-loader"/></svg><span>Carregando…</span></div>
 <div id="warn">Este navegador não permite acessar pastas. Abra este arquivo no <b>Google Chrome</b> ou no <b>Microsoft Edge</b>.</div>
 <header>
   <div class="brand"><span class="logo" role="img" aria-label="Polivenda"></span><span class="sub">Estúdio de Fotos</span></div>
@@ -679,6 +695,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
 <div id="dupWarn"><b>O Estúdio está aberto em mais de uma janela.</b> Feche as outras e use só uma: duas janelas abertas gravam o cadastro uma por cima da outra.</div>
 
 <main>
+<div id="carregandoApp" class="hidden" role="status"><svg class="ic spin" aria-hidden="true"><use href="#i-loader"/></svg><b>Carregando o Estúdio…</b><span class="muted">Trazendo produtos e fotos da nuvem</span></div>
 <div id="sisAviso" class="alert hidden" style="margin:0 0 14px"></div>
 <!-- ======================= RESUMO (painel da equipe e aprovação dos produtos) ======================= -->
 <section id="tab-resumo" class="hidden">
@@ -1406,13 +1423,20 @@ function minDims(){
   return p ? `${m}×${Math.round(m * p.h / p.w)}` : `${m}×${m}`;
 }
 let cfgTimer;
+let cfgGravado = null;
 function saveSettings(){
   store.set('settings', settings);
   cfgRegistrar();
   // cópia em _sistema (sem a chave da IA): outro computador ou o atalho novo puxam de lá
   if (!ws) return;
   clearTimeout(cfgTimer);
-  cfgTimer = setTimeout(() => sisGravar(CFG_FILE, JSON.stringify(settings, null, 2)).catch(() => {}), 400);
+  cfgTimer = setTimeout(async () => {
+    const txt = JSON.stringify(settings, null, 2);
+    // só grava quando muda (na abertura compara com o que já está guardado)
+    cfgGravado ??= (await sisLer(CFG_FILE).catch(() => null))?.texto ?? '';
+    if (txt === cfgGravado) return;
+    await sisGravar(CFG_FILE, txt).then(() => { cfgGravado = txt; }).catch(() => {});
+  }, 400);
 }
 store.set('settings', settings);
 function applyTheme(){
@@ -2057,6 +2081,7 @@ async function gravarPlano(){
   const m = await mesclarComDisco(PLAN_FILE, plan, ['produtos']);
   if (m) aplicarPlanoMesclado(m);
   const txt = JSON.stringify(plan, null, 2);
+  if (txt === sisBase[PLAN_FILE]) return; // nada mudou: não grava de novo
   await sisGravar(PLAN_FILE, txt);
   sisBase[PLAN_FILE] = txt;
 }
@@ -2090,8 +2115,14 @@ async function writeManifest(){
   for (const p of plan.produtos) for (const u of units(p)) for (const it of p.checklist) filesOf(u, it).forEach((f, i) => {
     rows.push(line([ud(p, u).join('/'), f, isVideo(it) ? 'vídeo' : 'foto', altFor(p, u, it, i), p.nome, u.nome, it.nome, u.sku || p.sku, p.palavra, p.titulo]));
   });
-  await sisGravar(MANIFEST_FILE, '﻿' + rows.join('\r\n') + '\r\n');
+  const txt = '﻿' + rows.join('\r\n') + '\r\n';
+  // só grava quando muda (na abertura compara com o que já está guardado)
+  manifestoGravado ??= (await sisLer(MANIFEST_FILE).catch(() => null))?.texto ?? '';
+  if (txt === manifestoGravado) return;
+  await sisGravar(MANIFEST_FILE, txt);
+  manifestoGravado = txt;
 }
+let manifestoGravado = null;
 
 // ---------- lista ----------
 $('pStatus').innerHTML = '<option value="">Todas as etapas</option>' + ETAPAS.map(([k,l]) => `<option value="${k}">${l}</option>`).join('');
@@ -3384,7 +3415,7 @@ $('fSave').onclick = async () => {
   current = p.id; currentVar = null;
   $('dlgProd').close();
   let renamed = 0;
-  if (ws){ await createFolders(p); renamed = await syncNames(p); }
+  if (ws){ toast('Salvando o produto…', 60000); await comBarra(async () => { await createFolders(p); renamed = await syncNames(p); }); }
   try { await gravarAnexos(p); } catch (e) { toast('Não consegui guardar os arquivos do fornecedor: ' + e.message, 6000); }
   if (!editing) registrar('Cadastro do produto', 'Cadastrou o produto' + (comIA ? ' (com ajuda da IA)' : ''), p,
     pDiff(pFoto({ variacoes: [], checklist: [], anexos: [] }), pFoto(p)).filter(x => !/^(Checklist|Tem variação):/.test(x)).join('; '));
@@ -3415,10 +3446,12 @@ const nvListas = new Map(); // pasta → { em, pastas: Set, arquivos: Map(nome �
 const nvBlobs = new Map();  // arquivo → { etag, file } (os últimos lidos, para não baixar de novo o que não mudou)
 let nvBlobBytes = 0;
 const nvNaoExiste = nome => new DOMException(`"${nome}" não existe.`, 'NotFoundError');
-async function nvPedir(rota, params, opt = {}){
+async function nvPedir(rota, params, { quieto, ...opt } = {}){
   let r;
+  if (!quieto){ nvLendo++; nvAviso(); } // "quieto": trabalho de fundo (miniaturas), sem aviso na tela
   try { r = await fetch('/nuvem/' + rota + '?' + new URLSearchParams(params), { cache: 'no-store', ...opt }); }
   catch { throw new Error('Sem conexão com a nuvem. Confira a internet.'); }
+  finally { if (!quieto){ nvLendo--; nvAviso(); } }
   if (r.status === 401){ location.reload(); throw new Error('Entre de novo.'); }
   if (!r.ok && r.status !== 404 && r.status !== 304){ let m = ''; try { m = (await r.json()).erro; } catch {} throw new Error(m || `A nuvem respondeu ${r.status}.`); }
   return r;
@@ -3474,7 +3507,7 @@ async function lerFotoDe(dir, nome, larg = 144){
     } catch {}
   }
   const f = await (await dir.getFileHandle(nome)).getFile(), t = { ...(await lerFoto(f, larg)), size: f.size };
-  if (etag) fetch(t.mini).then(r => r.blob()).then(b => nvGravar(`${MINI_DIR}/${etag}-${larg}-${t.w}x${t.h}-${f.size}.jpg`, b)).catch(() => {});
+  if (etag) fetch(t.mini).then(r => r.blob()).then(b => nvGravar(`${MINI_DIR}/${etag}-${larg}-${t.w}x${t.h}-${f.size}.jpg`, b, null, true)).catch(() => {});
   return t;
 }
 function nvGuardarBlob(cam, etag, file){
@@ -3483,12 +3516,18 @@ function nvGuardarBlob(cam, etag, file){
   // guarda no máximo ~150 MB: sai o que foi lido primeiro
   for (const [k, v] of nvBlobs){ if (nvBlobBytes <= 150 * MB) break; nvBlobs.delete(k); nvBlobBytes -= v.file.size; }
 }
-// barrinha no topo: aparece quando uma gravação na nuvem passa de um quarto de segundo
-let nvAtivos = 0;
+// barrinha no topo e aviso fixo: aparecem quando algo com a nuvem passa de meio segundo
+// ("Salvando…" se tiver gravação no meio; senão "Carregando…")
+let nvAtivos = 0, nvLendo = 0, nvAvisoT = 0;
+function nvAviso(){
+  const algo = nvAtivos + nvLendo > 0;
+  if (!algo){ clearTimeout(nvAvisoT); nvAvisoT = 0; $('nvBarra').classList.remove('on'); $('nvStatus').classList.add('hidden'); return; }
+  $('nvStatus').querySelector('span').textContent = nvAtivos ? 'Salvando…' : 'Carregando…';
+  nvAvisoT ||= setTimeout(() => { nvAvisoT = 0; if (nvAtivos + nvLendo > 0){ $('nvBarra').classList.add('on'); $('nvStatus').classList.remove('hidden'); } }, 500);
+}
 async function comBarra(fn){
-  nvAtivos++;
-  setTimeout(() => { if (nvAtivos) $('nvBarra').classList.add('on'); }, 250);
-  try { return await fn(); } finally { if (!--nvAtivos) $('nvBarra').classList.remove('on'); }
+  nvAtivos++; nvAviso();
+  try { return await fn(); } finally { nvAtivos--; nvAviso(); }
 }
 // envio que conta o quanto já subiu (o fetch não informa isso)
 function nvPut(cam, blob, aoProgresso){
@@ -3506,10 +3545,11 @@ function nvPut(cam, blob, aoProgresso){
     x.send(blob);
   });
 }
-async function nvGravar(cam, dados, aoProgresso){
+async function nvGravar(cam, dados, aoProgresso, quieto = false){
   const blob = dados instanceof Blob ? dados : new Blob([dados]);
-  const d = await comBarra(async () => aoProgresso ? nvPut(cam, blob, aoProgresso)
-    : (await nvPedir('arquivo', { c: cam }, { method: 'PUT', body: blob, headers: { 'Content-Type': blob.type || 'application/octet-stream' } })).json());
+  const grava = async () => aoProgresso ? nvPut(cam, blob, aoProgresso)
+    : (await nvPedir('arquivo', { c: cam }, { method: 'PUT', body: blob, headers: { 'Content-Type': blob.type || 'application/octet-stream' }, quieto })).json();
+  const d = await (quieto ? grava() : comBarra(grava));
   const pasta = cam.slice(0, cam.lastIndexOf('/')), nome = cam.slice(cam.lastIndexOf('/') + 1);
   nvListas.get(pasta)?.arquivos.set(nome, { nome, tamanho: d.tamanho, mod: d.mod, etag: d.etag });
   nvGuardarBlob(cam, d.etag, new File([blob], nome, { type: blob.type, lastModified: d.mod }));
@@ -3658,10 +3698,15 @@ function renderWs(){
   $('cfgWsChange').classList.toggle('hidden', !!ws?.nuvem && !('showDirectoryPicker' in window));
   renderCfgHome();
 }
+// tela de abertura: aparece no site enquanto os dados chegam (no lugar do Resumo zerado e da lista vazia)
+function inicioCarregando(){ document.body.classList.add('abrindo'); $('carregandoApp').classList.remove('hidden'); setTimeout(fimCarregando, 25000); }
+function fimCarregando(){ document.body.classList.remove('abrindo'); $('carregandoApp').classList.add('hidden'); }
 (async () => {
   if (WEB){
+    inicioCarregando();
     // com a nuvem ligada, a pasta de trabalho é a da nuvem: funciona em qualquer computador ou celular, só com o login
-    if (await nuvemDisponivel()){ try { await usarNuvem(); } catch (e) { toast('Não consegui abrir os arquivos da nuvem: ' + e.message, 8000); } return; }
+    if (await nuvemDisponivel()){ try { await usarNuvem(); } catch (e) { toast('Não consegui abrir os arquivos da nuvem: ' + e.message, 8000); } fimCarregando(); return; }
+    fimCarregando();
     // no site a pasta guardada é a "Organizador de Fotos" inteira
     const raiz = await idb.get('raiz');
     savedWs = raiz; renderWs();
@@ -3682,12 +3727,16 @@ async function useWorkspace(h){
     const r = await sisLer(PLAN_FILE);
     if (!r) throw new Error('ainda não há cadastro salvo');
     const txt = r.texto;
-    await backupDiario(txt);
+    backupDiario(txt).catch(() => {}); // a cópia do dia não precisa segurar a abertura
     sisBase[PLAN_FILE] = txt;
     const disk = migrate(JSON.parse(txt));
     const ids = new Set(disk.produtos.map(p => p.id));
     if (!h.nuvem) disk.produtos.push(...plan.produtos.filter(p => !ids.has(p.id)));
     plan = disk;
+    // o cadastro chegou: já mostra a tela; o resto (demandas, conferência dos arquivos) continua por trás
+    if (!curP()) current = plan.produtos[0]?.id || null;
+    renderList(); renderDetail(); if (!$('tab-resumo').classList.contains('hidden')) renderResumo();
+    fimCarregando();
   } catch {}
   // configurações: neste endereço ainda não há nada salvo? traz da pasta. Senão, guarda uma cópia nela.
   if (settingsFresh){
@@ -3701,7 +3750,7 @@ async function useWorkspace(h){
   saveSettings();
   gravarLog(); // o que ficou registrado sem a pasta vai para o arquivo agora
   await carregarDem();
-  await registrarAtualizacoes();
+  registrarAtualizacoes(); // anota as atualizações do app no registro, por trás
   for (const p of plan.produtos) await createFolders(p);
   await verifyFiles(true);
   plan.produtos.forEach(autoStatus);
@@ -5338,6 +5387,7 @@ function salvarDem(){
       const m = await mesclarComDisco(DEM_FILE, dem, ['demandas', 'relatorios', 'chat']);
       if (m){ dem = normDem(m); store.set('demandas', dem); renderDemCont(); if (!$('tab-demandas').classList.contains('hidden')) renderDem(); }
       const txt = JSON.stringify(dem, null, 2);
+      if (txt === sisBase[DEM_FILE]) return; // nada mudou: não grava de novo
       await sisGravar(DEM_FILE, txt);
       sisBase[DEM_FILE] = txt;
     } catch (e) { toast('Não consegui salvar as demandas: ' + e.message, 6000); }
@@ -6775,7 +6825,7 @@ function apSituacao(p){
 function apCard(p){
   const cv = apCapas.get(p.id), ant = apVista === 'aguardando' ? reprovacaoAnterior(p) : null;
   return `<button type="button" class="apcard" data-ap="${p.id}">
-    <span class="capa">${cv ? `<img src="${cv.url}" alt="">` : ic('image', 'lg')}</span>
+    <span class="capa ${!cv && ws && nFotos(p) ? 'carregando' : ''}">${cv ? `<img src="${cv.url}" alt="">` : ic('image', 'lg')}</span>
     <span class="apinfo"><b title="${esc(p.titulo || '')}">${esc(p.nome)}</b><span class="muted">${nFotos(p)} fotos</span>
       ${ant?.motivo ? `<span class="mot" title="${esc(ant.motivo)}">Reprovado antes: ${esc(ant.motivo)}</span>` : ''}
       <span class="apsit">${esc(apSituacao(p))}</span></span></button>`;
@@ -6802,7 +6852,7 @@ async function apCarregarCapas(lista){
         c = { assin, url: (await lerFotoDe(r[0], r[1], 480)).mini }; apCapas.set(p.id, c);
       }
       const el = document.querySelector(`.apcard[data-ap="${p.id}"] .capa`);
-      if (el && !el.querySelector('img')) el.innerHTML = `<img src="${c.url}" alt="">`;
+      if (el && !el.querySelector('img')){ el.innerHTML = `<img src="${c.url}" alt="">`; el.classList.remove('carregando'); }
     } catch {}
   });
 }
@@ -6841,7 +6891,7 @@ async function abrirAm(p){
   const redesenhar = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (am === meu) renderAm(); }); };
   await emParalelo(meu.jobs, 4, async j => {
     if (!j.dir || !IMG_EXT.test(j.local) || am !== meu) return;
-    try { j.url = (await lerFotoDe(j.dir, j.local, 480)).mini; } catch {}
+    try { j.url = (await lerFotoDe(j.dir, j.local, 480)).mini; } catch { j.falhou = true; }
     redesenhar();
   });
   if (am !== meu) return;
@@ -6874,7 +6924,7 @@ function renderAm(){
     return (u.nome ? `<div class="amvar">${esc(p.tipoVariacao)}: ${esc(u.nome)}</div>` : '') + `<div class="amgrid">${uj.map(j => {
       const i = jobs.indexOf(j), s = st(j), v = avDe(p, j), sel = am.sel.has(i), bl = jobBlocked(j);
       return `<div class="amft ${s} ${sel ? 'sel' : ''}" data-j="${i}">
-        <div class="img" title="${am.selecionar ? 'Clique para selecionar' : 'Clique para ver grande'}">${j.url ? `<img src="${j.url}" alt="">` : ic(j.a.video ? 'video' : 'ban', 'lg')}
+        <div class="img ${!j.url && !j.falhou && IMG_EXT.test(j.local) ? 'carregando' : ''}" title="${am.selecionar ? 'Clique para selecionar' : 'Clique para ver grande'}">${j.url ? `<img src="${j.url}" alt="">` : j.falhou || !IMG_EXT.test(j.local) ? ic(j.a.video ? 'video' : 'ban', 'lg') : ''}
           ${am.selecionar ? `<span class="amck">${sel ? ic('check') : ''}</span>` : ''}
           ${s ? `<span class="amst">${s === 'aprovada' ? ic('check') + 'Aprovada' : ic('x') + 'Reprovada'}</span>` : ''}
           ${bl ? `<span class="lbl block ambl" title="${esc(j.a.issues.filter(x => x.lvl === 'block').map(x => x.msg).join('; '))}">${ic('ban')}Fora da regra</span>` : ''}</div>
@@ -7055,6 +7105,12 @@ const ATUALIZACOES = [
     'Produto apagado pela equipe não volta mais por causa de um navegador com dados antigos'] },
   { id: '2026-10-27-inicio-resumo', em: '2026-10-27 07:20', titulo: 'O app abre sempre no Resumo', itens: [
     'Ao entrar, a primeira tela é sempre a aba Resumo (antes abria na última aba usada)'] },
+  { id: '2026-10-27-carregando-em-todo-lugar', em: '2026-10-27 07:30', titulo: 'Sinal de carregando em todo o app', itens: [
+    'Ao abrir, aparece "Carregando o Estúdio…" no lugar do Resumo zerado e da lista vazia',
+    'Sempre que o app espera a nuvem por mais de meio segundo, aparece um aviso no canto: "Carregando…" ou "Salvando…"',
+    'Fotos e capas que ainda estão chegando aparecem como um bloco cinza com brilho',
+    'Ao salvar um produto, o app avisa "Salvando…" enquanto organiza as pastas e as fotos',
+    'A lista de produtos aparece assim que o cadastro chega; o resto continua carregando por trás'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
