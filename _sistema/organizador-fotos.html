@@ -1998,15 +1998,42 @@ const MANIFEST_HEAD = ['pasta','arquivo','tipo','texto_alternativo','nome_intern
 const sisBase = {}; // arquivo → texto da última leitura ou gravação
 const idDe = x => x.id ?? `${x.em}|${x.quem}`;
 function mesclarLista(base = [], meu = [], disco = []){
-  const B = new Map(base.map(x => [idDe(x), JSON.stringify(x)])), M = new Set(meu.map(idDe)), D = new Map(disco.map(x => [idDe(x), x]));
+  const B = new Map(base.map(x => [idDe(x), x])), M = new Set(meu.map(idDe)), D = new Map(disco.map(x => [idDe(x), x]));
   const out = [];
   for (const x of meu){
-    const k = idDe(x), b = B.get(k), mexi = JSON.stringify(x) !== b;
-    if (D.has(k)) out.push(mexi || JSON.stringify(D.get(k)) === b ? x : D.get(k));
-    else if (!B.has(k) || mexi) out.push(x); // novo meu (ou a outra pessoa apagou, mas eu mexi: fica)
+    const k = idDe(x), b = B.get(k);
+    if (D.has(k)) out.push(b ? mesclar3(b, x, D.get(k)) : x);
+    else if (!b || !igualJ(x, b)) out.push(x); // novo meu (ou a outra pessoa apagou, mas eu mexi: fica)
   }
   for (const x of disco) if (!M.has(idDe(x)) && !B.has(idDe(x))) out.push(x); // novo de outra pessoa
   return out;
+}
+// Junta três versões de um valor: a que os dois leram (base), a minha e a da nuvem. O que só um lado mudou fica mudado.
+// Os dois mudaram: listas de fotos somam (o que alguém tirou sai, o que alguém pôs entra), objetos juntam campo a campo,
+// listas com id (variações, itens) juntam item a item; no resto, fica o meu.
+const igualJ = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+function mesclar3(base, meu, disco){
+  if (igualJ(meu, base)) return disco;
+  if (igualJ(disco, base) || igualJ(meu, disco)) return meu;
+  if (Array.isArray(meu) && Array.isArray(disco)){
+    const b = Array.isArray(base) ? base : [];
+    if ([...meu, ...disco].every(x => typeof x === 'string')){
+      const bs = new Set(b), ds = new Set(disco), ms = new Set(meu);
+      return [...meu.filter(x => ds.has(x) || !bs.has(x)), ...disco.filter(x => !ms.has(x) && !bs.has(x))];
+    }
+    if ([...meu, ...disco].every(x => x && typeof x === 'object' && 'id' in x)) return mesclarLista(b, meu, disco);
+    return meu;
+  }
+  if (meu && disco && typeof meu === 'object' && typeof disco === 'object' && !Array.isArray(meu) && !Array.isArray(disco)){
+    const b = base && typeof base === 'object' && !Array.isArray(base) ? base : {}, out = {};
+    for (const k of new Set([...Object.keys(meu), ...Object.keys(disco)])){
+      if (!(k in disco) && k in b && igualJ(meu[k], b[k])) continue; // a nuvem tirou e eu não mexi
+      if (!(k in meu) && k in b && igualJ(disco[k], b[k])) continue; // eu tirei e a nuvem não mexeu
+      out[k] = !(k in disco) ? meu[k] : !(k in meu) ? disco[k] : mesclar3(b[k], meu[k], disco[k]);
+    }
+    return out;
+  }
+  return meu;
 }
 // null = ninguém mudou o arquivo; senão o objeto já juntado
 async function mesclarComDisco(arq, meu, listas){
@@ -2533,6 +2560,7 @@ async function uploadFiles(p, u, item, files){
       ensureFolders(p);
       const dir = await sub(ws, ...ud(p, u)), info = seoInfo(p, u), total = ok.reduce((t, f) => t + f.size, 0) || 1;
       u.arquivos[item.id] ||= [];
+      if (dir.nuvem) await nvListar(dir.caminho, true);
       let feito = 0;
       for (const f of ok){
         // já com o nome SEO final; se ele estiver ocupado, entra com um nome provisório e o syncNames acerta
@@ -2613,25 +2641,52 @@ async function verifyFiles(force = false){
   try {
     // na nuvem: a pasta toda num pedido só (as listagens de cada produto saem dela)
     if (ws.nuvem && Date.now() - (nvArvoreEm.get(ROOT_NAME) || 0) > 3000) await nvArvore(ROOT_NAME);
+    const volta = [];
     for (const p of plan.produtos){
       if (!p.pasta) continue;
       for (const u of units(p)){
         const dir = await subIfExists(ws, ...ud(p, u)), nomes = new Set();
         if (dir) for await (const k of dir.keys()) nomes.add(k);
+        else if (ws.nuvem) continue; // a pasta não está onde este aparelho espera (ex.: renomeada em outro): não tira nada
         for (const id in u.arquivos){
           const keep = u.arquivos[id].filter(f => nomes.has(f));
           if (keep.length !== u.arquivos[id].length) mudou.push([p, u, id, keep]);
         }
+        // na nuvem a pasta do produto é a verdade: foto de um item que está nela mas saiu da lista volta para o item
+        if (ws.nuvem){
+          const usadas = new Set(p.checklist.flatMap(it => filesOf(u, it)));
+          let soltas = [...nomes].filter(n => !usadas.has(n) && !/^tmp-/.test(n) && (IMG_EXT.test(n) || VID_EXT.test(n)));
+          for (const it of p.checklist){
+            if (!soltas.length) break;
+            const re = padraoDoItem(p, u, it), achadas = soltas.filter(n => re.test(n.replace(/\.[^.]+$/, '')));
+            if (achadas.length){ volta.push([p, u, it.id, achadas]); soltas = soltas.filter(n => !achadas.includes(n)); }
+          }
+        }
       }
     }
     // algo mexeu nos arquivos durante a conferência: deixa para a próxima
-    if (gen !== fsGen || fsBusy || !mudou.length) return;
+    if (gen !== fsGen || fsBusy || (!mudou.length && !volta.length)) return;
     for (const [, u, id, keep] of mudou) u.arquivos[id] = keep;
+    for (const [p, u, id, achadas] of volta){
+      u.arquivos[id] = [...(u.arquivos[id] || []), ...achadas].sort();
+      registrar('Checklist', 'Recolocou foto que tinha saído da lista', p, achadas.join(', '));
+    }
+    mudou.push(...volta);
     new Set(mudou.map(x => x[0])).forEach(autoStatus);
     savePlan(); renderList(); renderDetail();
   } catch {} finally { verifRodando = false; }
 }
 window.addEventListener('focus', () => verifyFiles());
+// nomes que as fotos de um item podem ter: o nome SEO com qualquer número (e o "-2" de um nome repetido)
+function padraoDoItem(p, u, it){
+  const info = { ...seoInfo(p, u), foto: it.nome }, a = prodBase(info, 1), b = prodBase(info, 2);
+  let i = 0; while (i < a.length && a[i] === b[i]) i++;
+  while (i > 0 && /\d/.test(a[i - 1])) i--;
+  let j = 0; while (j < a.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
+  while (j > 0 && /\d/.test(a[a.length - j])) j--;
+  const rx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp('^' + rx(a.slice(0, i)) + '\\d+' + rx(a.slice(a.length - j)) + '(-\\d+)?$');
+}
 
 function openAddLine(){
   const p = curP();
@@ -3631,7 +3686,7 @@ async function useWorkspace(h){
     sisBase[PLAN_FILE] = txt;
     const disk = migrate(JSON.parse(txt));
     const ids = new Set(disk.produtos.map(p => p.id));
-    disk.produtos.push(...plan.produtos.filter(p => !ids.has(p.id)));
+    if (!h.nuvem) disk.produtos.push(...plan.produtos.filter(p => !ids.has(p.id)));
     plan = disk;
   } catch {}
   // configurações: neste endereço ainda não há nada salvo? traz da pasta. Senão, guarda uma cópia nela.
@@ -6993,6 +7048,11 @@ const ATUALIZACOES = [
     'Na nuvem, a foto vai para a lixeira sem ser baixada e enviada de novo; as outras fotos do item são renomeadas com uma cópia só',
     'Fotos adicionadas no "Arquivo" também aparecem na hora, com a porcentagem do envio',
     'A pergunta de envio de outro dia agora tem os botões "Novo envio" e "Juntar"'] },
+  { id: '2026-10-27-sincronia-equipe', em: '2026-10-27 07:16', titulo: 'Sincronia da equipe sem perder fotos', itens: [
+    'Quando duas pessoas mexem no mesmo produto ao mesmo tempo, o app junta as mudanças das duas (antes valia só a de quem salvou por último, e fotos sumiam)',
+    'Fotos que estão na pasta do produto mas tinham saído da lista voltam sozinhas para o item certo',
+    'O app não tira mais fotos da lista quando a pasta do produto mudou de nome em outro aparelho',
+    'Produto apagado pela equipe não volta mais por causa de um navegador com dados antigos'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
