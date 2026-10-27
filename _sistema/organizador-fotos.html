@@ -497,9 +497,16 @@ dialog.wide{width:min(1000px,calc(100vw - 32px))}
 details.atu{border-bottom:1px solid var(--border);padding:8px 0}
 details.atu summary{cursor:pointer;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
 details.atu ul{margin:6px 0 2px;padding-left:20px;font-size:13px}
-.pfila{margin-top:10px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
-.pfila>b{display:flex;align-items:center;gap:6px;font-size:13px}
-.pfila .opt.on{background:var(--c,var(--accent));border-color:var(--c,var(--accent));color:#fff}
+/* prioridade do produto aberto, na barra de filtros */
+#pPrio{display:flex;align-items:center;gap:6px;padding:3px 4px 3px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
+#pPrio.hidden{display:none}
+#pPrio .rot{font-size:13px;font-weight:600;white-space:nowrap}
+#pPrio .rot i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted));margin-right:6px;font-style:normal}
+#pPrio select{max-width:170px;border:0;background:transparent;padding:4px 2px;font-weight:600}
+#pPrio button{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center}
+#pPrio button .ic{margin:0}
+#pPrio .pos{font-size:12px;white-space:nowrap}
+#pPrio .ajuda{margin:0}
 .ctxmenu{position:fixed;z-index:60;min-width:230px;max-width:320px;max-height:calc(100vh - 16px);overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px #0003;padding:4px}
 .ctxmenu .mt{font-size:11px;font-weight:700;color:var(--muted);padding:6px 10px 2px;text-transform:uppercase;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ctxmenu .mt:first-child{text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:2px}
@@ -751,6 +758,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
     <select id="pCat"></select>
     <select id="pStatus"></select>
     <select id="pOrdem" title="Ordem da lista"><option value="fila">Fila: prioridade primeiro</option><option value="demanda">Só os que estão na fila</option><option value="cadastro">Ordem de cadastro</option></select>
+    <span id="pPrio" class="hidden"></span>
   </div>
   <div class="split">
     <div class="plist" id="plist"></div>
@@ -2337,6 +2345,7 @@ function promptFor(p, u, item){
 function pathOf(p, u){ return [ws?.name, ...ud(p, u)].filter(Boolean).join('\\'); }
 
 function renderDetail(){
+  renderPrioBarra();
   const p = curP();
   if (!p){
     $('detail').innerHTML = plan.produtos.length
@@ -2377,13 +2386,6 @@ function renderDetail(){
     </div>
     ${reprovado(p) ? `<div class="alert block"><b>Reprovado por ${esc(p.aprovacao.por)} em ${esc(dtBR(p.aprovacao.em))}:</b> ${esc(p.aprovacao.motivo)}${p.aprovacao.fotos?.length ? `<br>Refazer: ${esc(p.aprovacao.fotos.join(' · '))}` : ''}
       <div style="margin-top:8px"><button class="sm primary" data-act="encaminhar">${ic('refresh')}Corrigido: encaminhar para aprovação</button></div></div>` : ''}
-    ${(() => { const man = p.prioridade, dm = prioDemandas(p), ef = prioProduto(p), f = ef ? filaDe(ef) : [], pos = f.indexOf(p);
-      return `<div class="pfila"><b>${ic('list')} Prioridade na fila</b>
-        <div class="opts">${DM_PRIO.map(([k, l, c]) => `<button type="button" class="opt ${man === k ? 'on' : ''}" style="--c:${c}" data-act="pprio" data-v="${k}">${l}</button>`).join('')}
-          <button type="button" class="opt ${man ? '' : 'on'}" data-act="pprio" data-v="" title="Segue as demandas que citam o produto">Automática${dm ? ` (${prioInfo(dm)[1]})` : ''}</button></div>
-        <div class="muted ajuda" data-em="b">${man ? `Definida à mão.${dm && prioIdx(dm) < prioIdx(man) ? ` <span style="color:var(--warn)">Uma demanda pede ${prioInfo(dm)[1]}.</span>` : ''}`
-          : dm ? 'Segue a demanda mais urgente que cita este produto.' : 'Fora da fila: nenhuma demanda cita este produto. Escolha uma prioridade para colocar na fila.'}${ef ? ` Posição: ${pos + 1}º de ${f.length} em ${prioInfo(ef)[1]}.` : ''}</div>
-        ${ef && f.length > 1 ? `<div style="display:flex;gap:6px;margin-top:6px"><button class="sm" data-act="pfila" data-d="-1" ${pos ? '' : 'disabled'}>${ic('up')}Subir na fila</button><button class="sm" data-act="pfila" data-d="1" ${pos < f.length - 1 ? '' : 'disabled'}>${ic('down')}Descer</button></div>` : ''}</div>`; })()}
     ${(() => { const ds = demandasDoProduto(p).filter(d => d.status !== 'feita').sort((a, b) => prioIdx(prioridadeDe(a)) - prioIdx(prioridadeDe(b)));
       return ds.length ? `<div class="pdem"><b>${ic('list')} Demandas deste produto</b>${ds.map(d => { const pr = prioInfo(prioridadeDe(d));
         return `<button class="pdemi" data-act="verdem" data-dm="${d.id}"><span class="lbl" style="--c:${pr[2]};margin:0">${pr[1]}</span><span>${esc(d.titulo)}</span><span class="muted">${esc(statusInfo(d.status)[1])}${prazoTxt(d) ? ' · ' + esc(prazoTxt(d)) : ''}${d.resp ? ' · ' + esc(d.resp) : ''}</span></button>`; }).join('')}</div>` : ''; })()}
@@ -6541,6 +6543,21 @@ addEventListener('resize', fecharMenu);
 addEventListener('blur', fecharMenu);
 
 // ---------- produtos: prioridade na fila, posição, abrir, editar, publicado ----------
+// prioridade do produto aberto, ao lado dos filtros da lista
+function renderPrioBarra(){
+  const el = $('pPrio'), p = curP();
+  el.classList.toggle('hidden', !p); if (!p) return (el.innerHTML = '');
+  const man = p.prioridade || '', dm = prioDemandas(p), ef = prioProduto(p), f = ef ? filaDe(ef) : [], pos = f.indexOf(p);
+  el.innerHTML = `<span class="rot" style="--c:${ef ? prioInfo(ef)[2] : 'var(--muted)'}"><i></i>Prioridade</span>
+    <select id="pPrioSel" title="Prioridade de ${esc(p.nome)} na fila">${DM_PRIO.map(([k, l]) => `<option value="${k}" ${man === k ? 'selected' : ''}>${l}</option>`).join('')}
+      <option value="" ${man ? '' : 'selected'}>Automática${dm ? ` (${prioInfo(dm)[1]})` : ''}</option></select>
+    ${ef && f.length > 1 ? `<button class="sm ghost" data-pf="-1" title="Subir na fila" ${pos ? '' : 'disabled'}>${ic('up')}</button><button class="sm ghost" data-pf="1" title="Descer na fila" ${pos < f.length - 1 ? '' : 'disabled'}>${ic('down')}</button>` : ''}
+    <span class="muted pos">${ef ? `${pos + 1}º de ${f.length}` : 'fora da fila'}</span>
+    <span class="muted ajuda">${man ? `Definida à mão.${dm && prioIdx(dm) < prioIdx(man) ? ` Uma demanda pede ${prioInfo(dm)[1]}.` : ''}`
+      : dm ? 'Automática: segue a demanda mais urgente que cita este produto.' : 'Automática: nenhuma demanda cita este produto, então ele está fora da fila. Escolha uma prioridade para colocá-lo na fila.'}</span>`;
+}
+$('pPrio').addEventListener('change', e => { const p = curP(); if (p && e.target.id === 'pPrioSel') setPrioProduto(p, e.target.value); });
+$('pPrio').addEventListener('click', e => { const b = e.target.closest('[data-pf]'), p = curP(); if (b && p) moverNaFila(p, +b.dataset.pf); });
 function setPrioProduto(p, v){
   if ((p.prioridade || '') === v) return;
   const antes = p.prioridade ? prioInfo(p.prioridade)[1] : 'Automática';
@@ -7565,6 +7582,8 @@ const ATUALIZACOES = [
     'Configurações → Conexões → Recuperar: mostra os produtos que estão nas cópias do cadastro mas sumiram, para trazer de volta',
     'Mostra também as fotos que estão na pasta de um produto mas fora da lista, com a miniatura e o item onde recolocar',
     'O cadastro agora é copiado a cada hora (últimas 48 horas), além da cópia diária'] },
+  { id: '2026-10-27-prioridade-na-barra', em: '2026-10-27 17:00', titulo: 'Prioridade junto dos filtros', itens: [
+    'A prioridade na fila do produto aberto saiu da ficha e fica na barra de cima, ao lado dos filtros da lista: escolha, subir/descer na fila e a posição'] },
   { id: '2026-10-27-colagem', em: '2026-10-27 16:30', titulo: 'Colagem das fotos', itens: [
     'Botão "Colagem" no checklist do produto: junta as fotos numa imagem só, 3 × 2 (6 fotos) ou 4 × 2 (8 fotos), sem margem',
     'Escolha as fotos e a ordem clicando nelas; a prévia mostra como fica e "Baixar colagem" salva o JPG'] },
