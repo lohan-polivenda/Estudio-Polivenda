@@ -6887,12 +6887,17 @@ async function abrirAm(p){
   meu.carregando = false;
   if (am !== meu) return;
   renderAm();
-  let raf = 0;
-  const redesenhar = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (am === meu) renderAm(); }); };
+  // cada foto que chega entra no lugar dela, sem redesenhar a janela (que voltava a rolagem para o topo)
+  const porFoto = j => {
+    const el = am === meu && $('amBody').querySelector(`.amft[data-j="${meu.jobs.indexOf(j)}"] .img`); if (!el) return;
+    el.classList.remove('carregando');
+    if (j.url) el.insertAdjacentHTML('afterbegin', `<img src="${j.url}" alt="">`);
+    else el.insertAdjacentHTML('afterbegin', ic(j.a.video ? 'video' : 'ban', 'lg'));
+  };
   await emParalelo(meu.jobs, 4, async j => {
     if (!j.dir || !IMG_EXT.test(j.local) || am !== meu) return;
     try { j.url = (await lerFotoDe(j.dir, j.local, 480)).mini; } catch { j.falhou = true; }
-    redesenhar();
+    porFoto(j);
   });
   if (am !== meu) return;
   try {
@@ -6941,6 +6946,7 @@ function renderAm(){
     : am.selecionar ? `<div class="ambar"><b>${k} selecionada(s)</b><button type="button" class="sm ghost" data-am="todas">${k === jobs.length ? 'Limpar' : 'Selecionar todas'}</button>
       <div class="ambtns"><button type="button" class="aprovar" data-am="oksel" ${k ? '' : 'disabled'}>${ic('check')}Aprovar</button><button type="button" class="reprovar" data-am="nosel" ${k ? '' : 'disabled'}>${ic('x')}Reprovar</button></div></div>`
     : etapa(p) === 'pronto' ? `<div class="ambar"><span class="muted">Aprovado, ainda não subiu para o Drive.</span><div class="ambtns"><button type="button" class="primary" data-am="enviar">${ic('upload')}Enviar ao Drive</button></div></div>` : '';
+  const rolagem = $('amBody').querySelector('.amcorpo')?.scrollTop || 0; // redesenhar não volta para o topo
   $('amBody').innerHTML = `<div class="amhead"><div class="t"><h2>${esc(p.nome)}</h2>
       <span class="muted">${jobs.length || nFotos(p)} fotos${nOk ? ` · ${nOk} aprovada(s)` : ''}${nNo ? ` · ${nNo} reprovada(s)` : ''}${edita && jobs.length ? ` · ${jobs.length - nOk - nNo} pendente(s)` : ` · ${esc(apSituacao(p))}`}</span></div>
       ${edita && jobs.length ? `<button type="button" class="sm ${am.selecionar ? 'on' : ''}" data-am="sel" title="Escolher várias fotos para aprovar ou reprovar de uma vez">${ic('check-circle')}${am.selecionar ? 'Cancelar seleção' : 'Selecionar'}</button>` : ''}
@@ -6949,6 +6955,7 @@ function renderAm(){
     <div class="amcorpo">${ant?.motivo ? `<div class="alert" style="margin:0 0 12px">Reprovado antes (${esc(ant.por)}, ${esc(dtBR(ant.em))}): ${esc(ant.motivo)}</div>` : ''}
       ${reprovado(p) ? `<div class="alert block" style="margin:0 0 12px">Reprovado por ${esc(p.aprovacao.por)} em ${esc(dtBR(p.aprovacao.em))}${p.aprovacao.motivo ? ': ' + esc(p.aprovacao.motivo) : ''}. A equipe corrige e encaminha de novo.</div>` : ''}
       ${corpo}</div>${barra}`;
+  if (rolagem) $('amBody').querySelector('.amcorpo').scrollTop = rolagem;
 }
 // (o aviso de fechar chega depois: se outra janela de produto já abriu, não mexe nela)
 $('dlgAp').addEventListener('close', () => { if (am && !$('dlgAp').open) fecharAm(); });
@@ -7111,6 +7118,9 @@ const ATUALIZACOES = [
     'Fotos e capas que ainda estão chegando aparecem como um bloco cinza com brilho',
     'Ao salvar um produto, o app avisa "Salvando…" enquanto organiza as pastas e as fotos',
     'A lista de produtos aparece assim que o cadastro chega; o resto continua carregando por trás'] },
+  { id: '2026-10-27-rolagem-aprovacao', em: '2026-10-27 11:00', titulo: 'Rolagem na janela de aprovação', itens: [
+    'Dá para rolar as fotos enquanto elas ainda estão chegando (antes a janela voltava para o topo a cada foto)',
+    'Aprovar ou reprovar uma foto não volta mais a janela para o topo'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
