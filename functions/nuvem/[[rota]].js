@@ -70,7 +70,8 @@ async function rotas({ request, env, params }){
   if (rota === 'arquivo' && m === 'GET'){
     if (!caminhoOk(c)) return erro('Caminho inválido.');
     const se = request.headers.get('If-None-Match');
-    const o = await b.get(c, se ? { onlyIf: { etagDoesNotMatch: se } } : {});
+    // o R2 quer a etiqueta sem aspas (o navegador manda "abc"; W/ é etiqueta fraca)
+    const o = await b.get(c, se ? { onlyIf: { etagDoesNotMatch: se.replace(/^W\//, '').replace(/"/g, '') } } : {});
     if (!o) return erro('Não existe.', 404);
     const h = { ETag: o.httpEtag, 'X-Mod': String(o.uploaded.getTime()), 'Cache-Control': 'no-store', 'Content-Type': o.httpMetadata?.contentType || 'application/octet-stream' };
     return 'body' in o ? new Response(o.body, { headers: h }) : new Response(null, { status: 304, headers: h });
