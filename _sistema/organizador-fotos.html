@@ -185,6 +185,13 @@ button.icon .ic,.chip button .ic,.fthumb button .ic,.check .ic,.ckic .ic{margin-
 .fthumb .carrega{position:absolute;top:0;left:0;width:72px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:6px;background:#00000059;color:#fff;font-size:12px;font-weight:700;pointer-events:none}
 .fthumb .carrega .ic{width:20px;height:20px;margin:0}
 .clrow.subindo{background:var(--accent-soft);box-shadow:inset 3px 0 var(--accent)}
+/* foto reprovada na aprovação: a linha fica vermelha até a foto ser trocada */
+.clrow.reprovada{background:color-mix(in srgb,var(--danger) 8%,transparent);box-shadow:inset 4px 0 var(--danger)}
+.clrow.reprovada .box{background:var(--danger);border-color:var(--danger)}
+.clrow.reprovada .box::after{content:"!";font-weight:800;font-size:14px;background:none;width:auto;height:auto}
+.fthumb.reprovada img,.fthumb.reprovada .vid{border:2px solid var(--danger)}
+.fthumb.reprovada .dim{color:var(--danger);font-weight:600}
+.clrow .reprov{margin-top:6px}
 .fthumb.removendo img{opacity:.35}
 /* barrinha no topo enquanto algo é gravado na nuvem */
 #nvBarra{position:fixed;top:0;left:0;right:0;height:3px;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,transparent,var(--accent),transparent) no-repeat;background-size:40% 100%;animation:nvbarra 1.1s linear infinite}
@@ -2431,10 +2438,13 @@ function mostrarEnvio(chave, frac){
 }
 function clLinha(p, u, it, i){
   const fs = filesOf(u, it), env = enviando.get(`${p.id}|${u.id}|${it.id}`);
+  // fotos deste item que a aprovação reprovou (somem daqui quando a foto é trocada)
+  const rep = reprovado(p) ? fs.map(f => ({ f, av: avDe(p, { u, it, local: f }) })).filter(x => x.av?.status === 'reprovada') : [];
+  const repF = new Set(rep.map(x => x.f)), repMot = [...new Set(rep.map(x => x.av.motivo).filter(Boolean))];
   const subindo = env ? env.previas.map(src => `<div class="fthumb enviando"><img src="${src}" alt=""><div class="carrega">${ic('loader', 'spin')}<b>${env.pct}%</b></div><div class="dim">enviando…</div></div>`).join('') : '';
-  return `<div class="clrow ${fs.length ? 'done' : ''} ${it.id === focoIid ? 'foco' : ''} ${it.id === editDica ? 'editando' : ''} ${env ? 'subindo' : ''}" data-iid="${it.id}">
-        <span class="box" title="${fs.length ? 'Feito: arquivo enviado' : 'Envie um arquivo para marcar'}"></span>
-        <div class="files">${fs.length ? fs.map(f => `<div class="fthumb ${removendo.has(`${p.id}|${u.id}|${f}`) ? 'removendo' : ''}" title="${esc(f)}">
+  return `<div class="clrow ${fs.length ? 'done' : ''} ${rep.length ? 'reprovada' : ''} ${it.id === focoIid ? 'foco' : ''} ${it.id === editDica ? 'editando' : ''} ${env ? 'subindo' : ''}" data-iid="${it.id}">
+        <span class="box" title="${rep.length ? 'Reprovada: troque a foto' : fs.length ? 'Feito: arquivo enviado' : 'Envie um arquivo para marcar'}"></span>
+        <div class="files">${fs.length ? fs.map(f => `<div class="fthumb ${repF.has(f) ? 'reprovada' : ''} ${removendo.has(`${p.id}|${u.id}|${f}`) ? 'removendo' : ''}" title="${esc(f)}">
               ${isVideo(it) || VID_EXT.test(f) ? `<div class="vid">${ic('video', 'lg')}</div>` : `<img data-f="${esc(f)}" alt="" title="Clique para ver grande">`}
               ${removendo.has(`${p.id}|${u.id}|${f}`) ? `<div class="carrega">${ic('loader', 'spin')}</div>`
                 : `<button data-act="rmfile" data-f="${esc(f)}" title="Remover arquivo">${ic('x')}</button>`}<div class="dim" data-dim="${esc(f)}"></div></div>`).join('') + subindo
@@ -2442,6 +2452,7 @@ function clLinha(p, u, it, i){
         <div class="cltext">
           <div class="clname">${i + 1}. ${esc(it.nome)}${isVideo(it) ? '<span class="tag">VÍDEO</span>' : ''}${it.id === focoIid ? proxTag(fs.length) : ''}</div>
           ${it.dica || it.dicaPropria ? `<div class="muted ajuda" data-em=".clname">${esc(it.dica)}${it.dicaPropria ? ' <span class="lbl info" title="Editada neste produto; o checklist padrão não muda">só neste produto</span>' : ''}</div>` : ''}
+          ${rep.length ? `<div class="reprov"><span class="lbl block">${ic('ban')}Reprovada${fs.length > 1 ? ` (${rep.length} de ${fs.length})` : ''}${repMot.length ? ': ' + esc(repMot.join(' · ')) : ''} · troque a foto</span></div>` : ''}
           ${fs.length ? `<div class="fname">${esc(fs[0])}${fs.length > 1 ? ` +${fs.length - 1}` : ''}</div><div class="regra"></div>` : ''}
         </div>
         <div class="clacts">
@@ -7579,6 +7590,9 @@ const ATUALIZACOES = [
   { id: '2026-10-27-so-titulo-obrigatorio', em: '2026-10-27 17:30', titulo: 'Só o título é obrigatório', itens: [
     'No cadastro, só o título do anúncio é obrigatório; categoria, tipo, material, cor, estilo e palavra-chave passam a ser opcionais',
     'O que ficar vazio só fica de fora do nome SEO das fotos (sem palavra-chave nem tipo, o nome usa o começo do título do anúncio); produto sem categoria vai direto para a pasta principal do Drive'] },
+  { id: '2026-10-27-reprovadas-em-vermelho', em: '2026-10-27 15:11', titulo: 'Fotos reprovadas em vermelho', itens: [
+    'No checklist do produto reprovado, a linha e a miniatura de cada foto reprovada ficam em vermelho, com o motivo',
+    'O destaque some quando a foto é trocada ou quando o produto volta para a aprovação'] },
   { id: '2026-10-27-prioridade-na-barra', em: '2026-10-27 17:00', titulo: 'Prioridade junto dos filtros', itens: [
     'A prioridade na fila do produto aberto saiu da ficha e fica na barra de cima, ao lado dos filtros da lista: escolha, subir/descer na fila e a posição'] },
   { id: '2026-10-27-colagem', em: '2026-10-27 16:30', titulo: 'Colagem das fotos', itens: [
