@@ -1648,7 +1648,9 @@ async function sisVerifica(){
   return sisOk;
 }
 async function sisErro(r){ let m = ''; try { m = (await r.json()).erro; } catch {} return new Error(m || `O servidor respondeu ${r.status}.`); }
-async function sisGravar(arq, dados){
+async function sisGravar(arq, dados, seBase){
+  // na nuvem, cadastro e demandas só gravam se ninguém salvou depois da última leitura (devolve a etiqueta nova)
+  if (sisDir?.nuvem && seBase !== undefined) return (await nvGravar(juntarCam(sisDir.caminho, arq), dados, null, false, seBase)).etag;
   if (sisDir){ const [ps, n] = sisPartes(arq); return writeFile(await sub(sisDir, ...ps), n, dados); }
   if (sisOk){
     const r = await fetch('/sistema/gravar?arq=' + encodeURIComponent(arq), { method: 'POST', headers: SIS_HDR, body: dados });
@@ -1662,7 +1664,13 @@ async function sisGravar(arq, dados){
 const UTF8 = new TextDecoder('utf-8', { ignoreBOM: true });
 async function sisLer(arq, decodificar = true){
   if (sisDir){
-    const [ps, n] = sisPartes(arq), dir = await subIfExists(sisDir, ...ps);
+    const [ps, n] = sisPartes(arq);
+    if (sisDir.nuvem){
+      // na nuvem: só "não existe" de verdade vira null; falha de internet é erro
+      const fh = new NuvemArquivo(juntarCam(sisDir.caminho, arq)), f = await fh.getFile().catch(e => { if (e?.name === 'NotFoundError') return null; throw e; });
+      return f && { texto: decodificar ? UTF8.decode(await f.arrayBuffer()) : '', bytes: f.size, mtime: f.lastModified, etag: nvBlobs.get(fh.caminho)?.etag };
+    }
+    const dir = await subIfExists(sisDir, ...ps);
     try { const f = await (await dir.getFileHandle(n)).getFile(); return { texto: decodificar ? UTF8.decode(await f.arrayBuffer()) : '', bytes: f.size, mtime: f.lastModified }; } catch { return null; }
   }
   if (sisOk){
@@ -2070,42 +2078,80 @@ function mesclar3(base, meu, disco){
   return meu;
 }
 // null = ninguém mudou o arquivo; senão o objeto já juntado
+const sisEtag = {}; // arquivo → etiqueta da versão da nuvem que está em sisBase
 async function mesclarComDisco(arq, meu, listas){
   const r = await sisLer(arq);
-  if (!r || sisBase[arq] === undefined || r.texto === sisBase[arq]) return null;
-  const base = JSON.parse(sisBase[arq]), disco = JSON.parse(r.texto), out = { ...disco, ...meu };
+  if (!r) return null;
+  if (r.texto === sisBase[arq]){ sisEtag[arq] = r.etag; return null; }
+  const disco = JSON.parse(r.texto);
+  sisEtag[arq] = r.etag;
+  // nunca leu este arquivo (a abertura falhou): vale o da nuvem — a cópia velha deste navegador não passa por cima
+  if (sisBase[arq] === undefined){ sisBase[arq] = r.texto; return disco; }
+  const base = JSON.parse(sisBase[arq]), out = { ...disco, ...meu };
   for (const k of listas) out[k] = mesclarLista(base[k], meu[k], disco[k]);
   sisBase[arq] = r.texto;
   return out;
 }
+// junta com a nuvem e grava só se ninguém salvou no meio; se salvou, junta de novo
+async function gravarJunto(arq, meu, listas, aplicar){
+  for (let i = 0; i < 5; i++){
+    const m = await mesclarComDisco(arq, meu(), listas);
+    if (m) aplicar(m);
+    const txt = JSON.stringify(meu(), null, 2);
+    if (txt === sisBase[arq]) return; // nada mudou: não grava de novo
+    try {
+      const etag = await sisGravar(arq, txt, ws?.nuvem ? sisEtag[arq] || 'novo' : undefined);
+      sisBase[arq] = txt; if (etag) sisEtag[arq] = etag;
+      return;
+    } catch (e) { if (e.status !== 412) throw e; await sleep(300 + Math.random() * 700); }
+  }
+  throw new Error('outra pessoa está salvando ao mesmo tempo; tento de novo na próxima alteração');
+}
 // troca o cadastro pelo juntado, mantendo a tela aberta (só redesenha o produto aberto se outra pessoa mexeu nele)
+// põe o valor novo dentro do objeto que já existe (mesmo objeto, conteúdo novo), item a item pelas ids
+function noLugar(velho, novo){
+  if (!velho || !novo || typeof velho !== 'object' || typeof novo !== 'object' || Array.isArray(velho) !== Array.isArray(novo)) return novo;
+  if (Array.isArray(novo)){
+    if (!novo.every(x => x && typeof x === 'object' && 'id' in x)) return novo;
+    const porId = new Map(velho.filter(x => x && typeof x === 'object').map(x => [x.id, x]));
+    return novo.map(x => porId.has(x.id) ? noLugar(porId.get(x.id), x) : x);
+  }
+  for (const k of Object.keys(velho)) if (!(k in novo)) delete velho[k];
+  for (const k of Object.keys(novo)) velho[k] = noLugar(velho[k], novo[k]);
+  return velho;
+}
 function aplicarPlanoMesclado(m){
-  const antes = curP();
-  plan.produtos = migrate(m).produtos;
+  const antes = curP(), velhos = new Map(plan.produtos.map(p => [p.id, JSON.stringify(p)]));
+  plan.produtos = noLugar(plan.produtos, migrate(m).produtos);
+  // produto que a equipe mexeu: a capa guardada pode estar velha (confere de novo)
+  for (const p of plan.produtos) if (velhos.get(p.id) !== JSON.stringify(p)){
+    const a = coverCache.get(p.id), b = apCapas.get(p.id); if (a) a.velha = true; if (b) b.velha = true;
+  }
   store.set('plan', plan);
   renderList();
-  if (!$('tab-resumo').classList.contains('hidden') && !$('dlgAp').open) renderResumo();
-  if (curP() !== antes) renderDetail();
+  if (!$('tab-resumo').classList.contains('hidden')) renderResumo();
+  if ($('dlgAp').open && am) renderAm(); // a janela de aprovação aberta mostra o que a equipe aprovou/reprovou
+  if (curP() !== antes || velhos.get(current) !== JSON.stringify(curP())) renderDetail();
 }
 async function gravarPlano(){
-  const m = await mesclarComDisco(PLAN_FILE, plan, ['produtos']);
-  if (m) aplicarPlanoMesclado(m);
-  const txt = JSON.stringify(plan, null, 2);
-  if (txt === sisBase[PLAN_FILE]) return; // nada mudou: não grava de novo
-  await sisGravar(PLAN_FILE, txt);
-  sisBase[PLAN_FILE] = txt;
+  await gravarJunto(PLAN_FILE, () => plan, ['produtos'], aplicarPlanoMesclado);
 }
-// a cada 20 s (com a janela aberta e nada esperando para gravar) traz o que a equipe mudou
-setInterval(async () => {
-  if (!ws || document.hidden || fsBusy || saveTimer || demTimer) return;
+// a cada 10 s (com a janela aberta e nada esperando para gravar) traz o que a equipe mudou;
+// e na hora em que a pessoa volta para a aba do Estúdio
+let trazendo = false;
+async function trazerEquipe(){
+  if (!ws || document.hidden || fsBusy || saveTimer || demTimer || trazendo || verifRodando) return;
+  trazendo = true;
   try {
     const m = await mesclarComDisco(PLAN_FILE, plan, ['produtos']);
     if (m) aplicarPlanoMesclado(m);
     const d = await mesclarComDisco(DEM_FILE, dem, ['demandas', 'relatorios', 'chat']);
     if (d){ dem = normDem(d); store.set('demandas', dem); renderDemCont(); renderList(); if (!$('tab-demandas').classList.contains('hidden')) renderDem(); }
     if (m) pcAgendar(500); // a equipe mexeu: traz as fotos novas para o computador
-  } catch {}
-}, 20000);
+  } catch {} finally { trazendo = false; }
+}
+setInterval(trazerEquipe, 10000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) trazerEquipe(); });
 setInterval(() => { if (!document.hidden) copiarParaPc(); }, 120000); // e confere a pasta inteira a cada 2 min
 let saveTimer;
 function savePlan(){
@@ -2188,9 +2234,10 @@ async function loadCovers(){
     const p = plan.produtos.find(x => x.id === img.dataset.cv); if (!p) return;
     // só o produto aberto pode ter trocado de capa agora; os outros usam a guardada
     let c = coverCache.get(p.id);
-    if (!c || p.id === current) try {
+    if (!c || c.velha || p.id === current) try {
       const r = await capaRef(p); if (!r) return;
       const assin = await capaAssin(r);
+      if (c) c.velha = false;
       if (!c || c.assin !== assin){
         if (c) URL.revokeObjectURL(c.url);
         c = { assin, url: (await lerFotoDe(r[0], r[1], 96)).mini }; coverCache.set(p.id, c);
@@ -2694,7 +2741,7 @@ async function verifyFiles(force = false){
         else if (ws.nuvem) continue; // a pasta não está onde este aparelho espera (ex.: renomeada em outro): não tira nada
         for (const id in u.arquivos){
           const keep = u.arquivos[id].filter(f => nomes.has(f));
-          if (keep.length !== u.arquivos[id].length) mudou.push([p, u, id, keep]);
+          if (keep.length !== u.arquivos[id].length) mudou.push([p, u, id, keep, dir]);
         }
         // na nuvem a pasta do produto é a verdade: foto de um item que está nela mas saiu da lista volta para o item
         if (ws.nuvem){
@@ -2710,6 +2757,12 @@ async function verifyFiles(force = false){
     }
     // algo mexeu nos arquivos durante a conferência: deixa para a próxima
     if (gen !== fsGen || fsBusy || (!mudou.length && !volta.length)) return;
+    // na nuvem, antes de tirar uma foto da lista, confere a pasta de novo (pode ser foto que outra pessoa acabou de subir)
+    if (ws.nuvem) for (const x of mudou){
+      const agora = (await nvListar(x[4].caminho, true)).arquivos;
+      x[3] = x[1].arquivos[x[2]].filter(f => agora.has(f));
+    }
+    if (gen !== fsGen || fsBusy) return;
     for (const [, u, id, keep] of mudou) u.arquivos[id] = keep;
     for (const [p, u, id, achadas] of volta){
       u.arquivos[id] = [...(u.arquivos[id] || []), ...achadas].sort();
@@ -3466,7 +3519,7 @@ async function nvPedir(rota, params, { quieto, ...opt } = {}){
   catch { throw new Error('Sem conexão com a nuvem. Confira a internet.'); }
   finally { if (!quieto){ nvLendo--; nvAviso(); } }
   if (r.status === 401){ location.reload(); throw new Error('Entre de novo.'); }
-  if (!r.ok && r.status !== 404 && r.status !== 304){ let m = ''; try { m = (await r.json()).erro; } catch {} throw new Error(m || `A nuvem respondeu ${r.status}.`); }
+  if (!r.ok && r.status !== 404 && r.status !== 304){ let m = ''; try { m = (await r.json()).erro; } catch {} throw Object.assign(new Error(m || `A nuvem respondeu ${r.status}.`), { status: r.status }); }
   return r;
 }
 // conteúdo de uma pasta; "forcar" busca de novo em vez de usar o que foi lido há poucos segundos
@@ -3559,10 +3612,11 @@ function nvPut(cam, blob, aoProgresso){
     x.send(blob);
   });
 }
-async function nvGravar(cam, dados, aoProgresso, quieto = false){
+// "seBase": etiqueta da versão lida ('novo' = o arquivo ainda não existia; '*' = grava de qualquer jeito)
+async function nvGravar(cam, dados, aoProgresso, quieto = false, seBase){
   const blob = dados instanceof Blob ? dados : new Blob([dados]);
   const grava = async () => aoProgresso ? nvPut(cam, blob, aoProgresso)
-    : (await nvPedir('arquivo', { c: cam }, { method: 'PUT', body: blob, headers: { 'Content-Type': blob.type || 'application/octet-stream' }, quieto })).json();
+    : (await nvPedir('arquivo', { c: cam }, { method: 'PUT', body: blob, headers: { 'Content-Type': blob.type || 'application/octet-stream', ...(seBase ? { 'If-Match': seBase } : {}) }, quieto })).json();
   const d = await (quieto ? grava() : comBarra(grava));
   const pasta = cam.slice(0, cam.lastIndexOf('/')), nome = cam.slice(cam.lastIndexOf('/') + 1);
   nvListas.get(pasta)?.arquivos.set(nome, { nome, tamanho: d.tamanho, mod: d.mod, etag: d.etag });
@@ -3783,7 +3837,7 @@ async function levarParaNuvem(){
         const la = (await nvListar(pasta)).arquivos.get(nome);
         // fotos com o mesmo tamanho já estão lá (dá para rodar de novo sem copiar tudo); os dados vão sempre
         if (la && la.tamanho === f.size && !it.cam.startsWith('_sistema/dados/')) pulados++;
-        else await nvGravar(it.cam, f);
+        else await nvGravar(it.cam, f, null, false, '*');
       } catch (e) { falhas.push(it.cam); }
       feitos++;
       txt.textContent = `${feitos} de ${arqs.length} arquivos${pulados ? ` (${pulados} já estavam lá)` : ''}…`;
@@ -3839,7 +3893,7 @@ async function useWorkspace(h){
     if (!r) throw new Error('ainda não há cadastro salvo');
     const txt = r.texto;
     backupDiario(txt).catch(() => {}); // a cópia do dia não precisa segurar a abertura
-    sisBase[PLAN_FILE] = txt;
+    sisBase[PLAN_FILE] = txt; sisEtag[PLAN_FILE] = r.etag;
     const disk = migrate(JSON.parse(txt));
     const ids = new Set(disk.produtos.map(p => p.id));
     if (!h.nuvem) disk.produtos.push(...plan.produtos.filter(p => !ids.has(p.id)));
@@ -3848,7 +3902,11 @@ async function useWorkspace(h){
     if (!curP()) current = plan.produtos[0]?.id || null;
     renderList(); renderDetail(); if (!$('tab-resumo').classList.contains('hidden')) renderResumo();
     fimCarregando();
-  } catch {}
+  } catch (e) {
+    // não deu para ler o cadastro da nuvem: a tela fica com a cópia deste navegador, mas nada dela grava por cima;
+    // a próxima leitura (a cada 10 s) traz o da nuvem
+    if (h.nuvem && e.message !== 'ainda não há cadastro salvo') toast('Não consegui ler o cadastro da nuvem (' + e.message + '). Tentando de novo…', 8000);
+  }
   // configurações: neste endereço ainda não há nada salvo? traz da pasta. Senão, guarda uma cópia nela.
   if (settingsFresh){
     try {
@@ -5495,12 +5553,9 @@ function salvarDem(){
   demTimer = setTimeout(async () => {
     demTimer = null;
     try {
-      const m = await mesclarComDisco(DEM_FILE, dem, ['demandas', 'relatorios', 'chat']);
-      if (m){ dem = normDem(m); store.set('demandas', dem); renderDemCont(); if (!$('tab-demandas').classList.contains('hidden')) renderDem(); }
-      const txt = JSON.stringify(dem, null, 2);
-      if (txt === sisBase[DEM_FILE]) return; // nada mudou: não grava de novo
-      await sisGravar(DEM_FILE, txt);
-      sisBase[DEM_FILE] = txt;
+      await gravarJunto(DEM_FILE, () => dem, ['demandas', 'relatorios', 'chat'], m => {
+        dem = normDem(m); store.set('demandas', dem); renderDemCont(); if (!$('tab-demandas').classList.contains('hidden')) renderDem();
+      });
     } catch (e) { toast('Não consegui salvar as demandas: ' + e.message, 6000); }
   }, 400);
 }
@@ -5509,7 +5564,7 @@ async function carregarDem(){
   try {
     const r = await sisLer(DEM_FILE);
     if (r){
-      sisBase[DEM_FILE] = r.texto;
+      sisBase[DEM_FILE] = r.texto; sisEtag[DEM_FILE] = r.etag;
       const disco = normDem(JSON.parse(r.texto));
       for (const k of ['demandas', 'relatorios']){ const ids = new Set(disco[k].map(x => x.id)); disco[k].push(...dem[k].filter(x => !ids.has(x.id))); }
       dem = disco;
@@ -6958,12 +7013,14 @@ async function apCarregarCapas(lista){
       const r = await capaRef(p); if (!r) return;
       const assin = await capaAssin(r);
       let c = apCapas.get(p.id);
+      if (c) c.velha = false;
       if (!c || c.assin !== assin){
         if (c) URL.revokeObjectURL(c.url);
         c = { assin, url: (await lerFotoDe(r[0], r[1], 480)).mini }; apCapas.set(p.id, c);
       }
+      // troca a foto do card quando a capa mudou (ex.: foto nova de outra pessoa)
       const el = document.querySelector(`.apcard[data-ap="${p.id}"] .capa`);
-      if (el && !el.querySelector('img')){ el.innerHTML = `<img src="${c.url}" alt="">`; el.classList.remove('carregando'); }
+      if (el && el.querySelector('img')?.getAttribute('src') !== c.url){ el.innerHTML = `<img src="${c.url}" alt="">`; el.classList.remove('carregando'); }
     } catch {}
   });
 }
@@ -7238,6 +7295,16 @@ const ATUALIZACOES = [
     'Renomear e remover fotos também acompanham na pasta (só mexe nas fotos que a própria cópia pôs lá)',
     'Ao abrir o site, se o navegador pedir, aparece o botão "Liberar a cópia no computador"',
     'O Drive e o ERP (Olist) continuam recebendo as fotos só depois da aprovação'] },
+  { id: '2026-10-27-equipe-ve-na-hora', em: '2026-10-27 12:00', titulo: 'A equipe vê fotos e aprovações mais rápido', itens: [
+    'O app busca o que a equipe mudou a cada 10 segundos (antes 20) e na hora em que você volta para a aba do Estúdio',
+    'A capa dos cards de aprovação e da lista de produtos troca quando outra pessoa põe foto nova (antes ficava a imagem antiga até recarregar)',
+    'Com a janela de aprovação aberta, o que outra pessoa aprova ou reprova aparece nela, e o Resumo se atualiza mesmo com a janela aberta'] },
+  { id: '2026-10-27-nada-some', em: '2026-10-27 12:30', titulo: 'Nada some quando outra pessoa está desatualizada', itens: [
+    'A nuvem só aceita gravar o cadastro e as demandas se a gravação partiu da versão mais nova; se outra pessoa salvou no meio, o app junta as duas e grava de novo',
+    'Janela do Estúdio aberta com uma versão antiga do app não consegue mais gravar por cima: aparece o aviso para apertar F5',
+    'Se a leitura do cadastro falha ao abrir (internet), o app não grava mais a cópia velha do navegador por cima da nuvem',
+    'Mudança da equipe chegando no meio de um envio de fotos não tira mais a foto nova do cadastro',
+    'Antes de tirar uma foto da lista, o app confere a pasta na nuvem de novo'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';

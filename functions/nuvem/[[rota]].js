@@ -6,6 +6,7 @@
 import { usuarioDaSessao } from '../_middleware.js';
 
 const RAIZES = ['Estudio Polivenda', '_sistema'];
+const PROTEGIDOS = /^_sistema\/dados\/(organizador|planejamento)\.json$/;
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 const erro = (mensagem, status = 400) => json({ erro: mensagem }, status);
 // caminho seguro: dentro de uma das raízes, sem "..", sem barras sobrando
@@ -72,7 +73,19 @@ export async function onRequest({ request, env, params }){
   }
   if (rota === 'arquivo' && m === 'PUT'){
     if (!caminhoOk(c)) return erro('Caminho inválido.');
-    const o = await b.put(c, request.body, { httpMetadata: { contentType: request.headers.get('Content-Type') || 'application/octet-stream' } });
+    // cadastro e demandas da equipe: só grava quem leu a versão mais nova (If-Match = etiqueta lida;
+    // "novo" = o arquivo não existia; "*" = de propósito por cima). Sem isso, uma janela antiga apagava o trabalho dos outros.
+    const se = request.headers.get('If-Match');
+    if (PROTEGIDOS.test(c) && !se) return erro('Esta janela do Estúdio está desatualizada. Aperte F5 para carregar a versão nova (nada foi gravado).', 428);
+    let onlyIf;
+    if (se && se !== '*'){
+      const atual = await b.head(c);
+      if (se === 'novo' ? !!atual : atual?.httpEtag !== se) return erro('Outra pessoa salvou antes.', 412);
+      // a conferência e a gravação num passo só no R2: duas pessoas salvando no mesmo instante não passam uma por cima da outra
+      if (atual) onlyIf = { etagMatches: atual.etag };
+    }
+    const o = await b.put(c, request.body, { httpMetadata: { contentType: request.headers.get('Content-Type') || 'application/octet-stream' }, ...(onlyIf ? { onlyIf } : {}) });
+    if (!o) return erro('Outra pessoa salvou antes.', 412);
     return json({ tamanho: o.size, mod: o.uploaded.getTime(), etag: o.httpEtag });
   }
   if (m !== 'POST') return erro('Rota desconhecida.', 404);
