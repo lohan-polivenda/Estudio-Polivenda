@@ -982,10 +982,10 @@ _sistema/                          ← tudo que não é produto
 
     <!-- ---------- Categorias ---------- -->
     <div class="cfgsec" data-sec="categorias">
-      <div class="cfghead"><h2>Categorias</h2><div class="muted ajuda">As categorias da loja. Todo produto escolhe uma delas no cadastro, e no Google Drive as pastas ficam separadas por categoria.</div></div>
+      <div class="cfghead"><h2>Categorias</h2><div class="muted ajuda">As categorias da loja. O produto pode escolher uma delas no cadastro, e no Google Drive as pastas ficam separadas por categoria.</div></div>
     <div class="panel" id="cfgCats">
       <h3><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Categorias da loja</h3>
-      <div class="muted ajuda">A ordem daqui é a ordem em que aparecem no cadastro. Com pelo menos uma categoria cadastrada, ela passa a ser obrigatória para salvar e enviar ao Drive.</div>
+      <div class="muted ajuda">A ordem daqui é a ordem em que aparecem no cadastro. A categoria é opcional: produto sem categoria fica direto na pasta principal do Drive.</div>
       <div id="catLista" style="margin-top:8px"></div>
       <div class="inrow" style="margin-top:10px;max-width:420px"><input id="catIn" placeholder="Nova categoria (ex.: Vasos decorativos)"><button type="button" class="sm" id="catAdd">Adicionar</button></div>
       <details class="sec">
@@ -1191,15 +1191,15 @@ _sistema/                          ← tudo que não é produto
       <div class="inrow"><input id="fTitulo" maxlength="120" placeholder="Ex.: Vaso Decorativo de Vidro Azul 30 cm para Flores Sala de Estar">
         <button type="button" class="ia sm" id="fTituloIA" title="A IA escreve o título com as palavras que o cliente busca"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg>Sugerir</button></div>
       <div class="muted ajuda" style="margin-top:4px">Vai na descrição do anúncio, no texto das fotos e no manifesto. Não use o nome interno nem códigos. Até 60 letras cabe no título do Mercado Livre.</div>
-      <div class="dobra" data-dobra="tipo"><button type="button" class="dobra-h" data-lab="Tipo do produto" data-req="1"></button>
+      <div class="dobra" data-dobra="tipo"><button type="button" class="dobra-h" data-lab="Tipo do produto"></button>
         <div class="dobra-b"><div class="opts" data-list="tipo"></div></div></div>
-      <div class="dobra" data-dobra="material"><button type="button" class="dobra-h" data-lab="Material principal" data-req="1"></button>
+      <div class="dobra" data-dobra="material"><button type="button" class="dobra-h" data-lab="Material principal"></button>
         <div class="dobra-b"><div class="opts" data-list="material"></div></div></div>
-      <div class="dobra" data-dobra="cor" id="fCorBox"><button type="button" class="dobra-h" data-lab="Cor" data-req="1"></button>
+      <div class="dobra" data-dobra="cor" id="fCorBox"><button type="button" class="dobra-h" data-lab="Cor"></button>
         <div class="dobra-b"><div class="opts" data-list="cor"></div></div></div>
-      <div class="dobra" data-dobra="estilo"><button type="button" class="dobra-h" data-lab="Estilo / ambiente (até 2)" data-req="1"></button>
+      <div class="dobra" data-dobra="estilo"><button type="button" class="dobra-h" data-lab="Estilo / ambiente (até 2)"></button>
         <div class="dobra-b"><div class="opts" data-list="estilo"></div></div></div>
-      <div class="dobra" data-dobra="palavra"><button type="button" class="dobra-h" data-lab="Palavra-chave principal" data-req="1"></button>
+      <div class="dobra" data-dobra="palavra"><button type="button" class="dobra-h" data-lab="Palavra-chave principal"></button>
         <div class="dobra-b"><div class="muted ajuda" style="margin-bottom:6px">O que o cliente digita na busca, com palavras simples (nunca o nome interno ou o código do produto).</div><div class="opts" id="fPalavra"></div></div></div>
       <label class="f">Medida principal <span style="font-weight:400">(opcional)</span></label>
       <div class="inrow" id="fMedidaBox" style="max-width:240px"><input id="fMedida" type="number" min="0" step="0.1" placeholder="Ex.: 30">
@@ -1639,7 +1639,8 @@ function prodBase(info, n, tpl = settings.tplProd){
   return full(parts) || 'foto-' + num;
 }
 function prodParts(info, num, tpl){
-  const vals = { produto: info.nome, palavra: info.palavra || info.tipo, tipo: info.tipo, marca: info.marca, modelo: info.modelo,
+  // sem palavra-chave nem tipo (são opcionais), o começo do título do anúncio faz esse papel no nome
+  const vals = { produto: info.nome, palavra: info.palavra || info.tipo || slug(info.titulo).split('-').slice(0, 6).join(' '), tipo: info.tipo, marca: info.marca, modelo: info.modelo,
     variacao: info.variacao, cor: info.cor, material: info.material, medida: info.medida, estilo: (info.estilo || []).join(' '),
     foto: info.foto, extra: info.extra, sku: info.sku, loja: settings.seo.usarLoja ? settings.seo.loja : '' };
   const keys = [...tpl.matchAll(/\{(\w+)\}/g)].map(m => m[1]).filter(k => k === 'n' || k in vals);
@@ -2080,17 +2081,10 @@ const corOf = (p, u) => colorVar(p) ? u.nome : p.cor;
 const fotoRefOf = p => p.checklist.map(c => c.nome).sort((a, b) => slug(b).length - slug(a).length)[0] || '';
 const seoInfo = (p, u) => ({...p, variacao: u.nome, cor: corOf(p, u), sku: u.sku || p.sku, medida: fmtMedida(p), fotoRef: fotoRefOf(p)});
 // o que falta no cadastro para o nome SEO ficar completo
+// só o título do anúncio é obrigatório; categoria, tipo, material, cor, estilo e palavra-chave são opcionais
+// (o que estiver vazio só fica de fora do nome SEO; sem categoria, a pasta no Drive fica direto na pasta principal)
 function seoFaltando(p){
-  const f = [];
-  // com categorias cadastradas, todo produto precisa de uma (é a pasta dele no Drive)
-  if (settings.categorias.length && !p.categoria) f.push('categoria');
-  if (!p.titulo?.trim()) f.push('título do anúncio');
-  if (!p.tipo) f.push('tipo do produto');
-  if (!p.material) f.push('material');
-  if (!colorVar(p) && !p.cor) f.push('cor');
-  if (!p.estilo?.length) f.push('estilo/ambiente');
-  if (!p.palavra) f.push('palavra-chave principal');
-  return f;
+  return p.titulo?.trim() ? [] : ['título do anúncio'];
 }
 const lojaNome = () => settings.seo.loja ? settings.seo.loja.charAt(0).toUpperCase() + settings.seo.loja.slice(1) : '';
 // texto alternativo: descreve a foto com as palavras do cliente (o nome interno do produto fica de fora)
@@ -3084,7 +3078,7 @@ function syncDobras(){
   document.querySelectorAll('#dlgProd .dobra').forEach(d => {
     const k = d.dataset.dobra, h = d.querySelector('.dobra-h'), v = dobraValor(k), aberta = fAbertas.has(k);
     d.classList.toggle('aberta', aberta);
-    const req = h.dataset.req || (k === 'cat' && settings.categorias.length);
+    const req = h.dataset.req;
     h.innerHTML = `<span class="dl">${esc(h.dataset.lab)}${req ? ' <span class="req">*</span>' : ''}</span>`
       + `<span class="dv ${v ? (k === 'varsug' ? 'leve' : '') : 'vazio'}">${esc(v || (aberta ? 'escolha abaixo' : 'escolher'))}</span>${ic('down')}`;
     h.title = aberta ? 'Fechar' : 'Abrir e escolher';
@@ -7582,6 +7576,9 @@ const ATUALIZACOES = [
     'Configurações → Conexões → Recuperar: mostra os produtos que estão nas cópias do cadastro mas sumiram, para trazer de volta',
     'Mostra também as fotos que estão na pasta de um produto mas fora da lista, com a miniatura e o item onde recolocar',
     'O cadastro agora é copiado a cada hora (últimas 48 horas), além da cópia diária'] },
+  { id: '2026-10-27-so-titulo-obrigatorio', em: '2026-10-27 17:30', titulo: 'Só o título é obrigatório', itens: [
+    'No cadastro, só o título do anúncio é obrigatório; categoria, tipo, material, cor, estilo e palavra-chave passam a ser opcionais',
+    'O que ficar vazio só fica de fora do nome SEO das fotos (sem palavra-chave nem tipo, o nome usa o começo do título do anúncio); produto sem categoria vai direto para a pasta principal do Drive'] },
   { id: '2026-10-27-prioridade-na-barra', em: '2026-10-27 17:00', titulo: 'Prioridade junto dos filtros', itens: [
     'A prioridade na fila do produto aberto saiu da ficha e fica na barra de cima, ao lado dos filtros da lista: escolha, subir/descer na fila e a posição'] },
   { id: '2026-10-27-colagem', em: '2026-10-27 16:30', titulo: 'Colagem das fotos', itens: [
