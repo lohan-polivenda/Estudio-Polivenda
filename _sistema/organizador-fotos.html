@@ -209,6 +209,11 @@ body.abrindo main > section{display:none !important}
 body.abrindo #nvStatus{display:none}
 #pcAviso{position:fixed;right:16px;bottom:16px;z-index:60;border-radius:20px;box-shadow:0 6px 18px #0002;font-weight:600}
 #pcAviso.hidden{display:none}
+#espInfo .barra{height:8px;border-radius:4px;background:var(--soft);overflow:hidden;margin:8px 0 2px}
+#espInfo .barra i{display:block;height:100%;background:var(--accent)}
+#espInfo .barra i.alto{background:var(--danger)}
+#espArq summary{cursor:pointer;margin-top:12px;font-weight:600;font-size:13px}
+#espArq ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.7;max-height:260px;overflow:auto}
 #colFormato{margin:4px 0 10px}
 #colFotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin:12px 0;max-height:220px;overflow:auto}
 #colFotos button{position:relative;padding:0;aspect-ratio:3/4;border-radius:8px;overflow:hidden;border:2px solid transparent;background:var(--soft)}
@@ -613,6 +618,9 @@ button.kpi:hover{background:var(--soft)}
 .apcard .apinfo .muted{font-size:13px}
 .apcard .mot{font-size:12px;color:var(--danger);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .apsit{margin-top:6px;font-size:12px;padding:4px 12px;border-radius:20px;background:var(--soft);color:var(--muted);border:1px solid var(--border)}
+/* reprovado: o motivo aparece no card, sem cortar */
+.apcard .mot.rep{white-space:normal;line-height:1.4;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--danger) 8%,transparent);text-align:left}
+.apsit.rep{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,transparent);background:color-mix(in srgb,var(--danger) 8%,transparent)}
 dialog.dlgap{width:min(1100px,calc(100vw - 32px));max-height:calc(100vh - 32px)}
 #amBody{display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
 .amhead{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border)}
@@ -670,7 +678,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
   <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9z"/></symbol>
-  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 13v8"/><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="m8 17 4-4 4 4"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 13v8"/><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="m8 17 4-4 4 4"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
@@ -844,6 +852,14 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
       <div class="muted" id="pcInfo"></div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button id="pcEscolher">Escolher pasta</button><button id="pcAgora" class="hidden">Copiar agora</button><button id="pcDesligar" class="ghost hidden">Desligar</button></div>
       <div class="muted ajuda">Toda foto inserida no Estúdio (por qualquer pessoa, até pelo celular) é baixada para a pasta escolhida enquanto o site estiver aberto neste computador. Renomear e remover também acompanham. Cada pessoa liga no próprio computador. O Drive e o ERP só recebem as fotos depois da aprovação.</div>
+    </div>
+
+    <div class="panel hidden" id="cfgEsp">
+      <h3><svg class="ic" aria-hidden="true"><use href="#i-cloud"/></svg>Espaço na nuvem</h3>
+      <div id="espInfo"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="muted">Espaço contratado</span><select id="espLimite"></select><button id="espAgora">Conferir agora</button></div>
+      <div class="muted ajuda">O app confere o espaço uma vez por dia. Chegando a 80%, ele primeiro esvazia a lixeira (o que está lá há mais de 30 dias) e depois tira do app as fotos dos produtos mais antigos que já estão no Google Drive, até voltar a 60%. Produto em produção, em aprovação ou que ainda não subiu para o Drive nunca sai. Fica o histórico: nome, quantidade de fotos, nomes dos arquivos, capa e o link da pasta no Drive. Os 10 GB são o gratuito da Cloudflare.</div>
+      <div id="espArq"></div>
     </div>
 
     <div class="panel" id="cfgWs">
@@ -1472,6 +1488,7 @@ function normSettings(raw){
   s.seo = { loja: 'polivenda', usarLoja: true, ...s.seo };
   s.listas = { ...structuredClone(DEFAULT_LISTAS), ...s.listas };
   s.drive = { clientId: '', email: '', pastaId: '', pastaNome: '', ...s.drive };
+  s.nuvem = { gb: 10, ...s.nuvem }; // espaço contratado no R2 (a limpeza começa em 80%)
   // ID do cliente do Google da Polivenda (não é segredo): todo computador já vem com ele
   if (!s.drive.clientId) s.drive.clientId = '396843345657-lnqcr576qf0jpjrrkg49b6t9jr4imn1m.apps.googleusercontent.com';
   s.novidades = { data: '', itens: [], ...s.novidades };
@@ -2056,6 +2073,7 @@ const etapaInfo = k => ETAPAS.find(x => x[0] === k) || ETAPAS[0];
 const mudouDepoisDoEnvio = p => !!(p.drive?.em && p.alterado && new Date(p.alterado) > new Date(p.drive.em));
 function etapa(p){
   if (p.status === 'publicado') return 'publicado';
+  if (p.arquivado) return 'drive';
   if (reprovado(p)) return 'reprovado';
   const { done, total } = prog(p);
   if (!done) return 'produzir';
@@ -2383,10 +2401,14 @@ function renderDetail(){
     <div class="etapa" ${p.drive?.em ? `title="Último envio ao Drive: ${new Date(p.drive.em).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})}"` : ''}>
       <span class="st" style="--c:${etapaInfo(etapa(p))[2]}">${etapaInfo(etapa(p))[1]}</span>
       ${etapaDica(p) ? `<span class="muted ajuda">${esc(etapaDica(p))}</span>` : ''}
+      ${p.arquivado ? `<button class="sm" data-act="abrirdrive" title="As fotos saíram do app para liberar espaço e estão no Google Drive">${ic('external')}Abrir no Drive</button>`
+        : p.aprovacao?.status === 'aprovado' || p.drive?.em ? `<button class="sm" data-act="baixarfotos" title="Baixa todas as fotos deste produto num arquivo .zip">${ic('download')}Baixar fotos</button>` : ''}
       <button class="sm ghost" data-act="publicado" title="Publicado é a única etapa marcada à mão: quando o anúncio já está no ar">${p.status === 'publicado' ? ic('undo') + 'Desmarcar publicado' : ic('check') + 'Marcar como publicado'}</button>
     </div>
     ${reprovado(p) ? `<div class="alert block"><b>Reprovado por ${esc(p.aprovacao.por)} em ${esc(dtBR(p.aprovacao.em))}:</b> ${esc(p.aprovacao.motivo)}${p.aprovacao.fotos?.length ? `<br>Refazer: ${esc(p.aprovacao.fotos.join(' · '))}` : ''}
       <div style="margin-top:8px"><button class="sm primary" data-act="encaminhar">${ic('refresh')}Corrigido: encaminhar para aprovação</button></div></div>` : ''}
+    ${p.arquivado ? `<div class="alert info"><b>Fotos guardadas só no Google Drive.</b> Saíram do app em ${esc(dtBR(p.arquivado.em))} para liberar espaço na nuvem: ${p.arquivado.fotos} arquivo(s)${p.arquivado.bytes ? ', ' + fmtMB(p.arquivado.bytes) : ''}. <a href="${driveUrl(p.arquivado.pastaId)}" target="_blank" rel="noopener">Abrir a pasta no Drive</a>
+      <details style="margin-top:6px"><summary>Nomes dos arquivos</summary><div class="fname">${p.arquivado.arquivos.map(esc).join('<br>')}</div></details></div>` : ''}
     ${(() => { const ds = demandasDoProduto(p).filter(d => d.status !== 'feita').sort((a, b) => prioIdx(prioridadeDe(a)) - prioIdx(prioridadeDe(b)));
       return ds.length ? `<div class="pdem"><b>${ic('list')} Demandas deste produto</b>${ds.map(d => { const pr = prioInfo(prioridadeDe(d));
         return `<button class="pdemi" data-act="verdem" data-dm="${d.id}"><span class="lbl" style="--c:${pr[2]};margin:0">${pr[1]}</span><span>${esc(d.titulo)}</span><span class="muted">${esc(statusInfo(d.status)[1])}${prazoTxt(d) ? ' · ' + esc(prazoTxt(d)) : ''}${d.resp ? ' · ' + esc(d.resp) : ''}</span></button>`; }).join('')}</div>` : ''; })()}
@@ -2404,7 +2426,7 @@ function renderDetail(){
         <b data-act="cltog">Checklist${u.nome ? ' · ' + esc(p.tipoVariacao) + ': ' + esc(u.nome) : ''}</b>
         <span class="muted">${pu.done}/${pu.total}</span>
         <span class="muted ajuda" data-em="b">Arraste o arquivo para a linha, ou copie a imagem na IA e cole aqui (Ctrl+V). Também dá para usar o botão <b>Enviar foto</b>.</span>
-        ${p.checklist.some(it => filesOf(u, it).some(f => IMG_EXT.test(f))) ? `<button class="sm" data-act="colagem" title="Juntar as fotos numa imagem só (3 × 2 ou 4 × 2)">${ic('grid')}Colagem</button>` : ''}
+        ${!p.arquivado && p.checklist.some(it => filesOf(u, it).some(f => IMG_EXT.test(f))) ? `<button class="sm" data-act="colagem" title="Juntar as fotos numa imagem só (3 × 2 ou 4 × 2)">${ic('grid')}Colagem</button>` : ''}
         <button class="sm" data-act="copyall">Copiar todos os prompts</button>
       </div>
       <div class="clbody">
@@ -2613,7 +2635,7 @@ const thumbCache = new Map();
 let rolarFoco = false;
 async function loadThumbs(p, u){
   if (rolarFoco){ rolarFoco = false; document.querySelector('#detail .clrow.foco')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
-  if (!ws) return;
+  if (!ws || p.arquivado) return;
   const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) return;
   // 4 fotos lidas ao mesmo tempo; as que já foram lidas aparecem na hora
   await emParalelo([...document.querySelectorAll('#detail img[data-f]')], 4, async img => {
@@ -2812,7 +2834,7 @@ async function verifyFiles(force = false){
     if (ws.nuvem && Date.now() - (nvArvoreEm.get(ROOT_NAME) || 0) > 3000) await nvArvore(ROOT_NAME);
     const volta = [];
     for (const p of plan.produtos){
-      if (!p.pasta) continue;
+      if (!p.pasta || p.arquivado) continue; // arquivado: as fotos saíram da nuvem de propósito
       for (const u of units(p)){
         const dir = await subIfExists(ws, ...ud(p, u)), nomes = new Set();
         if (dir) for await (const k of dir.keys()) nomes.add(k);
@@ -2951,6 +2973,8 @@ $('detail').addEventListener('click', async e => {
   if (act === 'editia'){ openForm(p); return iaSeo($('fIaSeo')); }
   if (act === 'pprio') return setPrioProduto(p, b.dataset.v);
   if (act === 'pfila') return moverNaFila(p, +b.dataset.d);
+  if (act === 'baixarfotos') return baixarFotos(p, b);
+  if (act === 'abrirdrive') return window.open(driveUrl(p.arquivado.pastaId), '_blank', 'noopener');
   if (act === 'publicado'){
     if (p.status === 'publicado'){ p.status = 'produzir'; autoStatus(p); toast('Desmarcado. A etapa volta a ser calculada pelo app.'); registrar('Produto', 'Desmarcou "publicado"', p); }
     else { p.status = 'publicado'; p.publicadoEm = new Date().toISOString(); toast('Marcado como publicado.'); registrar('Produto', 'Marcou como publicado', p); }
@@ -3223,6 +3247,7 @@ let fIaAntes = null;
 // onde está a capa: [pasta, nome do arquivo]
 async function capaRef(p){
   if (!ws || !p?.pasta) return null;
+  if (p.arquivado){ const d = await subIfExists(sisDir, ...ESP_CAPAS.split('/')), n = p.id + '.jpg'; try { await d.getFileHandle(n); return [d, n]; } catch { return null; } }
   const itens = [...p.checklist].sort((a, b) => isCapa(b) - isCapa(a));
   for (const u of units(p)){
     const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) continue;
@@ -3825,8 +3850,9 @@ async function copiarParaPc(pedir = false){
       feitos++; mostrar();
     });
     // o que saiu da nuvem (renomeado, removido) sai do computador também — só o que a cópia pôs lá
+    const guardar = plan.produtos.filter(p => p.arquivado).flatMap(p => units(p).map(u => ud(p, u).join('/') + '/'));
     for (const k of Object.keys(pcFeitos)){
-      if (nuvem.has(k)) continue;
+      if (nuvem.has(k) || guardar.some(g => k.startsWith(g))) continue;
       delete pcFeitos[k];
       try {
         const ps = k.split('/').slice(0, -1), dirs = [raiz];
@@ -3876,6 +3902,113 @@ $('pcDesligar').onclick = async () => {
   $('pcAviso').classList.add('hidden'); renderPc();
 };
 (async () => { if (pcPode()){ pcPasta = await idb.get('copiaPc') || null; pcFeitos = await idb.get('copiaPcFeitos') || {}; } renderPc(); })();
+// ---------- baixar as fotos do produto aprovado num .zip (sem compressão: as fotos já são comprimidas) ----------
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b){ let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+// [{ nome, dados: Uint8Array }] → Blob .zip
+function zipCriar(arqs){
+  const enc = new TextEncoder(), partes = [], central = [], d = new Date(); let pos = 0;
+  const hora = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dia = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const a of arqs){
+    const nome = enc.encode(a.nome), crc = crc32(a.dados), n = a.dados.length, h = new DataView(new ArrayBuffer(30)), c = new DataView(new ArrayBuffer(46));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x800, true); h.setUint16(10, hora, true); h.setUint16(12, dia, true);
+    h.setUint32(14, crc, true); h.setUint32(18, n, true); h.setUint32(22, n, true); h.setUint16(26, nome.length, true);
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x800, true); c.setUint16(12, hora, true); c.setUint16(14, dia, true);
+    c.setUint32(16, crc, true); c.setUint32(20, n, true); c.setUint32(24, n, true); c.setUint16(28, nome.length, true); c.setUint32(42, pos, true);
+    partes.push(h, nome, a.dados); central.push(c, nome);
+    pos += 30 + nome.length + n;
+  }
+  const tam = central.reduce((s, x) => s + x.byteLength, 0), f = new DataView(new ArrayBuffer(22));
+  f.setUint32(0, 0x06054b50, true); f.setUint16(8, arqs.length, true); f.setUint16(10, arqs.length, true); f.setUint32(12, tam, true); f.setUint32(16, pos, true);
+  return new Blob([...partes, ...central, f], { type: 'application/zip' });
+}
+async function baixarFotos(p, btn){
+  if (p.arquivado) return window.open(driveUrl(p.arquivado.pastaId), '_blank', 'noopener');
+  if (!ws) return toast('Conecte a pasta primeiro.');
+  const us = units(p), lista = [];
+  for (const u of us){
+    const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) continue;
+    for (const it of p.checklist) for (const f of filesOf(u, it)) lista.push({ dir, f, nome: (us.length > 1 && u.nome ? u.nome + '/' : '') + f });
+  }
+  if (!lista.length) return toast('Não achei as fotos deste produto.');
+  const antes = btn?.innerHTML, arqs = [];
+  const mostrar = () => { if (btn) btn.innerHTML = `${ic('loader', 'spin')}Baixando ${arqs.length} de ${lista.length}…`; };
+  if (btn) btn.disabled = true; mostrar();
+  try {
+    await comBarra(() => emParalelo(lista, 3, async x => {
+      arqs.push({ nome: x.nome, dados: new Uint8Array(await (await (await x.dir.getFileHandle(x.f)).getFile()).arrayBuffer()) }); mostrar();
+    }));
+    const a = document.createElement('a'), base = (p.titulo || p.nome).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    a.href = URL.createObjectURL(zipCriar(arqs.sort((x, y) => x.nome.localeCompare(y.nome)))); a.download = `${base || 'produto'}-fotos.zip`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    registrar('Download', 'Baixou as fotos do produto (.zip)', p, `${arqs.length} arquivo(s)`);
+  } catch (e) { toast('Não consegui baixar as fotos: ' + e.message, 6000); }
+  finally { if (btn?.isConnected){ btn.disabled = false; btn.innerHTML = antes; } }
+}
+
+// ---------- espaço na nuvem: chegando a 80%, as fotos mais antigas que já estão no Drive saem do app (fica o histórico) ----------
+const ESP_ARQ = 'dados/espaco.json', ESP_CAPAS = 'arquivo/capas', ESP_GB = [10, 20, 50, 100], GB = 1024 ** 3;
+let espaco = null, espRodando = false;
+const espTotal = () => (settings.nuvem?.gb || 10) * GB;
+const fmtGB = b => (b / GB).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' GB';
+const driveUrl = id => 'https://drive.google.com/drive/folders/' + id;
+// só sai do app o que já está no Drive e não mudou depois do envio
+const podeArquivar = p => !p.arquivado && p.pasta && p.dataColecao && p.drive?.em && p.drive.pastaId && !mudouDepoisDoEnvio(p) && ['drive', 'publicado'].includes(etapa(p));
+async function espMedir(){
+  const [fotos, sis] = await Promise.all([ROOT_NAME, '_sistema'].map(async c => (await (await nvPedir('arvore', { c }, { quieto: true })).json()).itens));
+  const soma = l => l.reduce((s, i) => s + (i.tamanho || 0), 0);
+  return { fotos, total: soma(fotos) + soma(sis) };
+}
+async function arquivarProduto(p, itens){
+  const pre = units(p).map(u => ud(p, u).join('/') + '/');
+  const bytes = itens.filter(i => pre.some(x => i.k.startsWith(x))).reduce((s, i) => s + (i.tamanho || 0), 0);
+  // a capa pequena fica para o histórico (cards e ficha)
+  try { const f = await capaDoProduto(p); if (f) await sisGravar(`${ESP_CAPAS}/${p.id}.jpg`, await (await fetch(await toJpegB64(f, 480))).blob()); } catch {}
+  const arquivos = units(p).flatMap(u => p.checklist.flatMap(it => filesOf(u, it).map(n => (u.nome ? u.nome + '/' : '') + n)));
+  for (const u of units(p)){ const c = juntarCam(ROOT_NAME, ...ud(p, u)); await nvPedir('apagar', { c }, { method: 'POST', quieto: true }); esquecerPasta(c); }
+  p.arquivado = { em: new Date().toISOString(), fotos: arquivos.length, arquivos, bytes, local: 'Google Drive', pastaId: p.drive.pastaId, enviadoEm: p.drive.em, aprovadoEm: p.aprovacao?.em || '' };
+  registrar('Espaço', 'Tirou as fotos do app para liberar espaço (estão no Google Drive)', p, `${arquivos.length} arquivo(s), ${fmtMB(bytes)} · ${driveUrl(p.drive.pastaId)}`);
+  return bytes;
+}
+async function espConferir(manual = false){
+  if (!ws?.nuvem || espRodando) return;
+  espRodando = true; renderEsp();
+  try {
+    if (!manual){ // automático: uma vez por dia para a equipe toda
+      const r = await sisLer(ESP_ARQ).catch(() => null), v = r && JSON.parse(r.texto);
+      if (v){ espaco = v; if (v.em?.slice(0, 10) === new Date().toISOString().slice(0, 10)) return; }
+    }
+    const m = await espMedir(), lim = espTotal(), feito = { lixeira: 0, produtos: [] };
+    if (m.total > lim * 0.8){
+      const r = await (await nvPedir('limpar', { c: '_sistema/lixeira', dias: 30 }, { method: 'POST' })).json();
+      feito.lixeira = r.bytes || 0; m.total -= feito.lixeira;
+      const fila = plan.produtos.filter(podeArquivar).sort((a, b) => a.drive.em.localeCompare(b.drive.em));
+      for (const p of fila){
+        if (m.total <= lim * 0.6) break;
+        m.total -= await arquivarProduto(p, m.fotos); feito.produtos.push(p.nome);
+      }
+      if (feito.produtos.length){ savePlan(); renderList(); renderDetail(); if (!$('tab-resumo').classList.contains('hidden')) renderResumo(); }
+    }
+    espaco = { em: new Date().toISOString(), total: m.total, limite: lim, feito };
+    await sisGravar(ESP_ARQ, JSON.stringify(espaco));
+    if (feito.produtos.length || feito.lixeira) toast(`Espaço na nuvem: ${feito.produtos.length ? `as fotos de ${feito.produtos.length} produto(s) antigo(s) saíram do app (estão no Google Drive)` : 'a lixeira antiga foi esvaziada'}. Agora: ${fmtGB(m.total)} de ${fmtGB(lim)}.`, 8000);
+    else if (manual) toast(`Espaço na nuvem: ${fmtGB(m.total)} de ${fmtGB(lim)}.`);
+  } catch (e) { if (manual) toast('Não consegui conferir o espaço: ' + e.message, 6000); }
+  finally { espRodando = false; renderEsp(); }
+}
+function renderEsp(){
+  $('cfgEsp').classList.toggle('hidden', !ws?.nuvem);
+  const lim = espTotal(), e = espaco, pct = e ? Math.min(100, Math.round(e.total / lim * 100)) : 0;
+  $('espInfo').innerHTML = espRodando ? `<span class="muted">${ic('loader', 'spin')} Conferindo o espaço…</span>`
+    : e ? `<b>${fmtGB(e.total)}</b> <span class="muted">de ${fmtGB(lim)} (${pct}%) · conferido em ${esc(dtBR(e.em))}</span><div class="barra"><i class="${pct >= 80 ? 'alto' : ''}" style="width:${pct}%"></i></div>`
+    : '<span class="muted">Ainda não conferido.</span>';
+  $('espLimite').innerHTML = ESP_GB.map(g => `<option value="${g}" ${g === (settings.nuvem?.gb || 10) ? 'selected' : ''}>${g} GB${g === 10 ? ' (grátis)' : ''}</option>`).join('');
+  const arq = plan.produtos.filter(p => p.arquivado).sort((a, b) => b.arquivado.em.localeCompare(a.arquivado.em));
+  $('espArq').innerHTML = arq.length ? `<details><summary>Histórico: ${arq.length} produto(s) com as fotos só no Drive</summary><ul>${arq.map(p => `<li><b>${esc(p.nome)}</b> <span class="muted">· ${p.arquivado.fotos} foto(s) · saiu em ${esc(dtBR(p.arquivado.em))}</span> · <a href="${driveUrl(p.arquivado.pastaId)}" target="_blank" rel="noopener">Abrir no Drive</a></li>`).join('')}</ul></details>` : '';
+}
+$('espLimite').onchange = e => { settings.nuvem = { ...settings.nuvem, gb: +e.target.value }; saveSettings(); renderEsp(); };
+$('espAgora').onclick = () => comBarra(() => espConferir(true));
+
 // ---------- colagem: as fotos da variação coladas numa imagem só (3 × 2 ou 4 × 2), sem margem ----------
 const COL_FORMATOS = [[3, 2], [4, 2]], COL_CEL = [900, 1200]; // cada foto num espaço 3:4 de 900 × 1200
 let col = null;
@@ -4069,6 +4202,7 @@ async function usarNuvem(){
   await Promise.all([nvArvore(ROOT_NAME), nvArvore('_sistema/dados'), nvArvore(MINI_DIR)].map(x => x.catch(() => {})));
   await useWorkspace(new NuvemPasta(ROOT_NAME));
   pcAgendar(1500); // cópia no computador, por trás
+  renderEsp(); setTimeout(() => espConferir(), 30000);
 }
 // uma vez só: copia a pasta "Organizador de Fotos" do computador (Google Drive) para a nuvem
 async function levarParaNuvem(){
@@ -4330,7 +4464,8 @@ async function dataDasFotos(p){
 // nova coleção de fotos: a atual fica guardada (pasta e Drive) e as próximas fotos vão para uma pasta nova, com a data delas
 function novaColecao(p){
   p.colecoes ||= [];
-  if (p.dataColecao) p.colecoes.push({ data: p.dataColecao, drive: p.drive?.em ? { em: p.drive.em } : null, fim: new Date().toISOString() });
+  if (p.dataColecao || p.arquivado) p.colecoes.push({ data: p.dataColecao, drive: p.drive?.em ? { em: p.drive.em } : null, fim: new Date().toISOString(), ...(p.arquivado ? { arquivado: p.arquivado } : {}) });
+  delete p.arquivado;
   // a pasta do produto (e a do Drive) continua a mesma: o próximo envio ganha só uma subpasta com a data dele
   p.dataColecao = ''; p.drive = p.drive?.pastaId ? { pastaId: p.drive.pastaId, vars: p.drive.vars } : null;
   p.arquivos = {}; p.variacoes.forEach(v => v.arquivos = {}); p.acervo = {};
@@ -7272,7 +7407,8 @@ function apCard(p){
     <span class="capa ${!cv && ws && nFotos(p) ? 'carregando' : ''}">${cv ? `<img src="${cv.url}" alt="">` : ic('image', 'lg')}</span>
     <span class="apinfo"><b title="${esc(p.titulo || '')}">${esc(p.nome)}</b><span class="muted">${nFotos(p)} fotos</span>
       ${ant?.motivo ? `<span class="mot" title="${esc(ant.motivo)}">Reprovado antes: ${esc(ant.motivo)}</span>` : ''}
-      <span class="apsit">${esc(apSituacao(p))}</span></span></button>`;
+      ${reprovado(p) ? `<span class="mot rep"><b>Motivo:</b> ${esc(p.aprovacao.motivo || 'não informado')}${p.aprovacao.fotos?.length ? `<br><b>Refazer:</b> ${esc(p.aprovacao.fotos.join(' · '))}` : ''}</span>` : ''}
+      <span class="apsit ${reprovado(p) ? 'rep' : ''}">${esc(apSituacao(p))}</span></span></button>`;
 }
 function renderAprov(){
   const L = apListas();
@@ -7590,6 +7726,12 @@ const ATUALIZACOES = [
   { id: '2026-10-27-so-titulo-obrigatorio', em: '2026-10-27 17:30', titulo: 'Só o título é obrigatório', itens: [
     'No cadastro, só o título do anúncio é obrigatório; categoria, tipo, material, cor, estilo e palavra-chave passam a ser opcionais',
     'O que ficar vazio só fica de fora do nome SEO das fotos (sem palavra-chave nem tipo, o nome usa o começo do título do anúncio); produto sem categoria vai direto para a pasta principal do Drive'] },
+  { id: '2026-10-27-baixar-e-espaco', em: '2026-10-27 16:37', titulo: 'Baixar fotos e espaço na nuvem', itens: [
+    'Produto aprovado ganha o botão "Baixar fotos": todas as fotos num arquivo .zip',
+    'Configurações → Conexões → Espaço na nuvem: mostra quanto está ocupado e o espaço contratado (10 GB grátis)',
+    'Uma vez por dia o app confere: chegando a 80%, esvazia a lixeira antiga e tira do app as fotos dos produtos mais antigos que já estão no Drive, até voltar a 60%',
+    'Fica o histórico do produto (fotos, nomes dos arquivos, capa e link do Drive) e o botão vira "Abrir no Drive"',
+    'O card de reprovado no Resumo mostra o motivo e as fotos para refazer'] },
   { id: '2026-10-27-reprovadas-em-vermelho', em: '2026-10-27 15:11', titulo: 'Fotos reprovadas em vermelho', itens: [
     'No checklist do produto reprovado, a linha e a miniatura de cada foto reprovada ficam em vermelho, com o motivo',
     'O destaque some quando a foto é trocada ou quando o produto volta para a aprovação'] },

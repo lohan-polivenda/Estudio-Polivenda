@@ -2,7 +2,7 @@
 // guardadas no Cloudflare R2 (ligação "ARQUIVOS"). O app usa como se fosse uma pasta do computador.
 // Pasta = prefixo do caminho; pasta vazia = objeto marcador terminado em "/".
 // Só quem entrou no Estúdio chega aqui (functions/_middleware.js).
-// Rotas: GET estado · GET lista?c= · GET arvore?c= · GET arquivo?c= · PUT arquivo?c= · POST pasta?c= · POST apagar?c= · POST mover?de=&para=
+// Rotas: GET estado · GET lista?c= · GET arvore?c= · GET arquivo?c= · PUT arquivo?c= · POST pasta?c= · POST apagar?c= · POST mover?de=&para= · POST limpar?c=_sistema/lixeira&dias=
 import { usuarioDaSessao } from '../_middleware.js';
 
 const RAIZES = ['Estudio Polivenda', '_sistema'];
@@ -108,6 +108,18 @@ async function rotas({ request, env, params }){
     const pasta = await tudoCom(b, c + '/');
     if (pasta.length) await apagarVarios(b, pasta); else await b.delete(c);
     return json({ ok: true, apagados: pasta.length || 1 });
+  }
+  // lixeira: apaga de vez o que está lá há mais de N dias (libera espaço na nuvem)
+  if (rota === 'limpar'){
+    if (c !== '_sistema/lixeira') return erro('Caminho inválido.');
+    const dias = Math.max(7, +q.get('dias') || 30), antes = Date.now() - dias * 864e5, velhos = []; let bytes = 0, cursor;
+    do {
+      const l = await b.list({ prefix: c + '/', cursor, limit: 1000 });
+      for (const o of l.objects) if (o.uploaded.getTime() < antes){ velhos.push(o.key); bytes += o.size; }
+      cursor = l.truncated ? l.cursor : null;
+    } while (cursor);
+    await apagarVarios(b, velhos);
+    return json({ ok: true, apagados: velhos.length, bytes });
   }
   if (rota === 'mover'){
     const de = q.get('de') || '', para = q.get('para') || '';
