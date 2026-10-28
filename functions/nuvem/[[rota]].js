@@ -112,7 +112,8 @@ async function rotas({ request, env, params }){
   // lixeira: apaga de vez o que está lá há mais de N dias (libera espaço na nuvem)
   if (rota === 'limpar'){
     if (c !== '_sistema/lixeira') return erro('Caminho inválido.');
-    const dias = Math.max(7, +q.get('dias') || 30), antes = Date.now() - dias * 864e5, velhos = []; let bytes = 0, cursor;
+    // dias=0: esvaziar tudo agora (pedido na mão, em Configurações → Espaço na nuvem)
+    const dias = q.has('dias') ? Math.max(0, +q.get('dias') || 0) : 30, antes = Date.now() - dias * 864e5, velhos = []; let bytes = 0, cursor;
     do {
       const l = await b.list({ prefix: c + '/', cursor, limit: 1000 });
       for (const o of l.objects) if (o.uploaded.getTime() < antes){ velhos.push(o.key); bytes += o.size; }

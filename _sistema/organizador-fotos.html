@@ -212,6 +212,20 @@ body.abrindo #nvStatus{display:none}
 #espInfo .barra{height:8px;border-radius:4px;background:var(--soft);overflow:hidden;margin:8px 0 2px}
 #espInfo .barra i{display:block;height:100%;background:var(--accent)}
 #espInfo .barra i.alto{background:var(--danger)}
+#espInfo .partes{font-size:12px;margin-top:4px}
+#espAviso{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#espAviso.hidden{display:none}
+#espAviso .barra{flex:1 1 160px;max-width:260px;height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
+#espAviso .barra i{display:block;height:100%;background:var(--c)}
+#espLista{margin-top:14px}
+#espLista .lin{display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid var(--border);font-size:13px}
+#espLista label.lin{margin:0;font-weight:400;cursor:pointer}
+#espLista .lin input{width:18px;height:18px;flex:none;margin:0;padding:0}
+#espLista .lin.off{opacity:.55;cursor:default}
+#espLista .lin .nome{flex:1;min-width:0}
+#espLista .lin .tam{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+#espLista .acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+#espLista .rol{max-height:340px;overflow:auto}
 #espArq summary{cursor:pointer;margin-top:12px;font-weight:600;font-size:13px}
 #espArq ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.7;max-height:260px;overflow:auto}
 #colFormato{margin:4px 0 10px}
@@ -744,6 +758,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
 <main>
 <div id="carregandoApp" class="hidden" role="status"><svg class="ic spin" aria-hidden="true"><use href="#i-loader"/></svg><b>Carregando o Estúdio…</b><span class="muted">Trazendo produtos e fotos da nuvem</span></div>
 <div id="sisAviso" class="alert hidden" style="margin:0 0 14px"></div>
+<div id="espAviso" class="alert hidden" style="margin:0 0 14px"></div>
 <!-- ======================= RESUMO (painel da equipe e aprovação dos produtos) ======================= -->
 <section id="tab-resumo" class="hidden">
   <div class="panel painel">
@@ -858,7 +873,8 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
       <h3><svg class="ic" aria-hidden="true"><use href="#i-cloud"/></svg>Espaço na nuvem</h3>
       <div id="espInfo"></div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="muted">Espaço contratado</span><select id="espLimite"></select><button id="espAgora">Conferir agora</button></div>
-      <div class="muted ajuda">O app confere o espaço uma vez por dia. Chegando a 80%, ele primeiro esvazia a lixeira (o que está lá há mais de 30 dias) e depois tira do app as fotos dos produtos mais antigos que já estão no Google Drive, até voltar a 60%. Produto em produção, em aprovação ou que ainda não subiu para o Drive nunca sai. Fica o histórico: nome, quantidade de fotos, nomes dos arquivos, capa e o link da pasta no Drive. Os 10 GB são o gratuito da Cloudflare.</div>
+      <div class="muted ajuda">O app confere o espaço uma vez por dia. A partir de 80% aparece um aviso no topo do app. Só em 98% ele apaga sozinho: primeiro o que está na lixeira há mais de 30 dias, depois as fotos dos produtos mais antigos que já estão no Google Drive, até voltar a 75%. Produto que ainda não subiu para o Drive nunca sai. Fica o histórico: nome, quantidade de fotos, nomes dos arquivos, capa e o link da pasta no Drive. Os 10 GB são o gratuito da Cloudflare.</div>
+      <div id="espLista"></div>
       <div id="espArq"></div>
     </div>
 
@@ -897,7 +913,9 @@ _sistema/                          ← tudo que não é produto
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="primary" id="drvLogin">Entrar com Google</button>
         <button id="drvLogout" class="hidden">Sair</button>
+        <button id="drvApi" title="Abre o Google Cloud na página da Google Drive API deste projeto">Ativar a API do Google Drive</button>
       </div>
+      <div class="muted ajuda">Sem a Google Drive API ativada, o envio dá erro. O botão abre a página do Google Cloud: clique em <b>Ativar</b> (com o Gmail da loja) e volte para cá; o app confere sozinho.</div>
       <label class="f">Pasta no Drive</label>
       <div id="drvFolder"></div>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
@@ -3956,18 +3974,48 @@ async function baixarFotos(p, btn){
   finally { if (btn?.isConnected){ btn.disabled = false; btn.innerHTML = antes; } }
 }
 
-// ---------- espaço na nuvem: chegando a 80%, as fotos mais antigas que já estão no Drive saem do app (fica o histórico) ----------
+// ---------- espaço na nuvem: aviso a partir de 80%; em 98% as fotos mais antigas que já estão no Drive saem do app (fica o histórico) ----------
 const ESP_ARQ = 'dados/espaco.json', ESP_CAPAS = 'arquivo/capas', ESP_GB = [10, 20, 50, 100], GB = 1024 ** 3;
-let espaco = null, espRodando = false;
+const ESP_AVISO = 0.8, ESP_AUTO = 0.98, ESP_ALVO = 0.75;
+let espaco = null, espRodando = false, espMed = null;
+const espSel = new Set();
 const espTotal = () => (settings.nuvem?.gb || 10) * GB;
-const fmtGB = b => (b / GB).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' GB';
+const fmtGB = b => b < GB / 10 ? fmtMB(b) : (b / GB).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' GB';
 const driveUrl = id => 'https://drive.google.com/drive/folders/' + id;
+const somaTam = l => l.reduce((s, i) => s + (i.tamanho || 0), 0);
 // só sai do app o que já está no Drive e não mudou depois do envio
 const podeArquivar = p => !p.arquivado && p.pasta && p.dataColecao && p.drive?.em && p.drive.pastaId && !mudouDepoisDoEnvio(p) && ['drive', 'publicado'].includes(etapa(p));
 async function espMedir(){
   const [fotos, sis] = await Promise.all([ROOT_NAME, '_sistema'].map(async c => (await (await nvPedir('arvore', { c }, { quieto: true })).json()).itens));
-  const soma = l => l.reduce((s, i) => s + (i.tamanho || 0), 0);
-  return { fotos, total: soma(fotos) + soma(sis) };
+  return { fotos, sis, total: somaTam(fotos) + somaTam(sis) };
+}
+// o que ocupa espaço, para escolher o que apagar: cada produto, as fotos fora do checklist e a lixeira
+function espPartes(m){
+  const fotos = m.fotos.filter(i => !i.k.endsWith('/')), out = [];
+  for (const p of plan.produtos){
+    if (!p.pasta || p.arquivado) continue;
+    const meus = fotos.filter(i => i.k.startsWith(p.pasta + '/'));
+    if (!meus.length) continue;
+    // soltas: na pasta da variação, mas fora do checklist (sobras de renomeação, cópias antigas)
+    const soltos = [];
+    for (const u of units(p)){
+      const pre = ud(p, u).join('/') + '/', lista = new Set(p.checklist.flatMap(it => filesOf(u, it)));
+      for (const i of meus){
+        const n = i.k.slice(pre.length);
+        if (!i.k.startsWith(pre) || n.includes('/') || [DESC_FILE, MANIFEST, 'descritivo.txt'].includes(n) || lista.has(n)) continue;
+        if (n.startsWith('tmp-') && Date.now() - i.mod < 36e5) continue; // renomeação acontecendo agora
+        soltos.push(i);
+      }
+    }
+    const status = podeArquivar(p) ? `No Drive desde ${dtBR(p.drive.em)} · sai do app, fica o histórico e o link`
+      : p.drive?.em && mudouDepoisDoEnvio(p) ? 'Mudou depois do envio ao Drive: envie de novo para poder tirar'
+      : 'Ainda não está no Google Drive: não pode ser apagado';
+    out.push({ id: 'p:' + p.id, tipo: 'produto', p, nome: p.nome, bytes: somaTam(meus), n: meus.length, ok: podeArquivar(p), status });
+    if (soltos.length) out.push({ id: 's:' + p.id, tipo: 'soltos', p, nome: `${p.nome}: fotos fora do checklist`, bytes: somaTam(soltos), n: soltos.length, itens: soltos, ok: true, status: 'Cópias que não aparecem no checklist · apagadas de vez' });
+  }
+  const lix = m.sis.filter(i => i.k.startsWith('lixeira/') && !i.k.endsWith('/'));
+  if (lix.length) out.push({ id: 'lixeira', tipo: 'lixeira', nome: 'Lixeira', bytes: somaTam(lix), n: lix.length, ok: true, status: 'Fotos tiradas ou trocadas · apagadas de vez' });
+  return out.sort((a, b) => b.bytes - a.bytes);
 }
 async function arquivarProduto(p, itens){
   const pre = units(p).map(u => ud(p, u).join('/') + '/');
@@ -3980,42 +4028,105 @@ async function arquivarProduto(p, itens){
   registrar('Espaço', 'Tirou as fotos do app para liberar espaço (estão no Google Drive)', p, `${arquivos.length} arquivo(s), ${fmtMB(bytes)} · ${driveUrl(p.drive.pastaId)}`);
   return bytes;
 }
+async function espGuardar(feito = {}){
+  espaco = { em: new Date().toISOString(), total: espMed.total, limite: espTotal(), feito };
+  await sisGravar(ESP_ARQ, JSON.stringify(espaco)).catch(() => {});
+}
 async function espConferir(manual = false){
   if (!ws?.nuvem || espRodando) return;
   espRodando = true; renderEsp();
   try {
-    if (!manual){ // automático: uma vez por dia para a equipe toda
+    if (!manual){ // automático: uma vez por dia para a equipe toda (de hora em hora quando já está perto do limite)
       const r = await sisLer(ESP_ARQ).catch(() => null), v = r && JSON.parse(r.texto);
-      if (v){ espaco = v; if (v.em?.slice(0, 10) === new Date().toISOString().slice(0, 10)) return; }
+      if (v){ espaco = v; if (Date.now() - Date.parse(v.em) < (v.total / espTotal() >= 0.7 ? 36e5 : 864e5)) return; }
     }
-    const m = await espMedir(), lim = espTotal(), feito = { lixeira: 0, produtos: [] };
-    if (m.total > lim * 0.8){
+    espMed = await espMedir();
+    const lim = espTotal(), feito = { lixeira: 0, produtos: [] };
+    if (espMed.total > lim * ESP_AUTO){
       const r = await (await nvPedir('limpar', { c: '_sistema/lixeira', dias: 30 }, { method: 'POST' })).json();
-      feito.lixeira = r.bytes || 0; m.total -= feito.lixeira;
+      feito.lixeira = r.bytes || 0;
+      let total = espMed.total - feito.lixeira;
       const fila = plan.produtos.filter(podeArquivar).sort((a, b) => a.drive.em.localeCompare(b.drive.em));
       for (const p of fila){
-        if (m.total <= lim * 0.6) break;
-        m.total -= await arquivarProduto(p, m.fotos); feito.produtos.push(p.nome);
+        if (total <= lim * ESP_ALVO) break;
+        total -= await arquivarProduto(p, espMed.fotos); feito.produtos.push(p.nome);
       }
       if (feito.produtos.length){ savePlan(); renderList(); renderDetail(); if (!$('tab-resumo').classList.contains('hidden')) renderResumo(); }
+      if (feito.produtos.length || feito.lixeira) espMed = await espMedir();
     }
-    espaco = { em: new Date().toISOString(), total: m.total, limite: lim, feito };
-    await sisGravar(ESP_ARQ, JSON.stringify(espaco));
-    if (feito.produtos.length || feito.lixeira) toast(`Espaço na nuvem: ${feito.produtos.length ? `as fotos de ${feito.produtos.length} produto(s) antigo(s) saíram do app (estão no Google Drive)` : 'a lixeira antiga foi esvaziada'}. Agora: ${fmtGB(m.total)} de ${fmtGB(lim)}.`, 8000);
-    else if (manual) toast(`Espaço na nuvem: ${fmtGB(m.total)} de ${fmtGB(lim)}.`);
+    await espGuardar(feito);
+    if (feito.produtos.length || feito.lixeira) toast(`Espaço na nuvem chegou a 98%: ${feito.produtos.length ? `as fotos de ${feito.produtos.length} produto(s) antigo(s) saíram do app (estão no Google Drive)` : 'a lixeira antiga foi esvaziada'}. Agora: ${fmtGB(espMed.total)} de ${fmtGB(lim)}.`, 8000);
+    else if (manual) toast(`Espaço na nuvem: ${fmtGB(espMed.total)} de ${fmtGB(lim)}.`);
   } catch (e) { if (manual) toast('Não consegui conferir o espaço: ' + e.message, 6000); }
   finally { espRodando = false; renderEsp(); }
 }
+// apaga o que a pessoa marcou na lista
+async function espApagar(){
+  const partes = espPartes(espMed).filter(x => x.ok && espSel.has(x.id));
+  if (!partes.length) return;
+  const bytes = somaTam(partes.map(x => ({ tamanho: x.bytes }))), prods = partes.filter(x => x.tipo === 'produto'), deVez = partes.filter(x => x.tipo !== 'produto');
+  if (!await confirmar(`Liberar ${fmtGB(bytes)} na nuvem?\n\n${partes.map(x => '• ' + x.nome + ' (' + fmtMB(x.bytes) + ')').join('\n')}\n\n`
+    + (prods.length ? 'Os produtos saem do app, mas continuam no Google Drive; fica o histórico com o link. ' : '')
+    + (deVez.length ? 'A lixeira e as fotos fora do checklist são apagadas de vez (não dá para recuperar).' : ''))) return;
+  espRodando = true; renderEsp();
+  try {
+    await comBarra(async () => {
+      for (const x of partes){
+        if (x.tipo === 'produto') await arquivarProduto(x.p, espMed.fotos);
+        else if (x.tipo === 'lixeira'){ await nvPedir('limpar', { c: '_sistema/lixeira', dias: 0 }, { method: 'POST' }); esquecerPasta('_sistema/lixeira'); }
+        else {
+          for (const i of x.itens) await nvPedir('apagar', { c: juntarCam(ROOT_NAME, i.k) }, { method: 'POST', quieto: true });
+          for (const u of units(x.p)) esquecerPasta(juntarCam(ROOT_NAME, ...ud(x.p, u)));
+          registrar('Espaço', 'Apagou as fotos fora do checklist', x.p, `${x.n} arquivo(s), ${fmtMB(x.bytes)}`);
+        }
+        espSel.delete(x.id);
+      }
+      if (partes.some(x => x.tipo === 'lixeira')) registrar('Espaço', 'Esvaziou a lixeira', null, fmtMB(partes.find(x => x.tipo === 'lixeira').bytes));
+      if (prods.length){ savePlan(); renderList(); renderDetail(); if (!$('tab-resumo').classList.contains('hidden')) renderResumo(); }
+      espMed = await espMedir(); await espGuardar({ manual: partes.map(x => x.nome) });
+    });
+    toast(`Pronto: ${fmtGB(bytes)} liberados. Agora: ${fmtGB(espMed.total)} de ${fmtGB(espTotal())}.`, 6000);
+  } catch (e) { toast('Não consegui apagar tudo: ' + e.message, 6000); }
+  finally { espRodando = false; renderEsp(); }
+}
+// aviso no topo do app a partir de 80%
+function renderEspAviso(){
+  const el = $('espAviso'), lim = espTotal(), f = espaco && ws?.nuvem ? espaco.total / lim : 0, pct = Math.round(f * 100);
+  el.classList.toggle('hidden', f < ESP_AVISO);
+  if (f < ESP_AVISO) return (el.innerHTML = '');
+  el.className = 'alert ' + (f >= 0.95 ? 'block' : '');
+  el.innerHTML = `<b>Armazenamento da nuvem em ${Math.min(pct, 100)}%</b><span class="barra"><i style="width:${Math.min(pct, 100)}%"></i></span>
+    <span class="muted">${fmtGB(espaco.total)} de ${fmtGB(lim)}. Em 98% o app apaga sozinho as fotos mais antigas que já estão no Drive.</span>
+    <button class="sm" id="espAvisoVer">Escolher o que apagar</button>`;
+}
+$('espAviso').addEventListener('click', e => { if (e.target.closest('#espAvisoVer')){ goCfg('conexoes', 'cfgEsp'); comBarra(() => espConferir(true)); } });
 function renderEsp(){
+  renderEspAviso();
   $('cfgEsp').classList.toggle('hidden', !ws?.nuvem);
   const lim = espTotal(), e = espaco, pct = e ? Math.min(100, Math.round(e.total / lim * 100)) : 0;
+  const partes = espMed ? espPartes(espMed) : [];
+  const soma = t => somaTam(partes.filter(x => x.tipo === t).map(x => ({ tamanho: x.bytes })));
   $('espInfo').innerHTML = espRodando ? `<span class="muted">${ic('loader', 'spin')} Conferindo o espaço…</span>`
     : e ? `<b>${fmtGB(e.total)}</b> <span class="muted">de ${fmtGB(lim)} (${pct}%) · conferido em ${esc(dtBR(e.em))}</span><div class="barra"><i class="${pct >= 80 ? 'alto' : ''}" style="width:${pct}%"></i></div>`
+      + (espMed ? `<div class="muted partes">${[['Produtos', soma('produto')], ['Fora do checklist', soma('soltos')], ['Lixeira', soma('lixeira')], ['Sistema e outros', espMed.total - somaTam(partes.map(x => ({ tamanho: x.bytes })))]]
+        .filter(([, b]) => b > 0).map(([n, b]) => `${n} ${fmtGB(b)}`).join(' · ')}</div>` : '')
     : '<span class="muted">Ainda não conferido.</span>';
   $('espLimite').innerHTML = ESP_GB.map(g => `<option value="${g}" ${g === (settings.nuvem?.gb || 10) ? 'selected' : ''}>${g} GB${g === 10 ? ' (grátis)' : ''}</option>`).join('');
+  for (const id of [...espSel]) if (!partes.some(x => x.id === id && x.ok)) espSel.delete(id);
+  const sel = partes.filter(x => espSel.has(x.id)), selB = somaTam(sel.map(x => ({ tamanho: x.bytes })));
+  $('espLista').innerHTML = !espMed ? `<div class="acoes"><button id="espVer">${ic('cloud')}Ver o que ocupa espaço</button><span class="muted">e escolher o que apagar</span></div>`
+    : !partes.length ? '<div class="muted">Nada para apagar.</div>'
+    : `<b style="font-size:13px">Escolha o que apagar</b><div class="rol">${partes.map(x => `<label class="lin ${x.ok ? '' : 'off'}">
+        <input type="checkbox" data-esp="${x.id}" ${espSel.has(x.id) ? 'checked' : ''} ${x.ok && !espRodando ? '' : 'disabled'}>
+        <span class="nome"><b>${esc(x.nome)}</b> <span class="muted">· ${x.n} arquivo(s)</span><br><span class="muted">${esc(x.status)}</span></span>
+        <span class="tam">${fmtMB(x.bytes)}</span></label>`).join('')}</div>
+      <div class="acoes"><button class="danger" id="espApagar" ${sel.length && !espRodando ? '' : 'disabled'}>${ic('trash')}Apagar selecionados${sel.length ? ` (${fmtGB(selB)})` : ''}</button>
+        <span class="muted">${sel.length ? `${sel.length} marcado(s)` : 'Marque o que quer apagar'}</span></div>`;
   const arq = plan.produtos.filter(p => p.arquivado).sort((a, b) => b.arquivado.em.localeCompare(a.arquivado.em));
   $('espArq').innerHTML = arq.length ? `<details><summary>Histórico: ${arq.length} produto(s) com as fotos só no Drive</summary><ul>${arq.map(p => `<li><b>${esc(p.nome)}</b> <span class="muted">· ${p.arquivado.fotos} foto(s) · saiu em ${esc(dtBR(p.arquivado.em))}</span> · <a href="${driveUrl(p.arquivado.pastaId)}" target="_blank" rel="noopener">Abrir no Drive</a></li>`).join('')}</ul></details>` : '';
 }
+$('espLista').addEventListener('change', e => { const c = e.target.closest('[data-esp]'); if (!c) return; c.checked ? espSel.add(c.dataset.esp) : espSel.delete(c.dataset.esp); renderEsp(); });
+$('espLista').addEventListener('click', e => { if (e.target.closest('#espVer')) comBarra(() => espConferir(true)); if (e.target.closest('#espApagar')) espApagar(); });
 $('espLimite').onchange = e => { settings.nuvem = { ...settings.nuvem, gb: +e.target.value }; saveSettings(); renderEsp(); };
 $('espAgora').onclick = () => comBarra(() => espConferir(true));
 
@@ -5024,15 +5135,30 @@ async function gLoginJa(){
   }
   renderDrive();
 }
+// Google Drive API desligada no projeto do Google Cloud (o número do projeto é o começo do ID do cliente)
+var gApiDesligada = false, gApiAberta = false; // var: renderDrive() roda antes desta linha na abertura
+const driveApiUrl = () => { const n = settings.drive.clientId.match(/^(\d+)-/)?.[1];
+  return n ? `https://console.developers.google.com/apis/api/drive.googleapis.com/overview?project=${n}` : 'https://console.cloud.google.com/apis/library/drive.googleapis.com'; };
+$('drvApi').onclick = () => { gApiAberta = true; window.open(driveApiUrl(), '_blank', 'noopener'); };
+// voltou do Google Cloud: confere se a API já responde
+window.addEventListener('focus', async () => {
+  if (!gApiAberta || !gOk()) return;
+  gApiAberta = false;
+  try { await gWho(); toast('A Google Drive API está ativada e respondendo.', 5000); }
+  catch (e) { toast(gApiDesligada ? 'A Google Drive API ainda não respondeu. Depois de clicar em Ativar, o Google pode levar alguns minutos.' : e.message, 7000); }
+});
 async function gFetch(url, opt = {}){
   if (!gOk()) await gLogin();
   let r = await fetch(url, { ...opt, headers: { Authorization: 'Bearer ' + gTok.t, ...opt.headers } });
   // acesso venceu no meio do caminho: renova pelo login guardado e tenta de novo
   if (r.status === 401 && await gSilent()) r = await fetch(url, { ...opt, headers: { Authorization: 'Bearer ' + gTok.t, ...opt.headers } });
-  if (r.ok) return r.status === 204 ? null : r.json();
+  if (r.ok){ if (gApiDesligada){ gApiDesligada = false; renderDrive(); } return r.status === 204 ? null : r.json(); }
   let m = ''; try { m = (await r.json()).error?.message || ''; } catch {}
   if (r.status === 401){ gDrop(); m = 'A sessão do Google expirou. Clique de novo para entrar.'; }
-  else if (r.status === 403 && /has not been used|is disabled|not enabled/i.test(m)) m = 'A Google Drive API não está ativada no projeto do Google Cloud (passo 2 do guia em Configurações → Conexões).';
+  else if (r.status === 403 && /has not been used|is disabled|not enabled/i.test(m)){
+    gApiDesligada = true; renderDrive();
+    m = 'A Google Drive API não está ativada. Em Configurações → Conexões → Google Drive, clique em "Ativar a API do Google Drive".';
+  }
   const e = new Error(m || `Erro do Google Drive (${r.status}).`); e.status = r.status; throw e;
 }
 const qEsc = s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -5130,8 +5256,9 @@ function renderDrive(){
   c.classList.toggle('ok', ok);
   c.innerHTML = ic('cloud') + (!d.clientId ? 'Configurar Drive' : ok ? 'Drive ' + ic('check') : 'Entrar no Drive');
   if (document.activeElement !== $('drvClient')) $('drvClient').value = d.clientId;
-  $('drvStatus').className = 'alert ' + (isFileUrl ? 'block' : ok ? 'ok' : d.clientId ? 'info' : '');
+  $('drvStatus').className = 'alert ' + (isFileUrl || gApiDesligada ? 'block' : ok ? 'ok' : d.clientId ? 'info' : '');
   $('drvStatus').innerHTML = isFileUrl ? 'Este arquivo foi aberto direto do disco. Para usar o Drive, feche e abra pelo atalho <b>Estúdio Polivenda</b> na Área de Trabalho.'
+    : gApiDesligada ? '<b>A Google Drive API está desativada</b> no projeto do Google Cloud. Clique em <b>Ativar a API do Google Drive</b>, logo abaixo.'
     : !d.clientId ? 'Ainda não configurado. Siga o passo a passo abaixo (uma vez só).'
     : ok ? `Conectado${d.email ? ' como <b>' + esc(d.email) + '</b>' : ''}.` + (gGuardado ? ` O login fica guardado ${WEB ? 'na Cloudflare, para toda a equipe' : 'neste computador'} (o Google pede um clique de novo a cada 7 dias).`
       : !gGuarda() ? ' No site o login vale 1 hora; depois o Google pede um clique de novo.'
@@ -5142,6 +5269,7 @@ function renderDrive(){
   $('drvSecret').placeholder = gSegredo ? 'já guardada (cole outra só se trocar)' : 'GOCSPX-…';
   $('drvLogin').classList.toggle('hidden', ok); $('drvLogin').disabled = isFileUrl || !d.clientId;
   $('drvLogout').classList.toggle('hidden', !ok);
+  $('drvApi').disabled = isFileUrl || !d.clientId; $('drvApi').classList.toggle('primary', gApiDesligada);
   $('drvFolder').innerHTML = d.pastaId ? `${ic('folder')} <b>${esc(d.pastaNome)}</b> <span class="muted">· pode mover para onde quiser dentro do Drive</span>`
     : `<span class="muted">Criada no primeiro envio: <b>${DRIVE_ROOT}</b></span>`;
   $('drvOpen').disabled = !d.pastaId;
@@ -7756,6 +7884,11 @@ const ATUALIZACOES = [
     'Tirar uma foto do checklist não fica mais girando sem parar: a renomeação das outras fotos terminava nunca quando uma delas tinha sumido da pasta',
     'Foto que some da pasta libera o nome dela, e a foto que ganha esse nome continua no checklist',
     'Sobras de renomeação interrompida (tmp-renomeando-…) com mais de 1 hora vão sozinhas para a lixeira'] },
+  { id: '2026-10-28-escolher-o-que-apagar', em: '2026-10-28 09:00', titulo: 'Escolher o que apagar da nuvem', itens: [
+    'Configurações → Conexões → Espaço na nuvem: quanto ocupam os produtos, as fotos fora do checklist, a lixeira e o sistema',
+    'Lista para marcar o que apagar: produtos que já estão no Drive (fica o histórico), fotos fora do checklist e a lixeira',
+    'A partir de 80% aparece um aviso no topo do app; o app só apaga sozinho em 98%, até voltar a 75%',
+    'Google Drive: botão "Ativar a API do Google Drive", que abre a página certa do Google Cloud e confere quando você volta'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
