@@ -2376,7 +2376,8 @@ function promptFor(p, u, item){
   const estilo = (video ? settings.estiloVideo : settings.estilo) || '';
   if (estilo.trim()) parts.push(estilo.trim());
   // a foto já sai no formato que a conferência do envio exige
-  if (!video && propAtual()) parts.push(`Formato ${propAtual().nome}, ${minDims()} px ou maior`);
+  // a IA não obedece pixels: o que muda o tamanho é pedir alta resolução (e escolher 2K no gerador, quando ele tiver a opção)
+  if (!video && propAtual()) parts.push(`Formato ${propAtual().nome}, em alta resolução (2K), com no mínimo ${minDims()} px`);
   return parts.map(s => s.replace(/[.\s]+$/, '')).join('. ') + '.';
 }
 function pathOf(p, u){ return [ws?.name, ...ud(p, u)].filter(Boolean).join('\\'); }
@@ -2671,10 +2672,14 @@ function mostrarThumb(img, t){
   img.src = t.mini;
   const th = img.closest('.fthumb'), probs = regraFoto(t.w, t.h);
   th.classList.toggle('fora', probs.length > 0); th.dataset.probs = probs.map(x => x.curto).join(', ');
+  th.classList.toggle('pequena', probs.some(x => x.code === 'small'));
   th.querySelector('.dim').textContent = `${t.w}×${t.h}`;
   const row = img.closest('.clrow'), box = row.querySelector('.regra');
   const fora = [...new Set([...row.querySelectorAll('.fthumb.fora')].flatMap(x => x.dataset.probs.split(', ')))];
-  if (box) box.innerHTML = fora.length ? `<span class="lbl warn" title="O envio ao Drive bloqueia a foto até ela ser trocada ou ajustada">${ic('alert')}Fora da regra: ${esc(fora.join(', '))} · o envio ajusta</span>` : '';
+  // pequena: ampliar sempre tira nitidez, então o melhor é gerar de novo maior
+  const pequena = !!row.querySelector('.fthumb.pequena');
+  if (box) box.innerHTML = fora.length ? `<span class="lbl ${pequena ? 'block' : 'warn'}" title="O envio ao Drive bloqueia a foto até ela ser trocada ou ajustada">${ic('alert')}Fora da regra: ${esc(fora.join(', '))}${pequena
+    ? ' · ampliada, a foto perde nitidez: gere de novo em alta resolução (2K)' : ' · o envio ajusta'}</span>` : '';
 }
 // lê as medidas da foto e faz uma miniatura leve (uma leitura só)
 async function lerFoto(f, larg = 144){
@@ -2695,7 +2700,10 @@ function regraFoto(w, h){
   const rg = settings.regras, pr = propAtual(), out = [];
   if (pr && Math.abs(w / h - pr.w / pr.h) > (pr.w / pr.h) * 0.01)
     out.push({ code: 'prop', curto: `${razaoNome(w, h)} (pede ${pr.w}:${pr.h})`, msg: `Proporção errada (${w}×${h}): precisa ser ${pr.nome}, ex.: ${minDims()}` });
-  if (Math.min(w, h) < rg.minPx) out.push({ code: 'small', curto: `menor que ${minDims()}`, msg: `Pequena (${w}×${h}): mínimo ${minDims()} px` });
+  if (Math.min(w, h) < rg.minPx){
+    const amplia = Math.round((rg.minPx / Math.min(w, h) - 1) * 100);
+    out.push({ code: 'small', curto: `menor que ${minDims()} (o envio amplia ${amplia}%)`, msg: `Pequena (${w}×${h}): mínimo ${minDims()} px` });
+  }
   return out;
 }
 const proxTag = feito => `<span class="prox">${feito ? 'SELECIONADO' : 'PRÓXIMO'} · Ctrl+V cola aqui</span>`;
@@ -7913,6 +7921,9 @@ const ATUALIZACOES = [
     'Foto ampliada para chegar ao mínimo ganha uma máscara de nitidez leve: os detalhes não ficam mais moles',
     'O JPG enviado ao Drive fica com qualidade alta (88% a 95%); se ainda passar do peso máximo, o app diminui as medidas (sem passar do mínimo) em vez de piorar a qualidade',
     'A conversão de PNG para JPG também não desce mais de 88%'] },
+  { id: '2026-10-28-gerar-em-2k', em: '2026-10-28 10:30', titulo: 'Fotos já no tamanho certo', itens: [
+    'O prompt copiado pede alta resolução (2K), além do formato 3:4 e do mínimo em pixels: a IA não obedece pixels, mas obedece a resolução',
+    'Foto menor que o mínimo fica com aviso vermelho no checklist, dizendo quanto o envio vai ampliar e pedindo para gerar de novo em 2K'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
