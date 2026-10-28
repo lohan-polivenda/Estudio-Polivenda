@@ -524,15 +524,6 @@ details.atu{border-bottom:1px solid var(--border);padding:8px 0}
 details.atu summary{cursor:pointer;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
 details.atu ul{margin:6px 0 2px;padding-left:20px;font-size:13px}
 /* prioridade do produto aberto, na barra de filtros */
-#pPrio{display:flex;align-items:center;gap:6px;padding:3px 4px 3px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
-#pPrio.hidden{display:none}
-#pPrio .rot{font-size:13px;font-weight:600;white-space:nowrap}
-#pPrio .rot i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted));margin-right:6px;font-style:normal}
-#pPrio select{max-width:170px;border:0;background:transparent;padding:4px 2px;font-weight:600}
-#pPrio button{width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center}
-#pPrio button .ic{margin:0}
-#pPrio .pos{font-size:12px;white-space:nowrap}
-#pPrio .ajuda{margin:0}
 .ctxmenu{position:fixed;z-index:60;min-width:230px;max-width:320px;max-height:calc(100vh - 16px);overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px #0003;padding:4px}
 .ctxmenu .mt{font-size:11px;font-weight:700;color:var(--muted);padding:6px 10px 2px;text-transform:uppercase;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ctxmenu .mt:first-child{text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:2px}
@@ -788,7 +779,6 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
     <select id="pCat"></select>
     <select id="pStatus"></select>
     <select id="pOrdem" title="Ordem da lista"><option value="fila">Fila: prioridade primeiro</option><option value="demanda">Só os que estão na fila</option><option value="cadastro">Ordem de cadastro</option></select>
-    <span id="pPrio" class="hidden"></span>
   </div>
   <div class="split">
     <div class="plist" id="plist"></div>
@@ -2389,7 +2379,6 @@ function promptFor(p, u, item, prop = propAtual()){
 function pathOf(p, u){ return [ws?.name, ...ud(p, u)].filter(Boolean).join('\\'); }
 
 function renderDetail(){
-  renderPrioBarra();
   const p = curP();
   if (!p){
     $('detail').innerHTML = plan.produtos.length
@@ -6858,21 +6847,6 @@ addEventListener('resize', fecharMenu);
 addEventListener('blur', fecharMenu);
 
 // ---------- produtos: prioridade na fila, posição, abrir, editar, publicado ----------
-// prioridade do produto aberto, ao lado dos filtros da lista
-function renderPrioBarra(){
-  const el = $('pPrio'), p = curP();
-  el.classList.toggle('hidden', !p); if (!p) return (el.innerHTML = '');
-  const man = p.prioridade || '', dm = prioDemandas(p), ef = prioProduto(p), f = ef ? filaDe(ef) : [], pos = f.indexOf(p);
-  el.innerHTML = `<span class="rot" style="--c:${ef ? prioInfo(ef)[2] : 'var(--muted)'}"><i></i>Prioridade</span>
-    <select id="pPrioSel" title="Prioridade de ${esc(p.nome)} na fila">${DM_PRIO.map(([k, l]) => `<option value="${k}" ${man === k ? 'selected' : ''}>${l}</option>`).join('')}
-      <option value="" ${man ? '' : 'selected'}>Automática${dm ? ` (${prioInfo(dm)[1]})` : ''}</option></select>
-    ${ef && f.length > 1 ? `<button class="sm ghost" data-pf="-1" title="Subir na fila" ${pos ? '' : 'disabled'}>${ic('up')}</button><button class="sm ghost" data-pf="1" title="Descer na fila" ${pos < f.length - 1 ? '' : 'disabled'}>${ic('down')}</button>` : ''}
-    <span class="muted pos">${ef ? `${pos + 1}º de ${f.length}` : 'fora da fila'}</span>
-    <span class="muted ajuda">${man ? `Definida à mão.${dm && prioIdx(dm) < prioIdx(man) ? ` Uma demanda pede ${prioInfo(dm)[1]}.` : ''}`
-      : dm ? 'Automática: segue a demanda mais urgente que cita este produto.' : 'Automática: nenhuma demanda cita este produto, então ele está fora da fila. Escolha uma prioridade para colocá-lo na fila.'}</span>`;
-}
-$('pPrio').addEventListener('change', e => { const p = curP(); if (p && e.target.id === 'pPrioSel') setPrioProduto(p, e.target.value); });
-$('pPrio').addEventListener('click', e => { const b = e.target.closest('[data-pf]'), p = curP(); if (b && p) moverNaFila(p, +b.dataset.pf); });
 function setPrioProduto(p, v){
   if ((p.prioridade || '') === v) return;
   const antes = p.prioridade ? prioInfo(p.prioridade)[1] : 'Automática';
@@ -7937,6 +7911,9 @@ const ATUALIZACOES = [
     'O padrão continua 3:4 vertical, mas fotos 1:1 quadradas (mínimo 1200×1200) também passam na conferência e no envio ao Drive',
     'Ao lado de "Copiar prompt" há o botão "1:1", que copia o prompt pedindo a foto quadrada (melhor para o Mercado Livre, que mostra as fotos num quadro quadrado)',
     'O ajuste do envio leva cada foto para a proporção aceita mais perto dela; dá para desligar a opção em Configurações → Fotos e checklist → Regras das fotos'] },
+  { id: '2026-10-28-sem-prioridade-na-barra', em: '2026-10-28 11:30', titulo: 'Prioridade saiu da barra de cima', itens: [
+    'A caixa de prioridade do produto aberto (escolha, posição e bolinha de ajuda) saiu da barra dos filtros',
+    'Para mudar a prioridade ou subir/descer na fila, clique com o botão direito no produto da lista'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
