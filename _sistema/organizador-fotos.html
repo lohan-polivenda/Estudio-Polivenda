@@ -2792,11 +2792,14 @@ async function syncNamesJa(p){
     // renomeia direto quando o nome novo está livre (na nuvem cada renomeação copia a foto: uma só, não duas).
     // Quando todos os que faltam esperam um nome ainda ocupado (troca em círculo), um vai para um nome provisório.
     const ocupados = new Set(p.checklist.flatMap(it => filesOf(u, it)));
-    let pend = [...todo];
-    while (pend.length){
-      const j = pend.find(x => !ocupados.has(x.to)) || pend[0], direto = !ocupados.has(j.to);
+    let pend = [...todo], voltas = todo.length * 3 + 5;
+    while (pend.length && voltas--){
+      const j = pend.find(x => !ocupados.has(x.to)) || pend[0];
+      // já está no nome provisório e o nome certo continua preso: fica com o nome certo + "-2" (sem dar voltas para sempre)
+      const direto = !ocupados.has(j.to) || j.from.startsWith('tmp-renomeando-');
       let to = direto ? j.to : `tmp-renomeando-${uid()}${extOf(j.from)}`, k = 2;
-      if (direto) while (await exists(dir, to)) to = j.to.replace(/(\.[^.]+)$/, `-${k++}$1`);
+      if (direto) while (to !== j.from && (ocupados.has(to) || await exists(dir, to))) to = j.to.replace(/(\.[^.]+)$/, `-${k++}$1`);
+      if (to === j.from){ pend = pend.filter(x => x !== j); continue; } // o nome livre mais próximo é o que ela já tem
       try { await renameFile(dir, j.from, to); }
       catch {
         // a resposta pode ter se perdido depois de a nuvem já ter renomeado: confere antes de tirar a foto da lista
@@ -2804,7 +2807,8 @@ async function syncNamesJa(p){
         const ficou = await exists(dir, j.from), foi = !ficou && await exists(dir, to);
         if (!foi){
           pend = pend.filter(x => x !== j);
-          if (!ficou){ j.missing = true; continue; }
+          // a foto sumiu: o nome dela fica livre (e sai da lista pela posição, não pelo nome, que outra foto pode ganhar agora)
+          if (!ficou){ j.missing = true; ocupados.delete(j.from); u.arquivos[j.it.id][j.i] = null; continue; }
           to = j.from; // não renomeou: fica com o nome que tinha
         }
       }
@@ -2814,7 +2818,13 @@ async function syncNamesJa(p){
       u.arquivos[j.it.id][j.i] = to; j.from = to;
       if (direto){ changed++; pend = pend.filter(x => x !== j); }
     }
-    for (const j of todo) if (j.missing) u.arquivos[j.it.id] = u.arquivos[j.it.id].filter(f => f !== j.from);
+    for (const j of todo) if (j.missing) u.arquivos[j.it.id] = u.arquivos[j.it.id].filter(f => f !== null);
+    // sobras de renomeação interrompida (página fechada no meio): com mais de 1 hora, vão para a lixeira
+    if (dir.nuvem){
+      const l = await nvListar(dir.caminho).catch(() => null), meus = new Set(p.checklist.flatMap(it => filesOf(u, it)));
+      for (const [n, a] of l?.arquivos || []) if (n.startsWith('tmp-renomeando-') && !meus.has(n) && Date.now() - a.mod > 36e5)
+        await paraLixeira(dir, n, ...ud(p, u)).catch(() => {});
+    }
   }
   if (changed){ mexeu(p); await writeDescritivo(p); }
   return changed;
@@ -7742,6 +7752,10 @@ const ATUALIZACOES = [
     'Escolha as fotos e a ordem clicando nelas; a prévia mostra como fica e "Baixar colagem" salva o JPG'] },
   { id: '2026-10-27-endereco-unico', em: '2026-10-27 15:30', titulo: 'Um endereço só para a equipe', itens: [
     'Quem abrir o endereço antigo (estudio-polivenda…workers.dev) vai direto para estudio-polivenda.pages.dev, que tem o login e a nuvem da equipe'] },
+  { id: '2026-10-28-apagar-sem-travar', em: '2026-10-28 08:00', titulo: 'Apagar foto sem travar', itens: [
+    'Tirar uma foto do checklist não fica mais girando sem parar: a renomeação das outras fotos terminava nunca quando uma delas tinha sumido da pasta',
+    'Foto que some da pasta libera o nome dela, e a foto que ganha esse nome continua no checklist',
+    'Sobras de renomeação interrompida (tmp-renomeando-…) com mais de 1 hora vão sozinhas para a lixeira'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
