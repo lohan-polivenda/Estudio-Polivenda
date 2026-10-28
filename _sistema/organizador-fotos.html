@@ -1713,9 +1713,15 @@ async function copyText(t){
   try { await navigator.clipboard.writeText(t); }
   catch { const a = document.createElement('textarea'); a.value = t; document.body.append(a); a.select(); document.execCommand('copy'); a.remove(); }
 }
-// operações nos arquivos em andamento: a conferência automática (verifyFiles) espera elas terminarem
-let fsBusy = 0, fsGen = 0;
-async function comTrava(fn){ fsBusy++; fsGen++; try { return await fn(); } finally { fsBusy--; fsGen++; } }
+// operações nos arquivos em andamento: a conferência automática (verifyFiles) espera elas terminarem.
+// Uma de cada vez, na ordem: duas renomeações juntas (ex.: tirar várias fotos seguidas) copiavam a mesma foto duas vezes
+let fsBusy = 0, fsGen = 0, fsFila = Promise.resolve();
+const fsAlvos = new Set(); // fotos esperando a vez de sair: { p, u, nome, chave }
+async function comTrava(fn){
+  fsBusy++; fsGen++;
+  const vez = fsFila.then(fn); fsFila = vez.catch(() => {});
+  try { return await vez; } finally { fsBusy--; fsGen++; }
+}
 // ---------- _sistema: o que NÃO é foto de produto fica fora da pasta Estudio Polivenda ----------
 // Cadastro, configurações, manifesto, backups e lixeira vão para a pasta _sistema, pelo servidor local do atalho.
 // Sem o servidor novo (arquivo aberto direto do disco, ou servidor antigo ainda rodando) o app guarda tudo como
@@ -2782,7 +2788,7 @@ async function uploadFiles(p, u, item, files){
         else await writeFile(dir, nome, f);
         feito += f.size; u.arquivos[item.id].push(nome);
       }
-      await syncNames(p);
+      await syncNamesJa(p);
     });
     terminou();
     mexeu(p);
@@ -2836,6 +2842,7 @@ async function syncNamesJa(p){
       ocupados.delete(j.from); ocupados.add(to);
       // a miniatura guardada com esses nomes não vale mais (ex.: a foto 02 virou 01)
       thumbCache.delete(`${ud(p, u).join('/')}/${j.from}`); thumbCache.delete(`${ud(p, u).join('/')}/${to}`);
+      for (const a of fsAlvos) if (a.p === p && (a.u.id || '') === (u.id || '') && a.nome === j.from){ removendo.delete(a.chave); a.nome = to; a.chave = `${p.id}|${u.id}|${to}`; removendo.add(a.chave); }
       u.arquivos[j.it.id][j.i] = to; j.from = to;
       if (direto){ changed++; pend = pend.filter(x => x !== j); }
     }
@@ -3041,17 +3048,19 @@ $('detail').addEventListener('click', async e => {
   }
   if (act === 'rmfile' && await confirmar(`Tirar o arquivo "${b.dataset.f}" deste item?\n\nEle vai para a lixeira, na pasta _sistema (dá para recuperar).`)){
     let falhou = false;
-    const chaveRm = `${p.id}|${u.id}|${b.dataset.f}`;
-    removendo.add(chaveRm); renderDetail();
+    // a foto escolhida: se outra remoção na fila renumerar as fotos antes, o nome dela é atualizado junto
+    const alvo = { p, u, nome: b.dataset.f, chave: `${p.id}|${u.id}|${b.dataset.f}` };
+    fsAlvos.add(alvo); removendo.add(alvo.chave); renderDetail();
     await comTrava(async () => {
-      try { await paraLixeira(await sub(ws, ...ud(p, u)), b.dataset.f, ...ud(p, u)); }
+      if (!filesOf(u, item).includes(alvo.nome)){ falhou = true; toast('Essa foto já não está mais na lista.', 4000); return; }
+      try { await paraLixeira(await sub(ws, ...ud(p, u)), alvo.nome, ...ud(p, u)); }
       catch (e) { falhou = true; toast('Não consegui mover o arquivo para a lixeira: ' + e.message, 6000); return; } // o arquivo continua onde estava
-      u.arquivos[item.id] = filesOf(u, item).filter(f => f !== b.dataset.f);
-      await syncNames(p);
+      u.arquivos[item.id] = filesOf(u, item).filter(f => f !== alvo.nome);
+      await syncNamesJa(p);
     });
-    removendo.delete(chaveRm);
+    fsAlvos.delete(alvo); removendo.delete(alvo.chave);
     if (falhou) return renderDetail();
-    registrar('Checklist', 'Removeu um arquivo (foi para a _lixeira)', p, `${item.nome}${u.nome ? ' · ' + u.nome : ''}: ${b.dataset.f}`);
+    registrar('Checklist', 'Removeu um arquivo (foi para a _lixeira)', p, `${item.nome}${u.nome ? ' · ' + u.nome : ''}: ${alvo.nome}`);
     focoIid = item.id; mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail(); toast('Arquivo movido para a lixeira (_sistema). Cole ou envie o novo (Ctrl+V).', 4000);
   }
   if (act === 'copy11'){ await copyText(promptFor(p, u, item, PROPORCOES['1:1'])); marcarFoco(item.id); toast('Prompt 1:1 (quadrada) copiado. Gere na IA, copie a imagem e cole aqui (Ctrl+V).', 4000); }
@@ -5887,7 +5896,7 @@ $('rvIn').onchange = async () => {
       // a versão antiga vai para a lixeira em _sistema (não some de vez)
       try { await paraLixeira(dir, j.local, ...ud(p, j.u)); } catch {}
       thumbCache.delete(`${ud(p, j.u).join('/')}/${j.local}`);
-      await syncNames(p);
+      await syncNamesJa(p);
     });
     mexeu(p); manterAprovacao(p, rv.aprovado); autoStatus(p); savePlan(); renderList(); renderDetail();
     registrar('Envio ao Drive', 'Trocou um arquivo na conferência', p, `${j.it.nome}${j.u.nome ? ' · ' + j.u.nome : ''}: ${j.local} → ${f.name} (o antigo foi para a _lixeira)`);
@@ -7930,6 +7939,9 @@ const ATUALIZACOES = [
   { id: '2026-10-28-enviar-mesmo-assim', em: '2026-10-28 12:00', titulo: 'Enviar ao Drive mesmo assim', itens: [
     'Na conferência do envio, fotos fora da regra (pequenas ou fora da proporção) não travam mais: o botão "Enviar mesmo assim" pede confirmação e manda as fotos do jeito que estão, sem ajuste',
     'O ajuste automático só acontece se você clicar em "Ajustar"; arquivo sumido ou cadastro incompleto continuam travando o envio'] },
+  { id: '2026-10-28-fotos-sem-duplicar', em: '2026-10-28 16:30', titulo: 'Tirar fotos não duplica mais', itens: [
+    'Tirar várias fotos seguidas fazia duas renomeações rodarem juntas, e a mesma foto era copiada duas vezes (a lista crescia a cada remoção)',
+    'Agora remover, colar e trocar arquivos acontecem um de cada vez, em fila; dá para clicar no X de várias fotos seguidas e cada uma sai na sua vez (a certa, mesmo que as outras sejam renumeradas)'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
