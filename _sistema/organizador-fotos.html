@@ -5348,8 +5348,8 @@ async function analyze(file, it){
   if (a.ext !== '.jpg'){
     const c = document.createElement('canvas'); c.width = a.w; c.height = a.h;
     const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, a.w, a.h); ctx.drawImage(bmp, 0, 0);
-    let q = 0.92, blob;
-    do { blob = await toJpeg(c, q); q -= 0.04; } while (blob.size > rg.maxMB * MB && q >= 0.8);
+    let q = 0.95, blob;
+    do { blob = await toJpeg(c, q); q -= 0.02; } while (blob.size > rg.maxMB * MB && q >= 0.875);
     Object.assign(a, { out: blob, size: blob.size, converted: true });
     add('info', `${a.ext.slice(1).toUpperCase() || 'Arquivo'} → JPG no envio`);
   }
@@ -5424,9 +5424,29 @@ async function ajustarImagem(file, forcar){
     ctx.drawImage(bmp, (bmp.width - pl.cw) / 2, (bmp.height - pl.ch) / 2, pl.cw, pl.ch, dx, dy, dw, dh);
   }
   bmp.close();
-  let q = 0.92, blob;
-  do { blob = await toJpeg(c, q); q -= 0.05; } while (blob.size > settings.regras.maxMB * MB && q >= 0.6);
-  return { blob, pl, liso: borda.liso };
+  if (pl.ampliar > 1.005) nitidez(c, Math.min(0.9, (pl.ampliar - 1) * 4 + 0.3));
+  return { blob: await jpegLeve(c), pl, liso: borda.liso };
+}
+// ampliar deixa a foto mole: uma máscara de nitidez leve devolve o contorno dos detalhes
+function nitidez(c, forca){
+  const w = c.width, h = c.height, ctx = c.getContext('2d', { willReadFrequently: true }), o = ctx.getImageData(0, 0, w, h), px = o.data;
+  const b = document.createElement('canvas'); b.width = w; b.height = h;
+  const bx = b.getContext('2d', { willReadFrequently: true }); bx.drawImage(c, 0, 0); bx.filter = 'blur(1px)'; bx.drawImage(c, 0, 0);
+  const d = bx.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < px.length; i += 4){ px[i] += forca * (px[i] - d[i]); px[i + 1] += forca * (px[i + 1] - d[i + 1]); px[i + 2] += forca * (px[i + 2] - d[i + 2]); }
+  ctx.putImageData(o, 0, 0);
+}
+// JPG com qualidade alta (88% a 95%); se ainda passar do peso máximo, diminui as medidas (sem passar do mínimo) em vez de piorar a qualidade
+async function jpegLeve(c){
+  const max = settings.regras.maxMB * MB, minPx = settings.regras.minPx;
+  for (;;){
+    let q = 0.95, blob;
+    do { blob = await toJpeg(c, q); q -= 0.02; } while (blob.size > max && q >= 0.875);
+    const f = Math.max(0.9, minPx / Math.min(c.width, c.height));
+    if (blob.size <= max || f >= 0.999) return blob;
+    const m = document.createElement('canvas'); m.width = Math.round(c.width * f); m.height = Math.round(c.height * f);
+    const mx = m.getContext('2d'); mx.imageSmoothingQuality = 'high'; mx.drawImage(c, 0, 0, m.width, m.height); c = m;
+  }
 }
 function descAjuste(pl, liso, w, h){
   const o = [];
@@ -7889,6 +7909,10 @@ const ATUALIZACOES = [
     'Lista para marcar o que apagar: produtos que já estão no Drive (fica o histórico), fotos fora do checklist e a lixeira',
     'A partir de 80% aparece um aviso no topo do app; o app só apaga sozinho em 98%, até voltar a 75%',
     'Google Drive: botão "Ativar a API do Google Drive", que abre a página certa do Google Cloud e confere quando você volta'] },
+  { id: '2026-10-28-ajuste-sem-perder-qualidade', em: '2026-10-28 10:00', titulo: 'Ajuste no envio sem perder qualidade', itens: [
+    'Foto ampliada para chegar ao mínimo ganha uma máscara de nitidez leve: os detalhes não ficam mais moles',
+    'O JPG enviado ao Drive fica com qualidade alta (88% a 95%); se ainda passar do peso máximo, o app diminui as medidas (sem passar do mínimo) em vez de piorar a qualidade',
+    'A conversão de PNG para JPG também não desce mais de 88%'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
