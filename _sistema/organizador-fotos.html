@@ -5521,7 +5521,9 @@ function manifestFor(p, jobs){
 
 let rv = null; // revisão aberta: { p, step, us, jobs, sugs, … }
 const jobBlocked = j => j.a.issues.some(x => x.lvl === 'block');
-const rvBlocks = () => rv.jobs.filter(jobBlocked).length + (seoFaltando(rv.p).length ? 1 : 0) + (rv.jobs.length ? 0 : 1);
+// foto fora da regra que dá para mandar como está ("Enviar mesmo assim"); arquivo sumido ou cadastro incompleto continuam travando
+const jobForcavel = j => jobBlocked(j) && !!j.a.out;
+const rvBlocks = () => rv.jobs.filter(j => jobBlocked(j) && !(rv.forcado && jobForcavel(j))).length + (seoFaltando(rv.p).length ? 1 : 0) + (rv.jobs.length ? 0 : 1);
 function freeJobs(){ rv?.jobs.forEach(j => j.url && URL.revokeObjectURL(j.url)); }
 // auto: aberto pela aprovação; sem bloqueio na conferência, sobe direto (sem as sugestões da IA nem outro clique)
 async function openReview(p, { auto = false } = {}){
@@ -5561,8 +5563,8 @@ function renderRvFoot(){
   let h;
   if (rv.loading) h = btn('close', 'Cancelar');
   else if (rv.step === 1){
-    const n = rvBlocks();
-    h = btn('close', 'Cancelar') + btn('recheck', ic('refresh') + 'Conferir de novo') + btn('next', n ? ic('ban') + `Resolva ${n} bloqueio(s) para continuar` : rv.auto ? ic('upload') + 'Enviar ao Drive' : 'Próximo: sugestões da IA →', 'primary', n > 0);
+    const n = rvBlocks(), forcaveis = rv.jobs.filter(jobForcavel).length;
+    h = btn('close', 'Cancelar') + btn('recheck', ic('refresh') + 'Conferir de novo') + (n && n === forcaveis ? btn('forcar', ic('upload') + 'Enviar mesmo assim') : '') + btn('next', n ? ic('ban') + `Resolva ${n} bloqueio(s) para continuar` : rv.auto ? ic('upload') + 'Enviar ao Drive' : 'Próximo: sugestões da IA →', 'primary', n > 0);
   } else if (rv.step === 2){
     if (rv.iaLoading) h = btn('back', '← Voltar', '', true) + btn('wait', ic('loader', 'spin') + 'Revisando…', 'primary', true);
     else if (rv.iaErr) h = btn('back', '← Voltar') + btn('iaretry', ic('refresh') + 'Tentar de novo') + btn('skip', 'Pular →', 'primary');
@@ -5585,6 +5587,7 @@ function rvStep1(){
   const ajust = jobs.filter(j => j.a.ajustada).length, podem = jobs.filter(j => jobBlocked(j) && j.a.ajustavel).length;
   const vazios = rv.us.flatMap(u => p.checklist.filter(it => !filesOf(u, it).length).map(it => (u.nome ? u.nome + ': ' : '') + it.nome));
   let h = (rv.auto ? `<div class="alert ok"><b>Aprovado.</b> Resolva o que está bloqueado abaixo e o produto sobe para o Drive.</div>` : '')
+    + (rv.forcado && jobs.some(jobForcavel) ? `<div class="alert">As fotos fora da regra vão para o Drive <b>do jeito que estão</b>, sem ajuste (você escolheu "Enviar mesmo assim").</div>` : '')
     + `<div class="sum"><b>${jobs.length} arquivo(s)</b><b style="color:var(--ok)">${ic('check')} ${jobs.length - bad} ok</b>`
     + (bad ? `<b style="color:var(--danger)">${ic('ban')} ${bad} bloqueado(s)</b>` : '') + (ajust ? `<b style="color:var(--ia)">${ic('sparkles')} ${ajust} ajustada(s) no envio</b>` : '')
     + (conv ? `<b style="color:var(--accent)">${ic('refresh')} ${conv} vira(m) JPG</b>` : '') + '</div>';
@@ -5755,7 +5758,7 @@ async function sendToDrive(){
         const ex = have.find(f => f.name === j.name);
         j.driveId = (await dUpload(j.name, j.a.out, dir, ex?.id))?.id || ex?.id;
         keep.add(j.name);
-        log(`   ${ex ? 'substituído' : 'enviado'}: ${j.name}${j.a.ajustada ? '  (ajustado)' : j.a.converted ? '  (convertido para JPG)' : ''}`);
+        log(`   ${ex ? 'substituído' : 'enviado'}: ${j.name}${j.a.ajustada ? '  (ajustado)' : jobBlocked(j) ? '  (fora da regra, enviado como está)' : j.a.converted ? '  (convertido para JPG)' : ''}`);
         bar(++done / total * 100);
       });
       // espelho do computador: o que ficou com nome antigo vai para a lixeira do Drive
@@ -5838,6 +5841,16 @@ $('dlgDrive').addEventListener('click', async e => {
   }
   if (act === 'completaria'){ const p = rv.p; reopenReview = p.id; $('dlgDrive').close(); openForm(p); return iaSeo($('fIaSeo')); }
   if (act === 'recheck') return loadJobs();
+  if (act === 'forcar'){
+    const r = rv, k = r.jobs.filter(jobForcavel).length;
+    if (!await confirmar(`Enviar ${k} foto(s) fora da regra assim mesmo?
+
+Elas vão para o Drive do jeito que estão, sem nenhum ajuste (só PNG vira JPG). Podem aparecer menores ou com faixas brancas no Mercado Livre.`, 'Enviar mesmo assim') || rv !== r) return;
+    r.forcado = true;
+    registrar('Envio ao Drive', 'Enviou fotos fora da regra, sem ajuste', r.p, `${k} foto(s)`);
+    if (r.auto){ r.step = 3; renderRv(); return sendToDrive(); }
+    r.step = 2; renderRv(); if (r.sugs === undefined) runIA(); return;
+  }
   if (act === 'next'){ if (rv.auto){ rv.step = 3; renderRv(); return sendToDrive(); } rv.step = 2; renderRv(); if (rv.sugs === undefined) runIA(); return; }
   if (act === 'back'){ rv.step = rv.auto && rv.step === 3 ? 1 : rv.step - 1; rv.result = null; return renderRv(); }
   if (act === 'skip'){ rv.step = 3; return renderRv(); }
@@ -7914,6 +7927,9 @@ const ATUALIZACOES = [
   { id: '2026-10-28-sem-prioridade-na-barra', em: '2026-10-28 11:30', titulo: 'Prioridade saiu da barra de cima', itens: [
     'A caixa de prioridade do produto aberto (escolha, posição e bolinha de ajuda) saiu da barra dos filtros',
     'Para mudar a prioridade ou subir/descer na fila, clique com o botão direito no produto da lista'] },
+  { id: '2026-10-28-enviar-mesmo-assim', em: '2026-10-28 12:00', titulo: 'Enviar ao Drive mesmo assim', itens: [
+    'Na conferência do envio, fotos fora da regra (pequenas ou fora da proporção) não travam mais: o botão "Enviar mesmo assim" pede confirmação e manda as fotos do jeito que estão, sem ajuste',
+    'O ajuste automático só acontece se você clicar em "Ajustar"; arquivo sumido ou cadastro incompleto continuam travando o envio'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
