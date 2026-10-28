@@ -995,6 +995,7 @@ _sistema/                          ← tudo que não é produto
         <option value="livre">Não exigir proporção</option>
       </select>
       <div class="muted" id="rgPropInfo" style="margin-top:4px"></div>
+      <div class="inline" id="rgQuadLin"><input type="checkbox" id="rgQuad"><label for="rgQuad">Aceitar também fotos 1:1 quadradas (opcional, melhor para o Mercado Livre)</label></div>
       <div class="inline"><input type="checkbox" id="rgCapa"><label for="rgCapa">Exigir fundo branco na capa</label></div>
       <div class="inline"><input type="checkbox" checked disabled><label>Converter para JPG no envio (sempre; o original fica no computador)</label></div>
     </div>
@@ -1500,7 +1501,7 @@ function normSettings(raw){
     s.v4 = true;
   }
   // regra mais rígida entre Mercado Livre, Shopee, Amazon e Magalu
-  s.regras = { minPx: 1200, maxMB: 2, proporcao: '3:4', capaBranca: true, ...s.regras };
+  s.regras = { minPx: 1200, maxMB: 2, proporcao: '3:4', capaBranca: true, aceita11: true, ...s.regras };
   // padrão da Polivenda: 3:4 vertical (antes era 1:1)
   if (!s.v5){ s.regras.proporcao = '3:4'; delete s.regras.quadrada; s.v5 = true; }
   s.seo = { loja: 'polivenda', usarLoja: true, ...s.seo };
@@ -1524,8 +1525,13 @@ let settings = normSettings(store.get('settings', {}));
 // proporção das fotos (largura : altura) e o tamanho mínimo que ela exige
 const PROPORCOES = { '3:4': { w: 3, h: 4, nome: '3:4 vertical' }, '1:1': { w: 1, h: 1, nome: '1:1 quadrada' }, '4:5': { w: 4, h: 5, nome: '4:5 vertical' } };
 const propAtual = () => PROPORCOES[settings.regras.proporcao] || null;
-function minDims(){
-  const p = propAtual(), m = settings.regras.minPx;
+// proporções que passam: a principal e, se marcado, a 1:1 quadrada como opcional
+const propsAceitas = () => { const p = propAtual(); return !p ? [] : settings.regras.aceita11 && settings.regras.proporcao !== '1:1' ? [p, PROPORCOES['1:1']] : [p]; };
+// a proporção aceita mais perto da foto (é nela que a conferência e o ajuste se baseiam)
+const propDa = (w, h) => propsAceitas().reduce((m, p) => !m || Math.abs(w / h - p.w / p.h) < Math.abs(w / h - m.w / m.h) ? p : m, null);
+const propNomes = () => propsAceitas().map(p => p.nome).join(' ou ');
+function minDims(p = propAtual()){
+  const m = settings.regras.minPx;
   return p ? `${m}×${Math.round(m * p.h / p.w)}` : `${m}×${m}`;
 }
 let cfgTimer;
@@ -2002,7 +2008,7 @@ function renderCfgHome(){
         b: g ? 'Ver' : d.clientId ? 'Entrar' : 'Configurar', go: ['conexoes', 'cfgDrive'] },
       { ok: !!k, t: 'Inteligência artificial', d: k ? `Gemini com a chave cadastrada.` : `Falta a chave do Gemini.`, b: k ? 'Ver' : 'Cadastrar chave', go: ['conexoes', k ? 'cfgAI' : 'aiKey'] },
       { ok: !velha, t: 'Novidades de SEO', d: n.data ? `Última busca em ${new Date(n.data).toLocaleDateString('pt-BR')}${velha ? ' (mais de 30 dias)' : ''}.` : 'Ainda não pesquisado.', b: 'Abrir', go: ['novidades'] },
-      { ok: true, t: 'Regras das fotos', d: `JPG${propAtual() ? ', ' + propAtual().nome : ''}, mínimo ${minDims()} px, até ${String(rg.maxMB).replace('.', ',')} MB${rg.capaBranca ? ', capa com fundo branco' : ''}.`, b: 'Ajustar', go: ['fotos', 'cfgRegras'] },
+      { ok: true, t: 'Regras das fotos', d: `JPG${propAtual() ? ', ' + propNomes() : ''}, mínimo ${minDims()} px, até ${String(rg.maxMB).replace('.', ',')} MB${rg.capaBranca ? ', capa com fundo branco' : ''}.`, b: 'Ajustar', go: ['fotos', 'cfgRegras'] },
     ];
     const falta = itens.filter(x => !x.ok).length;
     $('cfgHome').innerHTML = `<div class="alert ${falta ? '' : 'ok'}" style="margin:0 0 4px">${falta ? `${falta} ${falta > 1 ? 'itens precisam' : 'item precisa'} de atenção.` : 'Tudo pronto para usar.'}</div>`
@@ -2367,7 +2373,7 @@ $('plist').onclick = e => {
 };
 
 // ---------- detalhe ----------
-function promptFor(p, u, item){
+function promptFor(p, u, item, prop = propAtual()){
   const video = isVideo(item);
   const parts = [`${video ? 'Vídeo' : 'Foto'} de produto: ${p.titulo || p.nome}${p.marca ? ', marca ' + p.marca : ''}${p.modelo ? ', modelo ' + p.modelo : ''}`];
   if (u.nome) parts.push(`${p.tipoVariacao}: ${u.nome}`);
@@ -2377,7 +2383,7 @@ function promptFor(p, u, item){
   if (estilo.trim()) parts.push(estilo.trim());
   // a foto já sai no formato que a conferência do envio exige
   // a IA não obedece pixels: o que muda o tamanho é pedir alta resolução (e escolher 2K no gerador, quando ele tiver a opção)
-  if (!video && propAtual()) parts.push(`Formato ${propAtual().nome}, em alta resolução (2K), com no mínimo ${minDims()} px`);
+  if (!video && prop) parts.push(`Formato ${prop.nome}, em alta resolução (2K), com no mínimo ${minDims(prop)} px`);
   return parts.map(s => s.replace(/[.\s]+$/, '')).join('. ') + '.';
 }
 function pathOf(p, u){ return [ws?.name, ...ud(p, u)].filter(Boolean).join('\\'); }
@@ -2499,7 +2505,7 @@ function clLinha(p, u, it, i){
         <div class="clacts">
           ${env ? `<button class="sm" disabled>${ic('loader', 'spin')}Enviando…</button>`
             : `<button class="sm ${fs.length ? '' : 'primary'}" data-act="upload">${ic('clip')}${fs.length ? 'Mais' : isVideo(it) ? 'Enviar vídeo' : 'Enviar foto'}</button>`}
-          <button class="sm" data-act="copy">Copiar prompt</button>
+          <button class="sm" data-act="copy">Copiar prompt</button>${!isVideo(it) && propsAceitas().length > 1 ? `<button class="sm ghost" data-act="copy11" title="Copia o prompt pedindo a foto 1:1 quadrada (opcional, melhor para o Mercado Livre)">1:1</button>` : ''}
           <button class="sm icon edit" data-act="editdica" title="Editar a descrição deste item (o que vai no prompt) só neste produto">${ic('pencil')}</button>
           <button class="sm icon" data-act="rm" title="Remover do checklist">${ic('x')}</button>
         </div>
@@ -2697,12 +2703,12 @@ function razaoNome(w, h){
 }
 // confere medidas pelas regras de envio (a mesma conta da conferência do envio ao Drive)
 function regraFoto(w, h){
-  const rg = settings.regras, pr = propAtual(), out = [];
+  const rg = settings.regras, pr = propDa(w, h), out = [], pede = propsAceitas().map(x => `${x.w}:${x.h}`).join(' ou ');
   if (pr && Math.abs(w / h - pr.w / pr.h) > (pr.w / pr.h) * 0.01)
-    out.push({ code: 'prop', curto: `${razaoNome(w, h)} (pede ${pr.w}:${pr.h})`, msg: `Proporção errada (${w}×${h}): precisa ser ${pr.nome}, ex.: ${minDims()}` });
+    out.push({ code: 'prop', curto: `${razaoNome(w, h)} (pede ${pede})`, msg: `Proporção errada (${w}×${h}): precisa ser ${propNomes()}, ex.: ${propsAceitas().map(x => minDims(x)).join(' ou ')}` });
   if (Math.min(w, h) < rg.minPx){
     const amplia = Math.round((rg.minPx / Math.min(w, h) - 1) * 100);
-    out.push({ code: 'small', curto: `menor que ${minDims()} (o envio amplia ${amplia}%)`, msg: `Pequena (${w}×${h}): mínimo ${minDims()} px` });
+    out.push({ code: 'small', curto: `menor que ${minDims(pr)} (o envio amplia ${amplia}%)`, msg: `Pequena (${w}×${h}): mínimo ${minDims(pr)} px` });
   }
   return out;
 }
@@ -3059,6 +3065,7 @@ $('detail').addEventListener('click', async e => {
     registrar('Checklist', 'Removeu um arquivo (foi para a _lixeira)', p, `${item.nome}${u.nome ? ' · ' + u.nome : ''}: ${b.dataset.f}`);
     focoIid = item.id; mexeu(p); autoStatus(p); savePlan(); renderList(); renderDetail(); toast('Arquivo movido para a lixeira (_sistema). Cole ou envie o novo (Ctrl+V).', 4000);
   }
+  if (act === 'copy11'){ await copyText(promptFor(p, u, item, PROPORCOES['1:1'])); marcarFoco(item.id); toast('Prompt 1:1 (quadrada) copiado. Gere na IA, copie a imagem e cole aqui (Ctrl+V).', 4000); }
   if (act === 'copy'){ await copyText(promptFor(p, u, item)); marcarFoco(item.id); toast('Prompt copiado. Gere na IA, copie a imagem e cole aqui (Ctrl+V).', 4000); }
   if (act === 'copyall'){ await copyText(p.checklist.map((c, i) => `${i + 1}. ${c.nome}\n${promptFor(p, u, c)}`).join('\n\n')); toast(`${p.checklist.length} prompts copiados.`); }
   if (act === 'rm'){
@@ -4658,7 +4665,8 @@ function renderConfig(){
   $('seoLojaOn').checked = settings.seo.usarLoja; $('seoLoja').value = settings.seo.loja;
   const rg = settings.regras;
   $('rgMin').value = rg.minPx; $('rgMax').value = rg.maxMB; $('rgProp').value = PROPORCOES[rg.proporcao] ? rg.proporcao : 'livre'; $('rgCapa').checked = rg.capaBranca;
-  $('rgPropInfo').textContent = propAtual() ? `Com o tamanho mínimo atual, a foto precisa ter pelo menos ${minDims()} px.` : 'Qualquer proporção passa; só o tamanho mínimo é conferido.';
+  $('rgPropInfo').textContent = propAtual() ? `Com o tamanho mínimo atual, a foto precisa ter pelo menos ${propsAceitas().map(x => minDims(x)).join(' (ou ')}${propsAceitas().length > 1 ? ')' : ''} px.` : 'Qualquer proporção passa; só o tamanho mínimo é conferido.';
+  $('rgQuad').checked = rg.aceita11; $('rgQuadLin').classList.toggle('hidden', !propAtual() || rg.proporcao === '1:1');
   tplExample(); renderWs(); renderDrive(); renderLists(); renderNews(); renderDescPad(); renderCatsCfg(); renderEquipe(); renderLogView(); renderAtualizacoes();
 }
 function tplExample(){
@@ -4717,13 +4725,14 @@ function readRules(){
   const rg = settings.regras;
   rg.minPx = Math.min(5000, Math.max(500, +$('rgMin').value || 1200));
   rg.maxMB = Math.min(20, Math.max(0.5, +$('rgMax').value || 2));
-  rg.proporcao = $('rgProp').value; rg.capaBranca = $('rgCapa').checked;
-  $('rgPropInfo').textContent = propAtual() ? `Com o tamanho mínimo atual, a foto precisa ter pelo menos ${minDims()} px.` : 'Qualquer proporção passa; só o tamanho mínimo é conferido.';
+  rg.proporcao = $('rgProp').value; rg.capaBranca = $('rgCapa').checked; rg.aceita11 = $('rgQuad').checked;
+  $('rgPropInfo').textContent = propAtual() ? `Com o tamanho mínimo atual, a foto precisa ter pelo menos ${propsAceitas().map(x => minDims(x)).join(' (ou ')}${propsAceitas().length > 1 ? ')' : ''} px.` : 'Qualquer proporção passa; só o tamanho mínimo é conferido.';
+  $('rgQuad').checked = rg.aceita11; $('rgQuadLin').classList.toggle('hidden', !propAtual() || rg.proporcao === '1:1');
   renderCfgHome();
   saveSettings();
 }
 ['rgMin','rgMax'].forEach(k => $(k).onchange = readRules);
-['rgProp','rgCapa'].forEach(k => $(k).onchange = readRules);
+['rgProp','rgCapa','rgQuad'].forEach(k => $(k).onchange = readRules);
 // modelo padrão da descrição do anúncio
 function renderDescPad(){
   const pad = settings.descPadrao;
@@ -5394,7 +5403,7 @@ function bordaInfo(bmp){
 // como chegar na regra: "cortar" um pouco das laterais (foto), "completar" o fundo (fundo liso ou diferença grande) e ampliar até o mínimo
 // forcar: a escolha da equipe na conferência ("cortar" ou "completar"); alternativa: a outra opção possível
 function planoAjuste(w, h, fundoLiso, forcar){
-  const pr = propAtual(), minPx = settings.regras.minPx, s = w / h, r = pr ? pr.w / pr.h : s, dif = Math.abs(s - r) / r;
+  const pr = propDa(w, h), minPx = settings.regras.minPx, s = w / h, r = pr ? pr.w / pr.h : s, dif = Math.abs(s - r) / r;
   const auto = dif <= 0.01 ? 'nada' : fundoLiso || dif > 0.15 ? 'completar' : 'cortar';
   const modo = auto !== 'nada' && (forcar === 'completar' || (forcar === 'cortar' && dif <= 0.15)) ? forcar : auto;
   const alternativa = auto === 'nada' ? null : modo === 'cortar' ? 'completar' : dif <= 0.15 ? 'cortar' : null;
@@ -6000,7 +6009,7 @@ $('newsBtn').onclick = async () => {
   try {
     const rg = settings.regras, n0 = settings.novidades, tipos = [...new Set(plan.produtos.map(p => p.tipo).filter(Boolean))];
     const user = `Hoje é ${new Date().toLocaleDateString('pt-BR')}. Loja: Polivenda, decoração${tipos.length ? ' (' + tipos.join(', ') + ')' : ''}.
-Regras atuais do app para as fotos: JPG; proporção ${propAtual() ? propAtual().nome : 'livre'}; mínimo ${minDims()} px; máximo ${rg.maxMB} MB; capa com fundo branco: ${rg.capaBranca ? 'sim' : 'não'}.
+Regras atuais do app para as fotos: JPG; proporção ${propAtual() ? propNomes() : 'livre'}; mínimo ${minDims()} px; máximo ${rg.maxMB} MB; capa com fundo branco: ${rg.capaBranca ? 'sim' : 'não'}.
 Nome dos arquivos: minúsculas, sem acento, palavras separadas por hífen, palavra-chave principal primeiro, terminando com a marca e o número.
 Já conhecidas (não repita): ${n0.itens.map(x => x.titulo).slice(-40).join(' | ') || 'nenhuma'}.`;
     const out = await newsSearch(user);
@@ -7924,6 +7933,10 @@ const ATUALIZACOES = [
   { id: '2026-10-28-gerar-em-2k', em: '2026-10-28 10:30', titulo: 'Fotos já no tamanho certo', itens: [
     'O prompt copiado pede alta resolução (2K), além do formato 3:4 e do mínimo em pixels: a IA não obedece pixels, mas obedece a resolução',
     'Foto menor que o mínimo fica com aviso vermelho no checklist, dizendo quanto o envio vai ampliar e pedindo para gerar de novo em 2K'] },
+  { id: '2026-10-28-quadrada-opcional', em: '2026-10-28 11:00', titulo: 'Foto 1:1 quadrada como opção', itens: [
+    'O padrão continua 3:4 vertical, mas fotos 1:1 quadradas (mínimo 1200×1200) também passam na conferência e no envio ao Drive',
+    'Ao lado de "Copiar prompt" há o botão "1:1", que copia o prompt pedindo a foto quadrada (melhor para o Mercado Livre, que mostra as fotos num quadro quadrado)',
+    'O ajuste do envio leva cada foto para a proporção aceita mais perto dela; dá para desligar a opção em Configurações → Fotos e checklist → Regras das fotos'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
