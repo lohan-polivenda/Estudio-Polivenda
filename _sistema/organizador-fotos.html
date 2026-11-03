@@ -7706,6 +7706,7 @@ function renderAm(){
   $('amBody').innerHTML = `<div class="amhead"><div class="t"><h2>${esc(p.nome)}</h2>
       <span class="muted">${jobs.length || nFotos(p)} fotos${nOk ? ` · ${nOk} aprovada(s)` : ''}${nNo ? ` · ${nNo} reprovada(s)` : ''}${edita && jobs.length ? ` · ${jobs.length - nOk - nNo} pendente(s)` : ` · ${esc(apSituacao(p))}`}</span></div>
       ${edita && jobs.length ? `<button type="button" class="sm ${am.selecionar ? 'on' : ''}" data-am="sel" title="Escolher várias fotos para aprovar ou reprovar de uma vez">${ic('check-circle')}${am.selecionar ? 'Cancelar seleção' : 'Selecionar'}</button>` : ''}
+      ${!p.arquivado && (p.aprovacao?.status === 'aprovado' || p.drive?.em) ? `<button type="button" class="sm" data-am="baixar" title="Baixa todas as fotos deste produto num arquivo .zip" ${am.baixando ? 'disabled' : ''}>${am.baixando ? ic('loader', 'spin') + 'Baixando…' : ic('download') + 'Baixar fotos'}</button>` : ''}
       <button type="button" class="sm ghost" data-am="abrir" title="Abrir o produto">${ic('external')}</button>
       <button type="button" class="sm ghost" data-am="fechar" title="Fechar">${ic('x')}</button></div>
     <div class="amcorpo">${ant?.motivo ? `<div class="alert" style="margin:0 0 12px">Reprovado antes (${esc(ant.por)}, ${esc(dtBR(ant.em))}): ${esc(ant.motivo)}</div>` : ''}
@@ -7733,6 +7734,11 @@ $('dlgAp').addEventListener('click', e => {
   if (a === 'fechar') return fecharAm();
   if (a === 'abrir'){ current = p.id; currentVar = null; fecharAm(); return showTab('produtos'); }
   if (a === 'enviar'){ fecharAm(); return openReview(p, { auto: true }); }
+  if (a === 'baixar'){
+    const este = am; este.baixando = true;
+    b.disabled = true; b.innerHTML = ic('loader', 'spin') + 'Baixando…'; // aparece já, antes de procurar as fotos
+    return baixarFotos(p, b).finally(() => { este.baixando = false; if (am === este) renderAm(); });
+  }
   if (!amEdita(p)) return;
   if (a === 'sel'){ am.selecionar = !am.selecionar; am.sel.clear(); am.rep = null; return renderAm(); }
   if (a === 'todas'){ am.sel.size === am.jobs.length ? am.sel.clear() : am.jobs.forEach((_, k) => am.sel.add(k)); return renderAm(); }
@@ -7949,6 +7955,8 @@ const ATUALIZACOES = [
     'O padrão das fotos passou de 3:4 (1200×1600) para 1300×1540: é o que a conferência, o prompt copiado e o ajuste do envio usam',
     'A foto 1:1 continua aceita como opção, agora com mínimo de 1300×1300; fotos 3:4 antigas aparecem como fora da regra (dá para usar "Enviar mesmo assim")',
     'A colagem também passou a usar essa proporção; dá para escolher outra em Configurações → Fotos e checklist → Regras das fotos'] },
+  { id: '2026-11-03-baixar-nos-aprovados', em: '2026-11-03 14:03', titulo: 'Baixar fotos na janela de aprovados', itens: [
+    'A janela de um produto aprovado (Aprovação → Aprovados) ganhou o botão "Baixar fotos": baixa todas as fotos do produto num arquivo .zip'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
