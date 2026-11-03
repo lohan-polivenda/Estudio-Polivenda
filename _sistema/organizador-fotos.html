@@ -979,7 +979,8 @@ _sistema/                          ← tudo que não é produto
       </div>
       <label class="f">Proporção exigida</label>
       <select id="rgProp" style="max-width:300px">
-        <option value="3:4">3:4 vertical (padrão)</option>
+        <option value="1300:1540">1300×1540 vertical (padrão)</option>
+        <option value="3:4">3:4 vertical</option>
         <option value="1:1">1:1 quadrada</option>
         <option value="4:5">4:5 vertical</option>
         <option value="livre">Não exigir proporção</option>
@@ -1285,7 +1286,7 @@ _sistema/                          ← tudo que não é produto
   <div class="dlg-body">
     <h2>Colagem das fotos</h2>
     <div class="opts" id="colFormato"></div>
-    <div class="muted ajuda">As fotos ficam coladas umas nas outras, sem margem, na ordem em que você clicar. Cada foto ocupa um espaço 3:4 (as que forem de outro formato são cortadas no centro).</div>
+    <div class="muted ajuda">As fotos ficam coladas umas nas outras, sem margem, na ordem em que você clicar. Cada foto ocupa um espaço 1300×1540 (as que forem de outro formato são cortadas no centro).</div>
     <div id="colFotos"></div>
     <div id="colPrevia"></div>
   </div>
@@ -1491,9 +1492,11 @@ function normSettings(raw){
     s.v4 = true;
   }
   // regra mais rígida entre Mercado Livre, Shopee, Amazon e Magalu
-  s.regras = { minPx: 1200, maxMB: 2, proporcao: '3:4', capaBranca: true, aceita11: true, ...s.regras };
+  s.regras = { minPx: 1300, maxMB: 2, proporcao: '1300:1540', capaBranca: true, aceita11: true, ...s.regras };
   // padrão da Polivenda: 3:4 vertical (antes era 1:1)
   if (!s.v5){ s.regras.proporcao = '3:4'; delete s.regras.quadrada; s.v5 = true; }
+  // novo padrão da Polivenda: 1300×1540 (antes 3:4, mínimo 1200)
+  if (!s.padrao1300){ s.regras.proporcao = '1300:1540'; s.regras.minPx = Math.max(1300, s.regras.minPx); s.padrao1300 = true; }
   s.seo = { loja: 'polivenda', usarLoja: true, ...s.seo };
   s.listas = { ...structuredClone(DEFAULT_LISTAS), ...s.listas };
   s.drive = { clientId: '', email: '', pastaId: '', pastaNome: '', ...s.drive };
@@ -1513,7 +1516,7 @@ function normSettings(raw){
 }
 let settings = normSettings(store.get('settings', {}));
 // proporção das fotos (largura : altura) e o tamanho mínimo que ela exige
-const PROPORCOES = { '3:4': { w: 3, h: 4, nome: '3:4 vertical' }, '1:1': { w: 1, h: 1, nome: '1:1 quadrada' }, '4:5': { w: 4, h: 5, nome: '4:5 vertical' } };
+const PROPORCOES = { '1300:1540': { w: 1300, h: 1540, nome: '1300×1540 vertical', rot: '1300×1540' }, '3:4': { w: 3, h: 4, nome: '3:4 vertical' }, '1:1': { w: 1, h: 1, nome: '1:1 quadrada' }, '4:5': { w: 4, h: 5, nome: '4:5 vertical' } };
 const propAtual = () => PROPORCOES[settings.regras.proporcao] || null;
 // proporções que passam: a principal e, se marcado, a 1:1 quadrada como opcional
 const propsAceitas = () => { const p = propAtual(); return !p ? [] : settings.regras.aceita11 && settings.regras.proporcao !== '1:1' ? [p, PROPORCOES['1:1']] : [p]; };
@@ -2698,7 +2701,7 @@ function razaoNome(w, h){
 }
 // confere medidas pelas regras de envio (a mesma conta da conferência do envio ao Drive)
 function regraFoto(w, h){
-  const rg = settings.regras, pr = propDa(w, h), out = [], pede = propsAceitas().map(x => `${x.w}:${x.h}`).join(' ou ');
+  const rg = settings.regras, pr = propDa(w, h), out = [], pede = propsAceitas().map(x => x.rot || `${x.w}:${x.h}`).join(' ou ');
   if (pr && Math.abs(w / h - pr.w / pr.h) > (pr.w / pr.h) * 0.01)
     out.push({ code: 'prop', curto: `${razaoNome(w, h)} (pede ${pede})`, msg: `Proporção errada (${w}×${h}): precisa ser ${propNomes()}, ex.: ${propsAceitas().map(x => minDims(x)).join(' ou ')}` });
   if (Math.min(w, h) < rg.minPx){
@@ -4144,7 +4147,7 @@ $('espLimite').onchange = e => { settings.nuvem = { ...settings.nuvem, gb: +e.ta
 $('espAgora').onclick = () => comBarra(() => espConferir(true));
 
 // ---------- colagem: as fotos da variação coladas numa imagem só (3 × 2 ou 4 × 2), sem margem ----------
-const COL_FORMATOS = [[3, 2], [4, 2]], COL_CEL = [900, 1200]; // cada foto num espaço 3:4 de 900 × 1200
+const COL_FORMATOS = [[3, 2], [4, 2]], COL_CEL = [900, 1066]; // cada foto num espaço de 900 × 1066 (a proporção do padrão 1300×1540)
 let col = null;
 async function abrirColagem(p, u){
   if (!ws) return toast('Conecte a pasta primeiro.');
@@ -4183,7 +4186,7 @@ async function montarColagem(){
     const imgs = await comBarra(() => Promise.all(col.ordem.slice(0, c * l).map(fotoInteira)));
     if (vez !== col.vez) return;
     imgs.forEach((im, i) => {
-      // preenche o espaço 3:4 cortando o que sobra no centro
+      // preenche o espaço cortando o que sobra no centro
       const s = Math.max(W / im.width, H / im.height), w = W / s, h = H / s;
       g.drawImage(im, (im.width - w) / 2, (im.height - h) / 2, w, h, (i % c) * W, Math.floor(i / c) * H, W, H);
     });
@@ -4721,7 +4724,7 @@ $('seoLojaOn').onchange = readSettings;
 // regras de envio
 function readRules(){
   const rg = settings.regras;
-  rg.minPx = Math.min(5000, Math.max(500, +$('rgMin').value || 1200));
+  rg.minPx = Math.min(5000, Math.max(500, +$('rgMin').value || 1300));
   rg.maxMB = Math.min(20, Math.max(0.5, +$('rgMax').value || 2));
   rg.proporcao = $('rgProp').value; rg.capaBranca = $('rgCapa').checked; rg.aceita11 = $('rgQuad').checked;
   $('rgPropInfo').textContent = propAtual() ? `Com o tamanho mínimo atual, a foto precisa ter pelo menos ${propsAceitas().map(x => minDims(x)).join(' (ou ')}${propsAceitas().length > 1 ? ')' : ''} px.` : 'Qualquer proporção passa; só o tamanho mínimo é conferido.';
@@ -7942,6 +7945,10 @@ const ATUALIZACOES = [
   { id: '2026-10-28-fotos-sem-duplicar', em: '2026-10-28 16:30', titulo: 'Tirar fotos não duplica mais', itens: [
     'Tirar várias fotos seguidas fazia duas renomeações rodarem juntas, e a mesma foto era copiada duas vezes (a lista crescia a cada remoção)',
     'Agora remover, colar e trocar arquivos acontecem um de cada vez, em fila; dá para clicar no X de várias fotos seguidas e cada uma sai na sua vez (a certa, mesmo que as outras sejam renumeradas)'] },
+  { id: '2026-11-03-padrao-1300x1540', em: '2026-11-03 13:54', titulo: 'Novo padrão de foto: 1300×1540', itens: [
+    'O padrão das fotos passou de 3:4 (1200×1600) para 1300×1540: é o que a conferência, o prompt copiado e o ajuste do envio usam',
+    'A foto 1:1 continua aceita como opção, agora com mínimo de 1300×1300; fotos 3:4 antigas aparecem como fora da regra (dá para usar "Enviar mesmo assim")',
+    'A colagem também passou a usar essa proporção; dá para escolher outra em Configurações → Fotos e checklist → Regras das fotos'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
