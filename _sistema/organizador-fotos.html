@@ -2428,7 +2428,7 @@ function renderDetail(){
       <span class="st" style="--c:${etapaInfo(etapa(p))[2]}">${etapaInfo(etapa(p))[1]}</span>
       ${etapaDica(p) ? `<span class="muted ajuda">${esc(etapaDica(p))}</span>` : ''}
       ${p.arquivado ? `<button class="sm" data-act="abrirdrive" title="As fotos saíram do app para liberar espaço e estão no Google Drive">${ic('external')}Abrir no Drive</button>`
-        : p.aprovacao?.status === 'aprovado' || p.drive?.em ? `<button class="sm" data-act="baixarfotos" title="Baixa todas as fotos deste produto num arquivo .zip">${ic('download')}Baixar fotos</button>` : ''}
+        : nFotos(p) ? `<button class="sm" data-act="baixarfotos" title="Baixa todas as fotos deste produto num arquivo .zip">${ic('download')}Baixar fotos</button>` : ''}
       <button class="sm ghost" data-act="publicado" title="Publicado é a única etapa marcada à mão: quando o anúncio já está no ar">${p.status === 'publicado' ? ic('undo') + 'Desmarcar publicado' : ic('check') + 'Marcar como publicado'}</button>
     </div>
     ${reprovado(p) ? `<div class="alert block"><b>Reprovado por ${esc(p.aprovacao.por)} em ${esc(dtBR(p.aprovacao.em))}:</b> ${esc(p.aprovacao.motivo)}${p.aprovacao.fotos?.length ? `<br>Refazer: ${esc(p.aprovacao.fotos.join(' · '))}` : ''}
@@ -7737,7 +7737,7 @@ function renderAm(){
   $('amBody').innerHTML = `<div class="amhead"><div class="t"><h2>${esc(p.nome)}</h2>
       <span class="muted">${jobs.length || nFotos(p)} fotos${nOk ? ` · ${nOk} aprovada(s)` : ''}${nNo ? ` · ${nNo} reprovada(s)` : ''}${edita && jobs.length ? ` · ${jobs.length - nOk - nNo} pendente(s)` : ` · ${esc(apSituacao(p))}`}</span></div>
       ${edita && jobs.length ? `<button type="button" class="sm ${am.selecionar ? 'on' : ''}" data-am="sel" title="Escolher várias fotos para aprovar ou reprovar de uma vez">${ic('check-circle')}${am.selecionar ? 'Cancelar seleção' : 'Selecionar'}</button>` : ''}
-      ${!p.arquivado && (p.aprovacao?.status === 'aprovado' || p.drive?.em) ? `<button type="button" class="sm" data-am="baixar" title="Baixa todas as fotos deste produto num arquivo .zip" ${am.baixando ? 'disabled' : ''}>${am.baixando ? ic('loader', 'spin') + 'Baixando…' : ic('download') + 'Baixar fotos'}</button>` : ''}
+      ${!p.arquivado && nFotos(p) ? `<button type="button" class="sm" data-am="baixar" title="Baixa todas as fotos deste produto num arquivo .zip" ${am.baixando ? 'disabled' : ''}>${am.baixando ? ic('loader', 'spin') + 'Baixando…' : ic('download') + 'Baixar fotos'}</button>` : ''}
       ${edita ? `<button type="button" class="sm" data-am="compartilhar" title="Copiar o link que abre direto este produto">${ic('link')}Compartilhar</button>` : ''}
       <button type="button" class="sm ghost" data-am="abrir" title="Abrir o produto">${ic('external')}</button>
       <button type="button" class="sm ghost" data-am="fechar" title="Fechar">${ic('x')}</button></div>
@@ -7993,6 +7993,8 @@ const ATUALIZACOES = [
   { id: '2026-11-04-compartilhar-pendente', em: '2026-11-04 07:39', titulo: 'Compartilhar produto pendente', itens: [
     'O card e a janela de um produto pendente de aprovação ganharam o botão "Compartilhar", que copia um link direto (no celular, abre a lista de aplicativos)',
     'Quem abre o link cai na janela de aprovação desse produto, depois do login se precisar; se ele não estiver mais pendente, um aviso conta a situação'] },
+  { id: '2026-11-04-baixar-antes-da-aprovacao', em: '2026-11-04 11:24', titulo: 'Baixar fotos antes da aprovação', itens: [
+    'O botão "Baixar fotos" (.zip) agora também aparece em produtos pendentes de aprovação ou reprovados, na janela de aprovação e na tela do produto, não só depois de aprovados'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
