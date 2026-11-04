@@ -615,6 +615,9 @@ button.kpi:hover{background:var(--soft)}
 .apgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
 .apsem{grid-column:1/-1}
 .apcard{display:flex;flex-direction:column;padding:0;border:1px solid var(--border);border-radius:14px;background:var(--panel);overflow:hidden;text-align:left;font:inherit;color:inherit;cursor:pointer;white-space:normal}
+.apcardw{position:relative;display:flex;min-width:0}
+.apcardw .apcard{flex:1;min-width:0}
+.apshare{position:absolute;top:10px;right:10px}
 .apcard:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .apcard .capa{aspect-ratio:3/4;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--muted)}
 .apcard .capa img{width:100%;height:100%;object-fit:cover;display:block}
@@ -4436,6 +4439,7 @@ async function useWorkspace(h){
     if (!curP()) current = plan.produtos[0]?.id || null;
     renderList(); renderDetail(); if (!$('tab-resumo').classList.contains('hidden')) renderResumo();
     fimCarregando();
+    abrirLinkAprov();
   } catch (e) {
     // não deu para ler o cadastro da nuvem: a tela fica com a cópia deste navegador, mas nada dela grava por cima;
     // a próxima leitura (a cada 10 s) traz o da nuvem
@@ -7577,12 +7581,14 @@ function apSituacao(p){
 }
 function apCard(p){
   const cv = apCapas.get(p.id), ant = apVista === 'aguardando' ? reprovacaoAnterior(p) : null;
-  return `<button type="button" class="apcard" data-ap="${p.id}">
+  const partilha = amEdita(p) ? `<button type="button" class="sm apshare" data-apshare="${p.id}" title="Copiar o link que abre direto este produto">${ic('link')}Compartilhar</button>` : '';
+  const card = `<button type="button" class="apcard" data-ap="${p.id}">
     <span class="capa ${!cv && ws && nFotos(p) ? 'carregando' : ''}">${cv ? `<img src="${cv.url}" alt="">` : ic('image', 'lg')}</span>
     <span class="apinfo"><b title="${esc(p.titulo || '')}">${esc(p.nome)}</b><span class="muted">${nFotos(p)} fotos</span>
       ${ant?.motivo ? `<span class="mot" title="${esc(ant.motivo)}">Reprovado antes: ${esc(ant.motivo)}</span>` : ''}
       ${reprovado(p) ? `<span class="mot rep"><b>Motivo:</b> ${esc(p.aprovacao.motivo || 'não informado')}${p.aprovacao.fotos?.length ? `<br><b>Refazer:</b> ${esc(p.aprovacao.fotos.join(' · '))}` : ''}</span>` : ''}
       <span class="apsit ${reprovado(p) ? 'rep' : ''}">${esc(apSituacao(p))}</span></span></button>`;
+  return partilha ? `<div class="apcardw">${card}${partilha}</div>` : card;
 }
 function renderAprov(){
   const L = apListas();
@@ -7621,7 +7627,32 @@ function apIrProduto(p){
   abrirAm(p);
 }
 $('apVista').onclick = e => { const b = e.target.closest('[data-apv]'); if (!b) return; apVista = b.dataset.apv; store.set('apVista', apVista); renderAprov(); };
+// link de um produto pendente: quem abre (depois do login, se precisar) cai direto na janela de aprovação dele
+async function compartilharAprov(p, btn){
+  const url = `${location.origin}${location.pathname}#aprovar=${encodeURIComponent(p.id)}`;
+  // no celular abre a lista de aplicativos; no computador copia o link
+  if (matchMedia('(pointer: coarse)').matches && navigator.share){
+    try { return await navigator.share({ title: `Aprovar ${p.nome}`, url }); }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  await copyText(url);
+  toast('Link copiado. Quem abrir entra direto neste produto (com o login do Estúdio).', 4500);
+  // o aviso geral fica atrás da janela aberta: o próprio botão confirma
+  btn.dataset.txt ||= btn.innerHTML; btn.innerHTML = ic('check') + 'Link copiado';
+  clearTimeout(btn.volta); btn.volta = setTimeout(() => { btn.innerHTML = btn.dataset.txt; }, 2500);
+}
+function abrirLinkAprov(){
+  const id = location.hash.match(/^#aprovar=(.+)$/)?.[1]; if (!id) return;
+  history.replaceState(null, '', location.pathname + location.search); // o F5 não abre de novo
+  const p = plan.produtos.find(x => x.id === decodeURIComponent(id));
+  if (!p) return toast('O produto deste link não está mais na lista.', 6000);
+  apIrProduto(p);
+  if (!amEdita(p)) toast(`Este produto não está mais pendente: ${apSituacao(p)}.`, 6000);
+}
+addEventListener('hashchange', abrirLinkAprov);
 $('apCards').addEventListener('click', e => {
+  const s = e.target.closest('[data-apshare]');
+  if (s){ const q = plan.produtos.find(x => x.id === s.dataset.apshare); return q && compartilharAprov(q, s); }
   const c = e.target.closest('.apcard'), p = c && plan.produtos.find(x => x.id === c.dataset.ap);
   if (p) abrirAm(p);
 });
@@ -7707,6 +7738,7 @@ function renderAm(){
       <span class="muted">${jobs.length || nFotos(p)} fotos${nOk ? ` · ${nOk} aprovada(s)` : ''}${nNo ? ` · ${nNo} reprovada(s)` : ''}${edita && jobs.length ? ` · ${jobs.length - nOk - nNo} pendente(s)` : ` · ${esc(apSituacao(p))}`}</span></div>
       ${edita && jobs.length ? `<button type="button" class="sm ${am.selecionar ? 'on' : ''}" data-am="sel" title="Escolher várias fotos para aprovar ou reprovar de uma vez">${ic('check-circle')}${am.selecionar ? 'Cancelar seleção' : 'Selecionar'}</button>` : ''}
       ${!p.arquivado && (p.aprovacao?.status === 'aprovado' || p.drive?.em) ? `<button type="button" class="sm" data-am="baixar" title="Baixa todas as fotos deste produto num arquivo .zip" ${am.baixando ? 'disabled' : ''}>${am.baixando ? ic('loader', 'spin') + 'Baixando…' : ic('download') + 'Baixar fotos'}</button>` : ''}
+      ${edita ? `<button type="button" class="sm" data-am="compartilhar" title="Copiar o link que abre direto este produto">${ic('link')}Compartilhar</button>` : ''}
       <button type="button" class="sm ghost" data-am="abrir" title="Abrir o produto">${ic('external')}</button>
       <button type="button" class="sm ghost" data-am="fechar" title="Fechar">${ic('x')}</button></div>
     <div class="amcorpo">${ant?.motivo ? `<div class="alert" style="margin:0 0 12px">Reprovado antes (${esc(ant.por)}, ${esc(dtBR(ant.em))}): ${esc(ant.motivo)}</div>` : ''}
@@ -7734,6 +7766,7 @@ $('dlgAp').addEventListener('click', e => {
   if (a === 'fechar') return fecharAm();
   if (a === 'abrir'){ current = p.id; currentVar = null; fecharAm(); return showTab('produtos'); }
   if (a === 'enviar'){ fecharAm(); return openReview(p, { auto: true }); }
+  if (a === 'compartilhar') return compartilharAprov(p, b);
   if (a === 'baixar'){
     const este = am; este.baixando = true;
     b.disabled = true; b.innerHTML = ic('loader', 'spin') + 'Baixando…'; // aparece já, antes de procurar as fotos
@@ -7957,6 +7990,9 @@ const ATUALIZACOES = [
     'A colagem também passou a usar essa proporção; dá para escolher outra em Configurações → Fotos e checklist → Regras das fotos'] },
   { id: '2026-11-03-baixar-nos-aprovados', em: '2026-11-03 14:03', titulo: 'Baixar fotos na janela de aprovados', itens: [
     'A janela de um produto aprovado (Aprovação → Aprovados) ganhou o botão "Baixar fotos": baixa todas as fotos do produto num arquivo .zip'] },
+  { id: '2026-11-04-compartilhar-pendente', em: '2026-11-04 07:39', titulo: 'Compartilhar produto pendente', itens: [
+    'O card e a janela de um produto pendente de aprovação ganharam o botão "Compartilhar", que copia um link direto (no celular, abre a lista de aplicativos)',
+    'Quem abre o link cai na janela de aprovação desse produto, depois do login se precisar; se ele não estiver mais pendente, um aviso conta a situação'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
