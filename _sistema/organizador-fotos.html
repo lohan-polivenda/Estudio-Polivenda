@@ -7889,12 +7889,12 @@ b,.b{font-weight:600}
 .box{display:flex;background:#fff;border-radius:4px;box-shadow:0 1px 2px 0 rgba(0,0,0,.25);padding-bottom:40px}
 .cl{width:784px;flex:none}
 .cr{width:376px;flex:none;margin-left:24px;padding:24px 24px 0 0}
-.gal{display:flex;padding-top:24px;margin-bottom:68px}
+.gal{display:flex;padding-top:24px;margin-bottom:40px}
 .ths{width:56px;margin:0 24px;display:flex;flex-direction:column;gap:8px;flex:none}
 .th{position:relative;width:56px;height:56px;border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:2px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .th.on{border:2px solid #3483fa;padding:1px}
 .th img{max-width:100%;max-height:100%;object-fit:contain}
-.th::after,.fig::after,.ov,.mfig::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.04);pointer-events:none;border-radius:inherit}
+.ov,.rc .ri::after,.vc .ri::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.04);pointer-events:none;border-radius:inherit}
 .th .mais{position:absolute;inset:0;background:rgba(0,0,0,.45);color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;z-index:1}
 .fig{position:relative;margin:0;width:680px;height:504px;padding:0 24px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff}
 .fig img{max-width:100%;max-height:100%;object-fit:contain;display:block}
@@ -7905,15 +7905,71 @@ b,.b{font-weight:600}
 .specs{display:flex;gap:40px;align-items:flex-start}
 .spc{width:358px}
 .spc h3{font-size:16px;font-weight:600;line-height:20px;margin-bottom:16px}
-.spc table{width:100%;border-collapse:collapse;border-radius:6px;overflow:hidden}
+.spc table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #f5f5f5;border-radius:5px;overflow:hidden}
 .spc th,.spc td{width:50%;text-align:left;vertical-align:middle;font-size:12px;line-height:18px;color:rgba(0,0,0,.9);padding:15px 24px 15px 16px}
 .spc th{font-weight:600}.spc td{font-weight:400}
 .spc tr:nth-child(odd) th,.spc tr:nth-child(odd) td{background:rgba(0,0,0,.04)}
 .desc p{font-size:20px;font-weight:400;line-height:27px;color:rgba(0,0,0,.55);white-space:pre-line;overflow-wrap:anywhere}
+.dclamp{position:relative;max-height:353px;overflow:hidden}
+.dclamp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(rgba(255,255,255,0),#fff)}
+.dmais{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:14px;font-weight:400}
+.secad{display:flex;justify-content:space-between;align-items:baseline}
+.secad small{font-size:12px;color:rgba(0,0,0,.55);font-weight:400;margin-right:34px}
+.rels{position:relative;display:flex;gap:10px}
+.rc{width:230px;flex:none;border:1px solid rgba(0,0,0,.1);border-radius:6px;overflow:hidden;background:#fff}
+.rc .ri{position:relative;height:230px;display:flex;align-items:center;justify-content:center;background:#fff}
+.rc .ri img,.vc .ri img{max-width:100%;max-height:100%;object-fit:contain}
+.rc .rt{padding:12px 10px 14px}
+.rtit{font-size:14px;font-weight:400;line-height:18px;color:rgba(0,0,0,.9);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rpr{display:flex;align-items:baseline;gap:4px;margin-top:4px}
+.rpr .mny.card{font-size:20px;line-height:22px}
+.rpr .off{font-size:12px;line-height:14px}
+.rv{font-size:12px;font-weight:400;color:rgba(0,0,0,.55)}
+.rfg{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;font-weight:600;color:#00a650}
+.rsk{display:block;height:14px;width:55%;border-radius:4px;background:#eee;margin-top:8px}
+.rnext{position:absolute;right:20px;top:150px;width:56px;height:56px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}
+.rnext svg{width:10px;height:18px}
+.vcs{position:relative;display:flex;gap:10px}
+.vc{width:354px;flex:none;display:flex;gap:12px;border:1px solid rgba(0,0,0,.1);border-radius:6px;padding:10px;background:#fff}
+.vc .ri{position:relative;width:96px;height:96px;flex:none;display:flex;align-items:center;justify-content:center}
+.vc .rt{min-width:0}
+.vlink{display:inline-block;margin:16px 4px 0;font-size:14px;font-weight:400}
+.sbox{margin-top:16px}
+.shd{display:flex;align-items:center;gap:12px}
+.slogo{width:48px;height:48px;border-radius:50%;border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:rgba(0,0,0,.55);text-align:center;line-height:1.1;flex:none;overflow:hidden;padding:2px}
+.snome{font-size:18px;font-weight:600;line-height:22px}
+.seguir{margin-left:auto;align-self:flex-start;background:rgba(65,137,230,.15);color:#3483fa;font-size:12px;font-weight:600;padding:4px 8px;border-radius:4px}
+.sml{display:flex;align-items:center;gap:6px;margin-top:16px;font-size:14px;font-weight:600;color:#00a650}
+.term{display:flex;gap:2px;margin-top:12px}
+.term i{flex:1;height:6px}
+.term i:nth-child(1){background:#fff0f0}.term i:nth-child(2){background:#fff5e8}.term i:nth-child(3){background:#fffcda}.term i:nth-child(4){background:#f1fdd7}.term i:nth-child(5){background:#00a650}
+.sst{display:flex;margin-top:12px;text-align:center}
+.sst>div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:400;color:rgba(0,0,0,.55)}
+.sst b{font-size:14px;color:rgba(0,0,0,.9)}
+.sbox .btn.claro{margin-top:16px;height:32px;font-size:14px}
+.pagbox h2{font-size:18px;font-weight:400;line-height:22px;margin-bottom:8px}
+.pagbox h4{margin:16px 0 4px;font-size:16px;font-weight:400}
+.pagbox .g14{display:block;margin-bottom:8px}
+.pags{display:flex;align-items:center;gap:14px}
+.pgv{font:italic 800 18px Arial,sans-serif;color:#1a1f71;letter-spacing:-.5px}
+.pge{font:700 26px Arial,sans-serif;color:#000;letter-spacing:-1px}
+.pgx{font:600 18px Arial,sans-serif;color:#32bcad}
+.addl{display:flex;align-items:center;gap:8px;margin-top:20px;font-size:14px;font-weight:400}
+.opn{display:flex;gap:40px}
+.opn1{width:210px;flex:none}
+.opnn{display:flex;align-items:center;gap:12px}
+.opnn b{font-size:48px;font-weight:700;line-height:48px;color:#3483fa}
+.opnn small{display:block;font-size:12px;font-weight:400;color:rgba(0,0,0,.55);margin:2px 0 0 4px}
+.bars{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.bars div{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:400;color:rgba(0,0,0,.55)}
+.bars i{flex:1;height:4px;border-radius:2px;background:rgba(0,0,0,.1);position:relative;overflow:hidden}
+.bars i span{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.55);border-radius:2px}
+.opn2{flex:1;font-size:16px;font-weight:400;color:rgba(0,0,0,.55)}
+.opn2 h3{font-size:16px;font-weight:600;color:rgba(0,0,0,.9);margin-bottom:8px}
 .desc .vazia{font-style:italic;color:rgba(0,0,0,.35)}
 .perg{display:flex;gap:16px;margin-bottom:24px}
-.perg .inp{flex:1;height:48px;border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:14px 16px;font-size:16px;font-weight:400;color:rgba(0,0,0,.35)}
-.btn.pq{width:auto;margin:0;padding:0 24px}
+.perg .inp{flex:1;font-family:inherit;height:48px;border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:14px 16px;font-size:16px;font-weight:400;color:rgba(0,0,0,.35)}
+.btn.pq{width:auto;margin:0;padding:0 24px;gap:8px}
 .buy{position:relative;border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:16px}
 .fav{position:absolute;right:16px;top:16px;display:flex}
 .sub{font-size:14px;font-weight:400;line-height:20px;color:rgba(0,0,0,.55);white-space:pre}
@@ -7936,6 +7992,8 @@ b,.b{font-weight:600}
 .parc.verde{color:#00a650}
 .frete{margin-top:24px;font-size:16px;font-weight:400;line-height:20px}
 .frete .ch{margin-bottom:2px}
+.ftag{display:inline-block;background:#00a650;color:#fff;font-size:12px;font-weight:600;line-height:12px;padding:3px 4px;border-radius:2px;margin-bottom:16px}
+.ret{margin-top:16px}
 .frete .g14{line-height:18px}
 .full{margin-top:8px;font-size:14px;color:rgba(0,0,0,.55);display:flex;align-items:center;gap:4px}
 .fl{display:inline-flex;align-items:center;gap:2px;color:#00a650;font-weight:700}
@@ -8040,6 +8098,8 @@ b,.b{font-weight:600}
 .cel .specs{flex-direction:column;gap:24px}
 .cel .spc{width:100%}
 .cel .desc p{font-size:16px;line-height:22px}
+.cel .opn{flex-direction:column;gap:20px}
+.cel .addl{display:none}
 .mres{background:#fff}
 .mfil{display:flex;justify-content:space-between;padding:12px 16px;font-size:14px;font-weight:400;color:rgba(0,0,0,.55);border-bottom:1px solid rgba(0,0,0,.1)}
 .pc.pcm{display:flex;min-height:0;border-radius:0;box-shadow:none;border-bottom:1px solid rgba(0,0,0,.1)}
@@ -8102,6 +8162,7 @@ async function simCarregarFotos(meu, p){
       const x = { k: (u.id || '') + '|' + f, nome: f, rot: it.nome, dir, url: '' }; lista.push(x); todas.push(x);
     }
   }
+  simCarregarVizinhos(meu, p);
   meu.ordemOrig = Object.fromEntries(Object.entries(meu.fotos).map(([k, l]) => [k, l.map(f => f.k).join('/')]));
   meu.carregando = false;
   if (sim !== meu) return;
@@ -8113,13 +8174,24 @@ async function simCarregarFotos(meu, p){
     if (sim === meu) simAtualizarLogo();
   }).catch(() => {});
 }
+function simTemExtras(pid){ try { return !!JSON.parse(localStorage.getItem('simExtras') || '{}')[pid]; } catch { return false; } }
+async function simCarregarVizinhos(meu, p){
+  const outros = plan.produtos.filter(q => q.id !== p.id && !q.arquivado && nFotos(q)).slice(0, 8);
+  meu.vizinhos = [];
+  await emParalelo(outros, 3, async q => {
+    if (sim !== meu) return;
+    try { const f = await capaDoProduto(q); if (!f || sim !== meu) return;
+      meu.vizinhos.push({ id: q.id, ordem: outros.indexOf(q), titulo: q.titulo || q.nome, url: URL.createObjectURL(f), x: simExtrasLer(q.id), temX: simTemExtras(q.id) });
+      meu.vizinhos.sort((a, b) => a.ordem - b.ordem); simAtualizarLogo(); } catch {}
+  }).catch(() => {});
+}
 let simRaf = 0;
 function simAtualizarLogo(){ if (simRaf) return; simRaf = requestAnimationFrame(() => { simRaf = 0; simPagina(); simPainelFotos(); }); }
 async function fecharSim(forcar = false){
   if (!sim) return;
   if (!forcar && simMudouProduto() && !await confirmar('Sair sem aplicar?\n\nO título e a descrição alterados na simulação não vão para o produto.', 'Sair sem aplicar', 'Continuar editando')) return;
   const p = simP(), aplicou = sim.aplicou;
-  Object.values(sim.fotos).flat().forEach(f => f.url && URL.revokeObjectURL(f.url));
+  Object.values(sim.fotos).flat().concat(sim.vizinhos || []).forEach(f => f.url && URL.revokeObjectURL(f.url));
   simRO?.disconnect(); simRO = null;
   sim = null;
   if ($('dlgSim').open) $('dlgSim').close();
@@ -8187,6 +8259,7 @@ function simBarra(){
 }
 function simCliquePagina(e){
   e.preventDefault();
+  if (e.target.closest('[data-act="descMais"]')){ sim.descAberta = !sim.descAberta; return simPagina(); }
   const v = e.target.closest('[data-var]');
   if (v){ sim.varSel = v.dataset.var; sim.foto = 0; simPagina(); simPainelFotos(); return; }
   const t = e.target.closest('[data-thumb]'); if (t){ sim.foto = +t.dataset.thumb; return simPagina(); }
@@ -8356,6 +8429,13 @@ const SIM_IC = {
   fogo: '<svg width="9" height="11" viewBox="0 0 9 11"><path d="M4.6 0C5 2.3 8.4 3.4 8.4 6.9A4 4 0 0 1 .6 7.4c0-1.6.9-2.6 1.6-3.3.1 1 .6 1.7 1.3 2C3.3 3.9 3.6 1.6 4.6 0z" fill="#e6540b"/></svg>',
   raio: '<svg width="9" height="12" viewBox="0 0 9 12"><path d="M5.6 0 0 7h3.6L2.9 12 9 4.9H5.2z" fill="#00a650"/></svg>',
   verif: '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="6" fill="#3483fa"/><path d="m3.4 6.1 1.8 1.7 3.4-3.5" stroke="#fff" stroke-width="1.3" fill="none"/></svg>',
+  lista: '<svg width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="#3483fa" stroke-width="1.3"><path d="M1 2h9M1 6h9M1 10h6M12.5 8v6M9.5 11h6"/></svg>',
+  medalha: '<svg width="14" height="16" viewBox="0 0 14 16" fill="none" stroke="#00a650" stroke-width="1.3"><circle cx="7" cy="10" r="4.5"/><path d="M4.5 1.5 6 6M9.5 1.5 8 6"/></svg>',
+  msg: '<svg width="18" height="16" viewBox="0 0 18 16" fill="none" stroke="rgba(0,0,0,.7)" stroke-width="1.3"><path d="M2 2h14v9H7l-4 3v-3H2z"/><path d="m6.5 6.5 1.6 1.5 3.4-3"/></svg>',
+  relogio: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="rgba(0,0,0,.7)" stroke-width="1.3"><circle cx="9" cy="9" r="6.5"/><path d="M9 5v4l2.5 2"/></svg>',
+  master: '<svg width="34" height="22" viewBox="0 0 34 22"><circle cx="12" cy="11" r="10" fill="#eb001b"/><circle cx="22" cy="11" r="10" fill="#f79e1b" fill-opacity=".9"/></svg>',
+  boleto: '<svg width="26" height="18" viewBox="0 0 26 18" fill="#333"><path d="M1 1h1.5v12H1zM4 1h1v12H4zM6.5 1h2v12h-2zM10 1h1v12h-1zM12.5 1h1.5v12h-1.5zM15.5 1h1v12h-1zM18 1h2v12h-2zM21.5 1h1v12h-1zM24 1h1v12h-1z"/><text x="1" y="17.5" font-size="4.5" font-family="Arial">Boleto</text></svg>',
+  brilho: '<svg width="14" height="14" viewBox="0 0 14 14" fill="#fff"><path d="M7 0c.6 3.6 2.4 5.6 7 7-4.6 1.4-6.4 3.4-7 7-.6-3.6-2.4-5.6-7-7C4.6 5.6 6.4 3.6 7 0z"/></svg>',
   compart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3483fa" stroke-width="1.6"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg>',
 };
 function simDados(){
@@ -8405,10 +8485,12 @@ function simPrecoBloco(d, cel){
     <a class="lk mt8">Ver os meios de pagamento</a>`;
 }
 function simFreteBloco(d){
-  return `<div class="frete" data-ed="frete">${d.x.freteGratis
-    ? `<div class="ch"><span class="verde b">Chegará grátis</span> amanhã</div>`
-    : `<div class="ch"><span class="b">Chegará</span> amanhã por <span class="b">R$ 19,90</span></div>`}
-    <div class="g14">Comprando dentro das próximas 4 h 20 min</div><a class="lk">Mais formas de entrega</a>
+  return `<div class="frete" data-ed="frete">${d.x.freteGratis ? '<span class="ftag">FRETE GRÁTIS ACIMA DE R$ 19</span>' : ''}${d.x.freteGratis
+    ? `<div class="ch"><span class="verde b">Chegará grátis amanhã</span></div>`
+    : `<div class="ch"><span class="b">Chegará amanhã</span> por R$ 19,90</div>`}
+    <a class="lk">Mais detalhes e formas de entrega</a>
+    <div class="ret"><span class="verde b">Retire grátis</span> a partir de amanhã em uma agência Mercado Livre</div>
+    <div class="g14">Você tem um ponto de envio perto de você</div><a class="lk">Ver no mapa</a>
     ${d.x.full ? `<div class="full">Armazenado e enviado pelo <span class="fl">${SIM_IC.raio}<i>FULL</i></span></div>` : ''}</div>`;
 }
 function simVariacoes(d){
@@ -8426,7 +8508,51 @@ function simCompraBloco(d){
     <div class="vend" data-ed="vendedor">Vendido por <a class="lk">${esc(d.x.vendedor || 'POLIVENDA')}</a>${d.x.lojaOficial ? ` ${SIM_IC.verif}` : ''}
       ${d.vendidos ? `<div class="g12">${d.x.lojaOficial ? 'Loja oficial do Mercado Livre' : 'MercadoLíder'} | <b>${esc(d.vendidos)} vendas</b></div>` : ''}</div>
     <div class="gar">${SIM_IC.devolucao}<span><a class="lk">Devolução grátis.</a> Você tem 30 dias a partir da data de recebimento.</span></div>
-    <div class="gar">${SIM_IC.escudo}<span><a class="lk">Compra Garantida.</a> Receba o produto que está esperando ou devolvemos o dinheiro.</span></div>`;
+    <div class="gar">${SIM_IC.escudo}<span><a class="lk">Compra Garantida.</a> Receba o produto que está esperando ou devolvemos o dinheiro.</span></div>
+    <a class="addl">${SIM_IC.lista}Adicionar a uma lista</a>`;
+}
+function simVendedorBox(d){
+  const nome = d.x.vendedor || 'POLIVENDA';
+  return `<div class="buy sbox" data-ed="vendedor"><div class="shd"><span class="slogo">${esc(nome.slice(0, 14).toUpperCase())}</span>
+      <div><div class="snome">${esc(nome)}</div><div class="g12"><b>+${Math.max(plan.produtos.length, 10)}</b> Produtos</div></div><a class="seguir">Seguir</a></div>
+    <div class="sml">${SIM_IC.medalha}MercadoLíder</div><div class="g12">É um dos melhores do site!</div>
+    <div class="term"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="sst"><div><b>${esc(d.vendidos || '+100')}</b><span>Vendas</span></div><div>${SIM_IC.msg}<span>Bom atendimento</span></div><div>${SIM_IC.relogio}<span>Entrega no prazo</span></div></div>
+    <a class="btn claro">Ir para a página do vendedor</a></div>`;
+}
+function simPagamentoBox(){
+  return `<div class="buy sbox pagbox"><h2>Meios de pagamento</h2>
+    <h4>Cartões de crédito</h4><span class="g14">Pague em até 12x!</span>
+    <div class="pags"><span class="pgv">VISA</span><span class="pge">elo</span>${SIM_IC.master}</div>
+    <h4>Pix</h4><div class="pags"><span class="pgx">pix</span></div>
+    <h4>Boleto bancário</h4><div class="pags">${SIM_IC.boleto}</div>
+    <a class="lk" style="display:inline-block;margin-top:16px">Confira outros meios de pagamento</a></div>`;
+}
+// outros produtos da Polivenda (capa e título) nas vitrines do anúncio e na busca
+function simVizPreco(v){
+  const x = v.x, pr = simNum(x.preco), ant = simNum(x.precoAntigo), off = ant > pr ? Math.round((1 - pr / ant) * 100) : 0;
+  return { x, pr, ant, off };
+}
+function simVizCard(v, hor){
+  const { x, pr, ant, off } = simVizPreco(v);
+  const preco = v.temX ? `${off ? `<div class="rpr"><span class="off">${off}% OFF</span><s class="rv">${simReais(ant).replace(/,00$/, '')}</s></div>` : ''}
+      <div class="rpr">${simDinheiro(pr, 'card')}${x.vendidos ? `<span class="rv">${esc(x.vendidos)} vendidos</span>` : ''}</div>${x.freteGratis ? `<div class="rfg">Frete grátis${x.full ? ` <span class="fl">${SIM_IC.raio}<i>FULL</i></span>` : ''}</div>` : ''}`
+    : '<span class="rsk"></span>';
+  return `<div class="${hor ? 'vc' : 'rc'}"><div class="ri">${v.url ? `<img src="${v.url}" alt="">` : ''}</div><div class="rt"><div class="rtit">${esc(v.titulo)}</div>${preco}</div></div>`;
+}
+function simVitrines(){
+  const vz = sim.vizinhos || []; if (!vz.length) return '';
+  return `<section class="sec"><div class="secad"><h2>Produtos relacionados</h2><small>Ad</small></div><div class="rels">${vz.slice(0, 3).map(v => simVizCard(v)).join('')}${vz.length > 3 ? `<span class="rnext">${SIM_IC.seta}</span>` : ''}</div></section>
+    <section class="sec" style="padding-top:0"><h2>Produtos do vendedor</h2><div class="vcs">${vz.slice(0, 2).map(v => simVizCard(v, true)).join('')}</div><a class="vlink">Ir para a página do vendedor</a></section>`;
+}
+function simOpinioes(d){
+  if (!d.aval) return `<section class="sec"><h2>Opiniões do produto</h2><div class="opn2">Este produto ainda não tem opiniões.</div></section>`;
+  // distribuição aproximada das notas pela média
+  const pesos = [5, 4, 3, 2, 1].map(k => Math.exp(-Math.abs(k - d.nota) * 1.6)), soma = pesos.reduce((a, b) => a + b, 0);
+  return `<section class="sec" data-ed="vendas"><h2>Opiniões do produto</h2><div class="opn"><div class="opn1">
+      <div class="opnn"><b>${d.nota.toFixed(1)}</b><div>${simEstrelas(d.nota, 18)}<small>${d.aval} avaliações</small></div></div>
+      <div class="bars">${pesos.map((w, i) => `<div><i><span style="width:${Math.round(w / soma * 100)}%"></span></i>${5 - i} ★</div>`).join('')}</div></div>
+    <div class="opn2"><h3>Opiniões</h3>As opiniões dos compradores aparecem aqui.</div></div></section>`;
 }
 function simSpecs(d){
   if (!d.specs.length) return '';
@@ -8434,7 +8560,9 @@ function simSpecs(d){
 }
 function simDescricao(d){
   const t = sim.descricao.trim();
-  return `<section class="sec desc" data-ed="desc"><h2>Descrição</h2>${t ? `<p>${esc(t)}</p>` : '<p class="vazia">Este anúncio ainda não tem descrição.</p>'}</section>`;
+  const longa = t.length > 420 || t.split('\n').length > 12;
+  return `<section class="sec desc"><h2>Descrição</h2><div data-ed="desc" class="${longa && !sim.descAberta ? 'dclamp' : ''}">${t ? `<p>${esc(t)}</p>` : '<p class="vazia">Este anúncio ainda não tem descrição.</p>'}</div>
+    ${longa ? `<a class="dmais" data-act="descMais">${sim.descAberta ? 'Ver menos' : 'Ver descrição completa'} ${SIM_IC.baixo}</a>` : ''}</section>`;
 }
 function simTopoInfo(d){
   return `<div class="sub" data-ed="vendas">Novo${d.vendidos ? `  |  ${esc(d.vendidos)} vendidos` : ''}</div>
@@ -8453,8 +8581,9 @@ function simAnuncioDesk(d){
       <div class="bcr"><a>Vender um igual</a><span class="pipe"></span><a>Compartilhar</a></div></div>
     <div class="box"><div class="cl">
         <div class="gal" data-ed="fotos"><div class="ths">${thumbs}</div><figure class="fig">${simFotoImg(atual)}</figure></div>
-        <div class="sep"></div>${simSpecs(d)}${d.specs.length ? '<div class="sep"></div>' : ''}${simDescricao(d)}
-        <div class="sep"></div><section class="sec"><h2>Perguntas</h2><div class="perg"><span class="inp">Digite sua pergunta...</span><a class="btn azul pq">Perguntar</a></div><a class="lk">Ver todas as perguntas</a></section>
+        <div class="sep"></div>${simVitrines() ? simVitrines() + '<div class="sep"></div>' : ''}${simSpecs(d)}${d.specs.length ? '<div class="sep"></div>' : ''}${simDescricao(d)}
+        <div class="sep"></div><section class="sec"><h2>Perguntas e respostas</h2><div class="perg"><span class="inp">Digite sua pergunta...</span><a class="btn azul pq">${SIM_IC.brilho}Perguntar</a></div><a class="lk">Ver todas as perguntas</a></section>
+        <div class="sep"></div>${simOpinioes(d)}
       </div>
       <div class="cr"><div class="buy"><span class="fav">${SIM_IC.coracao}</span>
         ${simTopoInfo(d)}
@@ -8462,7 +8591,7 @@ function simAnuncioDesk(d){
         ${simFreteBloco(d)}
         ${simVariacoes(d)}
         ${simCompraBloco(d)}
-      </div></div>
+      </div>${simVendedorBox(d)}${simPagamentoBox()}</div>
     </div></div>`;
 }
 function simAnuncioCel(d){
@@ -8476,6 +8605,7 @@ function simAnuncioCel(d){
       ${simFreteBloco(d)}
       ${simCompraBloco(d)}</div>
     <div class="msep"></div>${simSpecs(d)}${d.specs.length ? '<div class="msep"></div>' : ''}${simDescricao(d)}
+    <div class="msep"></div>${simOpinioes(d)}
   </div>`;
 }
 function simCartao(d, cel){
@@ -8493,6 +8623,15 @@ function simCartao(d, cel){
     </div></div>`;
 }
 const simVazio = cel => `<div class="pc ${cel ? 'pcm' : ''} sk"><div class="pimg"></div><div class="pct"><i></i><i class="c"></i><i class="p"></i><i class="c"></i></div></div>`;
+// na busca, os vizinhos são os outros produtos da loja (com o que já foi simulado deles); sem foto, cartão cinza
+function simVizBusca(v, cel){
+  if (!v?.url) return simVazio(cel);
+  const { x, pr, ant, off } = simVizPreco(v);
+  return `<div class="pc ${cel ? 'pcm' : ''}"><div class="pimg"><img src="${v.url}" alt=""><span class="ov"></span></div><div class="pct">
+    <span class="ptit">${esc(v.titulo)}</span><span class="psel">Por ${esc(x.vendedor || 'POLIVENDA')}</span>
+    ${v.temX ? `<div class="ppr">${off ? `<s class="pold">${simReais(ant).replace(/,00$/, '')}</s>` : ''}<div class="prow">${simDinheiro(pr, 'card')}${off ? `<span class="off">${off}% OFF</span>` : ''}</div></div>
+      ${x.freteGratis ? '<span class="pfr">Frete grátis</span>' : ''}` : '<span class="rsk"></span>'}</div></div>`;
+}
 function simBuscaDesk(d){
   const q = d.kws[0] || d.titulo.toLowerCase();
   return `<div class="srch"><aside class="side">
@@ -8501,11 +8640,11 @@ function simBuscaDesk(d){
       ${['Chegará amanhã', 'FULL com frete grátis', 'Frete grátis', 'Internacional'].map(t => `<div class="fbox"><span>${t}</span><i class="tg"></i></div>`).join('')}
       <div class="fcat"><b>Categorias</b>${[...new Set([d.categoria, 'Enfeites e Decoração da Casa', 'Plantas e Flores Artificiais'])].map(c => `<span>${esc(c)}</span>`).join('')}</div></aside>
     <section class="res"><div class="sort">Ordenar por <a class="lk">Mais relevantes ${SIM_IC.baixo}</a></div>
-      <div class="grid">${simCartao(d)}${Array.from({ length: 7 }, () => simVazio()).join('')}</div></section></div>`;
+      <div class="grid">${simCartao(d)}${Array.from({ length: 7 }, (_, i) => simVizBusca(sim.vizinhos?.[i])).join('')}</div></section></div>`;
 }
 function simBuscaCel(d){
   return `<div class="mres"><div class="mfil"><span>+1.000 resultados</span><a class="lk">Filtrar (0)</a></div>
-    ${simCartao(d, true)}${Array.from({ length: 4 }, () => simVazio(true)).join('')}</div>`;
+    ${simCartao(d, true)}${Array.from({ length: 4 }, (_, i) => simVizBusca(sim.vizinhos?.[i], true)).join('')}</div>`;
 }
 
 // =====================================================================
