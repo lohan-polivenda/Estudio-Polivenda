@@ -2509,7 +2509,7 @@ function renderDetail(){
         <b data-act="cltog">Checklist${u.nome ? ' · ' + esc(p.tipoVariacao) + ': ' + esc(u.nome) : ''}</b>
         <span class="muted">${pu.done}/${pu.total}</span>
         <span class="muted ajuda" data-em="b">Arraste o arquivo para a linha, ou copie a imagem na IA e cole aqui (Ctrl+V). Também dá para usar o botão <b>Enviar foto</b>.</span>
-        ${!p.arquivado && p.checklist.some(it => filesOf(u, it).some(f => IMG_EXT.test(f))) ? `<button class="sm" data-act="colagem" title="Juntar as fotos numa imagem só (de 2 × 2 a 12 × 3)">${ic('grid')}Colagem</button>` : ''}
+        ${!p.arquivado && p.checklist.some(it => filesOf(u, it).some(f => IMG_EXT.test(f))) ? `<button class="sm" data-act="colagem" title="Juntar as fotos numa imagem só (de 4 a 12 fotos)">${ic('grid')}Colagem</button>` : ''}
         <button class="sm" data-act="copyall">Copiar todos os prompts</button>
       </div>
       <div class="clbody">
@@ -4206,8 +4206,8 @@ $('espLista').addEventListener('click', e => { if (e.target.closest('#espVer')) 
 $('espLimite').onchange = e => { settings.nuvem = { ...settings.nuvem, gb: +e.target.value }; saveSettings(); renderEsp(); };
 $('espAgora').onclick = () => comBarra(() => espConferir(true));
 
-// ---------- colagem: as fotos da variação coladas numa imagem só (de 2 × 2 a 12 × 3), sem margem ----------
-const COL_FORMATOS = [[2, 2], [3, 2], [4, 2], [6, 2], [8, 2], [9, 3], [12, 3]], COL_CEL = [900, 1066]; // cada foto num espaço de 900 × 1066 (a proporção do padrão 1300×1540)
+// ---------- colagem: as fotos da variação coladas numa imagem só (de 2 × 2 a 6 × 2), sem margem ----------
+const COL_FORMATOS = [[2, 2], [3, 2], [4, 2], [6, 2]], COL_CEL = [900, 1066]; // cada foto num espaço de 900 × 1066 (a proporção do padrão 1300×1540)
 let col = null;
 async function abrirColagem(p, u){
   if (!ws) return toast('Conecte a pasta primeiro.');
@@ -8858,7 +8858,7 @@ const ATUALIZACOES = [
     'Preço, desconto, parcelas, frete, vendas, nota e vendedor só existem na simulação e ficam guardados no computador',
     'Título e descrição só vão para o produto com "Aplicar ao produto" (produto aprovado volta a pedir aprovação)'] },
   { id: '2026-11-10-colagem-formatos', em: '2026-11-10 14:00', titulo: 'Mais formatos na colagem', itens: [
-    'A colagem ganhou os formatos 2 × 2 (4 fotos), 6 × 2 (12), 8 × 2 (16), 9 × 3 (27) e 12 × 3 (36), além dos 3 × 2 e 4 × 2 que já existiam'] },
+    'A colagem ganhou os formatos 2 × 2 (4 fotos) e 6 × 2 (12 fotos), além dos 3 × 2 e 4 × 2 que já existiam; o máximo é 12 fotos'] },
   { id: '2026-11-10-simulacao-ml-fiel', em: '2026-11-10 12:19', titulo: 'Simulação do Mercado Livre mais fiel', itens: [
     'Anúncio refeito comparando com anúncios do Mercado Livre de hoje: frete e retirada, fotos sem fundo cinza, tabela de características',
     'Novas partes iguais às do site: Produtos relacionados, Produtos do vendedor (com os outros produtos da loja), caixa do vendedor, Meios de pagamento, Perguntas e respostas e Opiniões',
