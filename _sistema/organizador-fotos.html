@@ -4244,13 +4244,13 @@ async function montarColagem(){
   const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
   try {
     const imgs = await comBarra(() => Promise.all(col.ordem.slice(0, c * l).map(fotoInteira)));
-    if (vez !== col.vez) return;
+    if (!col || vez !== col.vez) return; // a janela foi fechada (ou mudou o formato) enquanto carregava
     imgs.forEach((im, i) => {
       // preenche o espaço cortando o que sobra no centro
       const s = Math.max(W / im.width, H / im.height), w = W / s, h = H / s;
       g.drawImage(im, (im.width - w) / 2, (im.height - h) / 2, w, h, (i % c) * W, Math.floor(i / c) * H, W, H);
     });
-  } catch (e) { if (vez === col.vez) $('colPrevia').innerHTML = `<div class="muted">Não consegui abrir uma das fotos: ${esc(e.message)}</div>`; return; }
+  } catch (e) { if (col && vez === col.vez) $('colPrevia').innerHTML = `<div class="muted">Não consegui abrir uma das fotos: ${esc(e.message)}</div>`; return; }
   $('colPrevia').innerHTML = ''; $('colPrevia').append(cv);
   col.canvas = cv; $('colBaixar').disabled = !col.ordem.length;
 }
@@ -8170,7 +8170,7 @@ async function simCarregarFotos(meu, p){
   simMontar();
   await emParalelo(todas, 4, async f => {
     if (sim !== meu) return;
-    try { f.url = URL.createObjectURL(await (await f.dir.getFileHandle(f.nome)).getFile()); } catch { f.falhou = true; }
+    try { const arq = await (await f.dir.getFileHandle(f.nome)).getFile(); if (sim !== meu) return; f.url = URL.createObjectURL(arq); } catch { f.falhou = true; }
     if (sim === meu) simAtualizarLogo();
   }).catch(() => {});
 }
@@ -8195,7 +8195,7 @@ async function fecharSim(forcar = false){
   simRO?.disconnect(); simRO = null;
   sim = null;
   if ($('dlgSim').open) $('dlgSim').close();
-  // a janela de aprovação embaixo pode ter ficado com nomes de arquivo antigos (o título renomeia as fotos)
+  // a janela de aprovação embaixo mostra o título e a aprovação de antes: abre de novo
   if (aplicou && p && am?.pid === p.id) abrirAm(p);
   else if (am) renderAm();
 }
@@ -8863,6 +8863,9 @@ const ATUALIZACOES = [
     'Anúncio refeito comparando com anúncios do Mercado Livre de hoje: frete e retirada, fotos sem fundo cinza, tabela de características',
     'Novas partes iguais às do site: Produtos relacionados, Produtos do vendedor (com os outros produtos da loja), caixa do vendedor, Meios de pagamento, Perguntas e respostas e Opiniões',
     'Descrição longa com "Ver descrição completa"; na busca, os outros cards mostram produtos da própria loja'] },
+  { id: '2026-11-10-revisao', em: '2026-11-10 16:30', titulo: 'Revisão: colagem e simulação', itens: [
+    'Fechar a colagem enquanto ela ainda monta não dá mais erro escondido',
+    'Fechar a simulação enquanto as fotos carregam não deixa mais fotos presas na memória'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
