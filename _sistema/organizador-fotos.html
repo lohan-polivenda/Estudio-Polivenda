@@ -679,6 +679,60 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
 @media (max-width:1000px){.apgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-left:0;border-top:1px solid var(--border)}.kpi b{font-size:22px}}
 @media (max-width:600px){.aphead .apvista{margin-left:0;width:100%}.apvista button{flex:1;padding-left:6px;padding-right:6px}.apgrid{grid-template-columns:1fr}.amgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tabs{max-width:100%;overflow-x:auto}.tabs button{flex:none}}
+/* simulação do anúncio no marketplace */
+dialog.dlgsim{width:calc(100vw - 24px);height:calc(100vh - 24px);max-width:none;max-height:none}
+dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
+#simBody{display:flex;flex-direction:column;height:100%}
+.simhead{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.simhead .t{flex:1;min-width:0}.simhead h2{margin:0}
+.simonde{padding:18px 20px 22px}
+.simonde h3{margin:0 0 12px;font-size:15px}
+.simmks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.simmk{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px;border-radius:12px;text-align:left;white-space:normal}
+.simmk.on:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.simmk:disabled{opacity:.55}
+.simmk .lbl{margin:0}
+.simlogo{width:100%;height:64px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px;letter-spacing:.2px}
+.simlogo.ml{background:#ffe600}.simlogo.ml img{height:34px}
+.simbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.simbar .t{flex:1;min-width:160px;display:flex;flex-direction:column;line-height:1.25}
+.simbar .t .muted{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.simbar .tabs button{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;font-size:13px}
+.simbar .lbl{margin:0}
+.simbar button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.simmain{flex:1;display:flex;min-height:0}
+.simpalco{flex:1;min-width:0;overflow:auto;background:#d9dbe0}
+.simpalco.cel{display:flex;justify-content:center;align-items:flex-start;padding:20px}
+.simtela-desk{min-height:100%;background:#ededed}
+#simHost{display:block}
+.simfone{width:414px;flex:none;border-radius:44px;background:#16181d;padding:12px;box-shadow:0 20px 50px #0004}
+.simfone-tela{width:390px;height:min(780px,calc(100vh - 150px));border-radius:34px;overflow:auto;background:#fff;scrollbar-width:none}
+.simfone-tela::-webkit-scrollbar{display:none}
+.simpainel{width:360px;flex:none;overflow:auto;border-left:1px solid var(--border);padding:4px 16px 24px;background:var(--panel)}
+.simmain.sempainel .simpainel{display:none}
+.spsec{padding:14px 0;border-bottom:1px solid var(--border);transition:background .3s}
+.spsec:last-child{border-bottom:0}
+.spsec.brilho{background:var(--accent-soft);margin:0 -16px;padding:14px 16px}
+.spsec h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center}
+.spcont{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;font-size:12px;color:var(--muted);min-height:24px}
+.spcont .over{color:var(--danger);font-weight:700}
+.spvars{margin-bottom:10px}
+.spvazio{padding:10px 0}
+.spfotos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.spft .img{position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--muted);border:1px solid var(--border)}
+.spft .img img{width:100%;height:100%;object-fit:cover;display:block}
+.spft .n{position:absolute;left:5px;top:5px;min-width:20px;height:20px;border-radius:10px;background:#000a;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.spft .tt{position:absolute;right:5px;bottom:5px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--accent);color:#fff}
+.spft.oculta .img{opacity:.35}
+.spft .acts{display:flex;justify-content:center;gap:2px;margin-top:3px}
+.spft .acts button{width:28px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.spft .acts .ic{width:14px;height:14px;margin:0}
+.spgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.spgrid label.f{margin-top:6px}
+.spchks{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px}
+.spchk{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.spchk input{width:auto;margin:0}
+@media (max-width:900px){.simpainel{position:absolute;right:0;top:0;bottom:0;box-shadow:-10px 0 30px #0003;z-index:2}.simmain{position:relative}}
 </style>
 </head>
 <body>
@@ -723,7 +777,7 @@ button.reprovar.solid{background:var(--danger);border-color:var(--danger);color:
   <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></symbol>
-  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></symbol>
   <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></symbol>
   <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
@@ -1388,6 +1442,9 @@ _sistema/                          ← tudo que não é produto
   <div class="dlg-foot" id="rFoot"></div>
   <input type="file" id="rIn" multiple class="hidden" accept=".pdf,.txt,.csv,.md,.json,.htm,.html,.xml,.docx,.xlsx,image/*">
 </dialog>
+
+<!-- ======================= DIÁLOGO: SIMULAÇÃO DO ANÚNCIO ======================= -->
+<dialog id="dlgSim" class="dlgsim"><div id="simBody"></div></dialog>
 
 <div id="toast"></div>
 
@@ -7738,6 +7795,7 @@ function renderAm(){
       <span class="muted">${jobs.length || nFotos(p)} fotos${nOk ? ` · ${nOk} aprovada(s)` : ''}${nNo ? ` · ${nNo} reprovada(s)` : ''}${edita && jobs.length ? ` · ${jobs.length - nOk - nNo} pendente(s)` : ` · ${esc(apSituacao(p))}`}</span></div>
       ${edita && jobs.length ? `<button type="button" class="sm ${am.selecionar ? 'on' : ''}" data-am="sel" title="Escolher várias fotos para aprovar ou reprovar de uma vez">${ic('check-circle')}${am.selecionar ? 'Cancelar seleção' : 'Selecionar'}</button>` : ''}
       ${!p.arquivado && nFotos(p) ? `<button type="button" class="sm" data-am="baixar" title="Baixa todas as fotos deste produto num arquivo .zip" ${am.baixando ? 'disabled' : ''}>${am.baixando ? ic('loader', 'spin') + 'Baixando…' : ic('download') + 'Baixar fotos'}</button>` : ''}
+      ${!p.arquivado && nFotos(p) ? `<button type="button" class="sm" data-am="simular" title="Ver como o anúncio fica no marketplace (Mercado Livre)">${ic('monitor')}Simular</button>` : ''}
       ${edita ? `<button type="button" class="sm" data-am="compartilhar" title="Copiar o link que abre direto este produto">${ic('link')}Compartilhar</button>` : ''}
       <button type="button" class="sm ghost" data-am="abrir" title="Abrir o produto">${ic('external')}</button>
       <button type="button" class="sm ghost" data-am="fechar" title="Fechar">${ic('x')}</button></div>
@@ -7767,6 +7825,7 @@ $('dlgAp').addEventListener('click', e => {
   if (a === 'abrir'){ current = p.id; currentVar = null; fecharAm(); return showTab('produtos'); }
   if (a === 'enviar'){ fecharAm(); return openReview(p, { auto: true }); }
   if (a === 'compartilhar') return compartilharAprov(p, b);
+  if (a === 'simular') return abrirSim(p);
   if (a === 'baixar'){
     const este = am; este.baixando = true;
     b.disabled = true; b.innerHTML = ic('loader', 'spin') + 'Baixando…'; // aparece já, antes de procurar as fotos
@@ -7790,6 +7849,664 @@ $('dlgAp').addEventListener('click', e => {
     return avaliarFotos(p, r.idx.map(k => am.jobs[k]), 'reprovada', mot.join(', ') + (texto ? (mot.length ? ': ' : '') + texto : ''));
   }
 });
+
+// medidas copiadas do site do Mercado Livre (anúncio e busca, novembro/2026)
+const ML_CSS = `
+:host{all:initial;display:block}
+*{box-sizing:border-box}
+.ml{font-family:"Proxima Nova",-apple-system,"Helvetica Neue","DM Sans",Roboto,Arial,sans-serif;font-size:16px;font-weight:300;line-height:1.35;color:rgba(0,0,0,.9);background:#ededed;min-height:100%;-webkit-font-smoothing:antialiased;padding-bottom:48px}
+a{color:#3483fa;text-decoration:none;cursor:pointer}
+h1,h2,h3,p{margin:0}
+b,.b{font-weight:600}
+.verde{color:#00a650}
+.lk{color:#3483fa;font-size:14px;font-weight:400}
+.g14{font-size:14px;font-weight:400;color:rgba(0,0,0,.55)}
+.g12{font-size:12px;font-weight:400;color:rgba(0,0,0,.55);margin-top:2px}
+.mt8{display:inline-block;margin-top:8px}
+.ml.ed [data-ed]{cursor:pointer}
+.ml.ed [data-ed]:hover{outline:2px dashed rgba(93,110,200,.75);outline-offset:4px;border-radius:2px}
+/* ---------- topo (computador) ---------- */
+.hd{background:#ffe600;height:100px}
+.hin{position:relative;width:1184px;height:100px;margin:0 auto}
+.logo{position:absolute;left:2px;top:11px;width:134px;height:34px}
+.busca{position:absolute;left:184px;top:8px;width:588px;height:40px;background:#fff;border-radius:2px;box-shadow:0 1px 2px 0 rgba(0,0,0,.2);padding:10px 60px 10px 15px;font-size:16px;font-weight:400;color:rgba(0,0,0,.25);white-space:nowrap;overflow:hidden}
+.busca .ph.q{color:rgba(0,0,0,.9)}
+.busca .lupa{position:absolute;right:0;top:0;width:46px;height:40px;display:flex;align-items:center;justify-content:center;border-left:1px solid #e6e6e6;margin:10px 0;height:20px}
+.cp{position:absolute;left:2px;top:56px;display:flex;align-items:flex-end;gap:6px;font-size:14px;font-weight:400;line-height:14px}
+.cp small{display:block;font-size:12px;color:rgba(0,0,0,.55);line-height:13px}
+.nv,.nvr{position:absolute;top:70px;display:flex;gap:18px;font-size:14px;font-weight:400;line-height:18px;color:rgba(0,0,0,.55)}
+.nv{left:184px}.nv i{font-style:normal;font-size:12px}
+.nvr{right:2px;top:68px;align-items:center;gap:20px;color:rgba(0,0,0,.9)}
+.cart{display:flex}
+/* ---------- anúncio (computador) ---------- */
+.pg{width:1184px;margin:0 auto}
+.rel{padding:16px 0 0;font-size:14px;font-weight:400;line-height:24px;color:rgba(0,0,0,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rel b{font-weight:600}
+.bcrow{display:flex;justify-content:space-between;align-items:center;padding:14px 0 14px;font-size:14px;font-weight:400;line-height:14px}
+.bc,.bcr{display:flex;align-items:center;gap:6px}
+.bc svg{margin:0 2px}
+.pipe{width:1px;height:14px;background:rgba(0,0,0,.1);margin:0 6px}
+.box{display:flex;background:#fff;border-radius:4px;box-shadow:0 1px 2px 0 rgba(0,0,0,.25);padding-bottom:40px}
+.cl{width:784px;flex:none}
+.cr{width:376px;flex:none;margin-left:24px;padding:24px 24px 0 0}
+.gal{display:flex;padding-top:24px;margin-bottom:68px}
+.ths{width:56px;margin:0 24px;display:flex;flex-direction:column;gap:8px;flex:none}
+.th{position:relative;width:56px;height:56px;border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:2px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.th.on{border:2px solid #3483fa;padding:1px}
+.th img{max-width:100%;max-height:100%;object-fit:contain}
+.th::after,.fig::after,.ov,.mfig::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.04);pointer-events:none;border-radius:inherit}
+.th .mais{position:absolute;inset:0;background:rgba(0,0,0,.45);color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;z-index:1}
+.fig{position:relative;margin:0;width:680px;height:504px;padding:0 24px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff}
+.fig img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.semft{color:rgba(0,0,0,.35);font-size:16px;font-weight:400}
+.sep{height:1px;background:rgba(0,0,0,.1);margin:0 24px}
+.sec{padding:40px 24px}
+.sec h2{font-size:24px;font-weight:400;line-height:30px;color:rgba(0,0,0,.9);margin-bottom:24px}
+.specs{display:flex;gap:40px;align-items:flex-start}
+.spc{width:358px}
+.spc h3{font-size:16px;font-weight:600;line-height:20px;margin-bottom:16px}
+.spc table{width:100%;border-collapse:collapse;border-radius:6px;overflow:hidden}
+.spc th,.spc td{width:50%;text-align:left;vertical-align:middle;font-size:12px;line-height:18px;color:rgba(0,0,0,.9);padding:15px 24px 15px 16px}
+.spc th{font-weight:600}.spc td{font-weight:400}
+.spc tr:nth-child(odd) th,.spc tr:nth-child(odd) td{background:rgba(0,0,0,.04)}
+.desc p{font-size:20px;font-weight:400;line-height:27px;color:rgba(0,0,0,.55);white-space:pre-line;overflow-wrap:anywhere}
+.desc .vazia{font-style:italic;color:rgba(0,0,0,.35)}
+.perg{display:flex;gap:16px;margin-bottom:24px}
+.perg .inp{flex:1;height:48px;border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:14px 16px;font-size:16px;font-weight:400;color:rgba(0,0,0,.35)}
+.btn.pq{width:auto;margin:0;padding:0 24px}
+.buy{position:relative;border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:16px}
+.fav{position:absolute;right:16px;top:16px;display:flex}
+.sub{font-size:14px;font-weight:400;line-height:20px;color:rgba(0,0,0,.55);white-space:pre}
+.mv{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px}
+.mvl{background:#ff7733;color:#fff;font-size:12px;font-weight:600;line-height:12px;padding:3px 4px;border-radius:2px}
+.mv .lk{font-size:12px}
+.tit{font-size:22px;font-weight:600;line-height:1.18;color:rgba(0,0,0,.9);padding-right:28px;margin-top:8px;overflow-wrap:anywhere}
+.rev{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:400;line-height:19px;color:rgba(0,0,0,.55);margin-top:2px}
+.stars{display:inline-flex;gap:2px;margin:0 3px}
+.ult{display:inline-flex;align-items:center;gap:4px;margin-top:16px;padding:3px 4px;border-radius:2px;background:rgba(255,119,51,.2);color:#e6540b;font-size:12px;font-weight:600;line-height:12px}
+.preco{margin-top:16px}
+.pold{display:block;font-size:16px;font-weight:400;line-height:16px;color:rgba(0,0,0,.55);margin:2px 0}
+.prow{display:flex;align-items:center;gap:8px}
+.mny{display:inline-flex;align-items:flex-start;color:rgba(0,0,0,.9);white-space:nowrap}
+.mny.big{font-size:28px;font-weight:500;line-height:40px}
+.mny.big .sym{margin-right:6px}
+.mny.big .ct{font-size:14px;line-height:14px;margin:7px 0 0 1px}
+.off{background:#00a650;color:#fff;font-size:14px;font-weight:600;line-height:18px;padding:0 2px;border-radius:2px}
+.parc{font-size:16px;font-weight:400;line-height:16px;margin-top:4px;color:rgba(0,0,0,.9)}
+.parc.verde{color:#00a650}
+.frete{margin-top:24px;font-size:16px;font-weight:400;line-height:20px}
+.frete .ch{margin-bottom:2px}
+.frete .g14{line-height:18px}
+.full{margin-top:8px;font-size:14px;color:rgba(0,0,0,.55);display:flex;align-items:center;gap:4px}
+.fl{display:inline-flex;align-items:center;gap:2px;color:#00a650;font-weight:700}
+.fl i{font-style:italic;letter-spacing:.5px}
+.vars{margin-top:24px}
+.vl{font-size:16px;font-weight:400;line-height:22px}
+.vi{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.vt{width:44px;height:44px;padding:2px;border:1px solid rgba(0,0,0,.25);border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fff;position:relative}
+.vt.on{border:2px solid #3483fa;padding:1px}
+.vt img{width:38px;height:38px;object-fit:contain}
+.vb{border:1px solid rgba(0,0,0,.25);border-radius:6px;padding:8px 12px;font-size:14px;font-weight:400;color:rgba(0,0,0,.9)}
+.vb.on{border:2px solid #3483fa;padding:7px 11px;font-weight:600}
+.est{margin-top:24px}
+.b16{font-size:16px;font-weight:600;line-height:20px}
+.qtd{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:16px;font-weight:400;line-height:16px}
+.qtd b{font-weight:600}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;height:48px;border-radius:6px;font-size:16px;font-weight:600;padding:0 24px}
+.btn.azul{background:#3483fa;color:#fff;margin-top:24px}
+.btn.claro{background:rgba(65,137,230,.15);color:#3483fa;margin-top:8px}
+.vend{margin-top:24px;font-size:14px;font-weight:400;line-height:18px;display:block}
+.vend svg{vertical-align:-1px}
+.gar{display:flex;gap:10px;margin-top:16px;font-size:14px;font-weight:400;line-height:18px;color:rgba(0,0,0,.55)}
+.gar svg{flex:none;margin-top:1px}
+/* ---------- busca (computador) ---------- */
+.srch{width:1476px;margin:0 auto;padding:0 10px;display:flex}
+.side{width:272px;flex:none;padding:48px 30px 0 0}
+.sbc{font-size:14px;font-weight:400;color:rgba(0,0,0,.55);display:flex;align-items:center;gap:6px;margin-bottom:16px}
+.side h1{font-size:20px;font-weight:600;line-height:25px;color:#333}
+.sq{font-size:14px;font-weight:300;color:#333;margin:2px 0 24px}
+.fbox{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.12);padding:14px 12px;margin-bottom:8px;font-size:14px;font-weight:600}
+.tg{width:30px;height:16px;border-radius:8px;background:rgba(0,0,0,.1);position:relative}
+.tg::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.fcat{display:flex;flex-direction:column;gap:6px;margin-top:24px;font-size:14px;font-weight:400;color:rgba(0,0,0,.55)}
+.fcat b{font-size:16px;color:rgba(0,0,0,.9);margin-bottom:6px}
+.res{width:1184px;flex:none}
+.sort{text-align:right;padding:48px 0 16px;font-size:14px;font-weight:600}
+.sort .lk{font-weight:400;display:inline-flex;gap:6px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(4,284px);gap:16px}
+.pc{background:#fff;border-radius:6px;box-shadow:0 1px 2px 0 rgba(0,0,0,.12);overflow:hidden;min-height:539px}
+.pimg{position:relative;width:284px;height:284px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:6px 6px 0 0}
+.pimg img{max-width:100%;max-height:100%;object-fit:contain}
+.plbl{position:absolute;left:8px;bottom:8px;background:#ff7733;color:#fff;font-size:12px;font-weight:600;line-height:12px;padding:4px 6px;border-radius:3px}
+.pct{padding:16px 16px 16px;display:flex;flex-direction:column}
+.ptit{font-size:14px;font-weight:400;line-height:18px;color:rgba(0,0,0,.9);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.psel{font-size:14px;font-weight:400;line-height:18px;color:rgba(0,0,0,.55);margin-top:2px}
+.psel b{color:rgba(0,0,0,.9)}
+.prv{font-size:14px;font-weight:400;line-height:18px;color:rgba(0,0,0,.55);margin-top:2px}
+.pst{color:#3483fa}
+.prv .pst+*,.prv{white-space:nowrap}
+.ppr{margin-top:8px}
+.ppr .pold{font-size:12px;line-height:15px;margin:0}
+.mny.card{font-size:24px;font-weight:400;line-height:24px}
+.mny.card .sym{margin-right:4px}
+.mny.card .ct{font-size:12px;line-height:12px;margin:2px 0 0 1px}
+.ppr .off{font-size:14px;line-height:16px}
+.ppr .parc{display:block;font-size:14px;line-height:18px;margin-top:4px}
+.pfr{margin-top:8px;font-size:14px;font-weight:600;line-height:18px;color:#00a650;display:flex;align-items:center;gap:6px}
+.pc.sk{opacity:.55}
+.pc.sk .pimg{background:#f5f5f5}
+.pc.sk i{display:block;height:12px;border-radius:4px;background:#eee;margin-bottom:10px}
+.pc.sk i.c{width:60%}.pc.sk i.p{height:22px;width:45%;margin-top:6px}
+/* ---------- celular ---------- */
+.ml.cel{background:#fff;padding-bottom:24px}
+.mhd{background:#ffe600;padding:8px 12px 6px;position:sticky;top:0;z-index:5}
+.mrow{display:flex;align-items:center;gap:10px}
+.mlogo{width:44px;height:31px}
+.mbusca{flex:1;height:32px;background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.2);display:flex;align-items:center;gap:6px;padding:0 10px;font-size:14px;font-weight:400;color:rgba(0,0,0,.35);white-space:nowrap;overflow:hidden}
+.mbusca svg{width:16px;height:16px;flex:none}
+.mbusca .q{color:rgba(0,0,0,.9)}
+.mic{display:flex;width:24px;justify-content:center}
+.mcp{display:flex;align-items:center;gap:5px;margin-top:8px;font-size:13px;font-weight:400;color:rgba(0,0,0,.6)}
+.mcp b{color:rgba(0,0,0,.8);font-weight:400}
+.mcp svg:first-child{width:12px;height:15px}
+.mcp svg:last-child{margin-left:auto}
+.mpg{background:#fff}
+.mtop{padding:16px 16px 12px}
+.cel .sub{font-size:12px;line-height:16px}
+.cel .tit{font-size:16px;font-weight:400;line-height:20px;margin-top:6px;padding-right:0}
+.cel .mrev{font-size:12px;margin-top:6px}
+.cel .ult{margin-top:10px}
+.mgw{position:relative}
+.mgal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.mgal::-webkit-scrollbar{display:none}
+.mfig{position:relative;flex:none;width:100%;height:400px;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;background:#fff}
+.mfig img{max-width:100%;max-height:100%;object-fit:contain}
+.mcnt{position:absolute;left:16px;top:12px;background:#ededed;border-radius:16px;padding:2px 9px;font-size:12px;font-weight:400;color:rgba(0,0,0,.9)}
+.mfav,.mshare{position:absolute;right:14px;top:12px;width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}
+.mshare{top:60px}
+.mfav svg{width:20px;height:18px}.mshare svg{width:18px;height:18px}
+.mbl{padding:0 16px}
+.cel .vars{margin-top:16px}
+.cel .preco{margin-top:20px}
+.cel .mny.big{font-size:36px;font-weight:300;line-height:40px}
+.cel .mny.big .ct{font-size:18px;line-height:18px;margin-top:4px}
+.cel .off{font-size:14px}
+.cel .frete{margin-top:20px}
+.cel .qtd{border:1px solid rgba(0,0,0,.1);border-radius:6px;padding:14px 12px;justify-content:flex-start}
+.cel .btn.azul{margin-top:20px}
+.msep{height:8px;background:#ededed;margin-top:32px}
+.cel .sec{padding:24px 16px}
+.cel .sec h2{font-size:20px;line-height:25px;margin-bottom:16px}
+.cel .specs{flex-direction:column;gap:24px}
+.cel .spc{width:100%}
+.cel .desc p{font-size:16px;line-height:22px}
+.mres{background:#fff}
+.mfil{display:flex;justify-content:space-between;padding:12px 16px;font-size:14px;font-weight:400;color:rgba(0,0,0,.55);border-bottom:1px solid rgba(0,0,0,.1)}
+.pc.pcm{display:flex;min-height:0;border-radius:0;box-shadow:none;border-bottom:1px solid rgba(0,0,0,.1)}
+.pcm .pimg{width:160px;height:160px;flex:none;margin:16px 0 16px 16px;border-radius:4px}
+.pcm .pct{padding:16px;min-width:0}
+.pcm .ptit{-webkit-line-clamp:3}
+.pcm .mny.card{font-size:20px;line-height:20px}
+.pc.pcm.sk{min-height:192px}
+`;
+
+// =====================================================================
+// SIMULAÇÃO: o anúncio como o cliente vê no marketplace (por enquanto só o Mercado Livre)
+// Tudo o que se edita aqui é rascunho: só vai para o produto com "Aplicar ao produto" (título e descrição).
+// Ordem das fotos, fotos de teste e preço/frete/vendas valem só na simulação.
+// =====================================================================
+const SIM_MKS = [
+  { id: 'meli', nome: 'Mercado Livre', ativo: true },
+  { id: 'shopee', nome: 'Shopee', cor: '#ee4d2d' },
+  { id: 'amazon', nome: 'Amazon', cor: '#232f3e' },
+  { id: 'magalu', nome: 'Magalu', cor: '#0086ff' },
+  { id: 'shein', nome: 'Shein', cor: '#111' },
+  { id: 'tiktok', nome: 'TikTok Shop', cor: '#111' },
+];
+const ML_LOGO_G = 'data:image/webp;base64,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';
+const ML_LOGO_P = 'data:image/png;base64,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';
+const ML_TITULO_MAX = 60;
+const SIM_VENDIDOS = ['', '+5', '+25', '+50', '+100', '+500', '+1000', '+5 mil', '+10 mil', '+50 mil'];
+const SIM_PADRAO = { preco: '99,90', precoAntigo: '', parcelas: 6, semJuros: true, freteGratis: true, full: false, vendidos: '+100',
+  nota: '4,8', avaliacoes: '37', vendedor: 'POLIVENDA', lojaOficial: false, estoque: 12, maisVendido: false };
+let sim = null; // { pid, passo, vista, tela, painel, titulo, descricao, orig, fotos: { [unidade]: [...] }, varSel, foto, extras, carregando }
+const simP = () => sim && plan.produtos.find(x => x.id === sim.pid);
+function simExtrasLer(pid){
+  let todos = {}; try { todos = JSON.parse(localStorage.getItem('simExtras') || '{}'); } catch {}
+  const ult = todos._ultimo || {};
+  return { ...SIM_PADRAO, vendedor: ult.vendedor || SIM_PADRAO.vendedor, lojaOficial: !!ult.lojaOficial, ...(todos[pid] || {}) };
+}
+function simExtrasGravar(){
+  try {
+    const todos = JSON.parse(localStorage.getItem('simExtras') || '{}');
+    todos[sim.pid] = sim.extras; todos._ultimo = { vendedor: sim.extras.vendedor, lojaOficial: sim.extras.lojaOficial };
+    localStorage.setItem('simExtras', JSON.stringify(todos));
+  } catch {}
+}
+function abrirSim(p){
+  fecharSim(true);
+  sim = { pid: p.id, passo: 'onde', vista: 'desk', tela: 'anuncio', painel: true, titulo: p.titulo || '', descricao: p.descricao || '',
+    orig: { titulo: p.titulo || '', descricao: p.descricao || '' }, fotos: {}, varSel: units(p)[0].id || '', foto: 0,
+    extras: simExtrasLer(p.id), carregando: true };
+  $('dlgSim').showModal(); simMontar();
+  simCarregarFotos(sim, p);
+}
+async function simCarregarFotos(meu, p){
+  const todas = [];
+  for (const u of units(p)){
+    const lista = meu.fotos[u.id || ''] = [];
+    const dir = ws ? await subIfExists(ws, ...ud(p, u)) : null; if (!dir) continue;
+    // mesma ordem do checklist, com a capa primeiro (é a foto principal do anúncio)
+    const itens = [...p.checklist].sort((a, b) => isCapa(b) - isCapa(a));
+    for (const it of itens) if (!isVideo(it)) for (const f of filesOf(u, it)) if (IMG_EXT.test(f) && !/\.heic$/i.test(f)){
+      const x = { k: (u.id || '') + '|' + f, nome: f, rot: it.nome, dir, url: '' }; lista.push(x); todas.push(x);
+    }
+  }
+  meu.ordemOrig = Object.fromEntries(Object.entries(meu.fotos).map(([k, l]) => [k, l.map(f => f.k).join('/')]));
+  meu.carregando = false;
+  if (sim !== meu) return;
+  if (!meu.fotos[meu.varSel]?.length) meu.varSel = Object.keys(meu.fotos).find(k => meu.fotos[k].length) ?? meu.varSel;
+  simMontar();
+  await emParalelo(todas, 4, async f => {
+    if (sim !== meu) return;
+    try { f.url = URL.createObjectURL(await (await f.dir.getFileHandle(f.nome)).getFile()); } catch { f.falhou = true; }
+    if (sim === meu) simAtualizarLogo();
+  }).catch(() => {});
+}
+let simRaf = 0;
+function simAtualizarLogo(){ if (simRaf) return; simRaf = requestAnimationFrame(() => { simRaf = 0; simPagina(); simPainelFotos(); }); }
+async function fecharSim(forcar = false){
+  if (!sim) return;
+  if (!forcar && simMudouProduto() && !await confirmar('Sair sem aplicar?\n\nO título e a descrição alterados na simulação não vão para o produto.', 'Sair sem aplicar', 'Continuar editando')) return;
+  const p = simP(), aplicou = sim.aplicou;
+  Object.values(sim.fotos).flat().forEach(f => f.url && URL.revokeObjectURL(f.url));
+  simRO?.disconnect(); simRO = null;
+  sim = null;
+  if ($('dlgSim').open) $('dlgSim').close();
+  // a janela de aprovação embaixo pode ter ficado com nomes de arquivo antigos (o título renomeia as fotos)
+  if (aplicou && p && am?.pid === p.id) abrirAm(p);
+  else if (am) renderAm();
+}
+function simMudouProduto(){
+  if (!sim) return false;
+  return sim.titulo.trim().replace(/\s+/g, ' ') !== sim.orig.titulo.trim() || sim.descricao.trim() !== sim.orig.descricao.trim();
+}
+function simFotosVis(uId = sim.varSel){ return (sim.fotos[uId] || []).filter(f => !f.oculta); }
+function simMudouFotos(){
+  return Object.entries(sim.fotos).some(([k, l]) => l.some(f => f.oculta || f.teste) || l.map(f => f.k).join('/') !== (sim.ordemOrig?.[k] ?? l.map(f => f.k).join('/')));
+}
+
+// ---------- montagem da janela ----------
+let simRO = null;
+function simMontar(){
+  const p = simP(); if (!p) return fecharSim(true);
+  const box = $('simBody');
+  $('dlgSim').classList.toggle('onde', sim.passo === 'onde');
+  if (sim.passo === 'onde'){
+    box.innerHTML = `<div class="simhead"><div class="t"><h2>Simular anúncio</h2><span class="muted">${esc(p.titulo || p.nome)}</span></div>
+        <button type="button" class="sm ghost" data-sim="fechar" title="Fechar">${ic('x')}</button></div>
+      <div class="simonde"><h3>Onde simular?</h3>
+        <div class="muted ajuda">Mostra o anúncio do jeito que o cliente vê no marketplace, no computador e no celular. Dá para mudar título, descrição e fotos e ver na hora como fica; só vai para o produto se você clicar em "Aplicar ao produto".</div>
+        <div class="simmks">${SIM_MKS.map(m => m.ativo
+          ? `<button type="button" class="simmk on" data-sim="mk" data-v="${m.id}"><span class="simlogo ml"><img src="${ML_LOGO_G}" alt="${esc(m.nome)}"></span><b>${esc(m.nome)}</b><span class="lbl ok">${ic('check')}Disponível</span></button>`
+          : `<button type="button" class="simmk" disabled title="Ainda não dá para simular aqui"><span class="simlogo" style="background:${m.cor}">${esc(m.nome)}</span><b>${esc(m.nome)}</b><span class="lbl">Em breve</span></button>`).join('')}</div></div>`;
+    converterAjudas();
+    return;
+  }
+  box.innerHTML = `<div class="simbar" id="simBar"></div>
+    <div class="simmain ${sim.painel ? '' : 'sempainel'}"><div class="simpalco ${sim.vista}" id="simPalco">${sim.vista === 'cel'
+      ? '<div class="simfone"><div class="simfone-tela" id="simTela"><div id="simHost"></div></div></div>'
+      : '<div class="simtela-desk" id="simTela"><div id="simHost"></div></div>'}</div>
+      <aside class="simpainel" id="simPainel"></aside></div>`;
+  const host = $('simHost'); host.attachShadow({ mode: 'open' });
+  host.shadowRoot.addEventListener('click', simCliquePagina);
+  host.shadowRoot.addEventListener('mouseover', e => { const t = e.target.closest('[data-thumb]'); if (t && +t.dataset.thumb !== sim.foto){ sim.foto = +t.dataset.thumb; simPagina(); } });
+  host.shadowRoot.addEventListener('scroll', simRolagemGaleria, true);
+  simRO?.disconnect();
+  simRO = new ResizeObserver(simEscala); simRO.observe($('simPalco'));
+  simBarra(); simPagina(); simPainel(); simEscala();
+}
+// o anúncio do computador tem 1240 px de largura: em tela menor, encolhe inteiro (como um print)
+function simEscala(){
+  const palco = $('simPalco'), host = $('simHost'); if (!palco || !host || !sim) return;
+  if (sim.vista === 'cel'){ host.style.zoom = ''; return; }
+  const larg = sim.tela === 'busca' ? 1500 : 1240;
+  const z = Math.min(1, (palco.clientWidth - 2) / larg);
+  host.style.zoom = z; host.style.width = Math.max(larg, Math.floor((palco.clientWidth - 2) / z)) + 'px';
+}
+function simBarra(){
+  const p = simP(), n = simMudouProduto(), f = simMudouFotos();
+  $('simBar').innerHTML = `<button type="button" class="sm ghost" data-sim="voltar" title="Escolher outro marketplace">${ic('back')}</button>
+    <div class="t"><b>Simulação · Mercado Livre</b><span class="muted">${esc(p.titulo || p.nome)}</span></div>
+    <div class="tabs"><button type="button" data-sim="tela" data-v="anuncio" class="${sim.tela === 'anuncio' ? 'on' : ''}">Anúncio</button><button type="button" data-sim="tela" data-v="busca" class="${sim.tela === 'busca' ? 'on' : ''}">Busca</button></div>
+    <div class="tabs"><button type="button" data-sim="vista" data-v="desk" class="${sim.vista === 'desk' ? 'on' : ''}">${ic('monitor')}Computador</button><button type="button" data-sim="vista" data-v="cel" class="${sim.vista === 'cel' ? 'on' : ''}">${ic('phone')}Celular</button></div>
+    ${n ? `<span class="lbl warn">Título ou descrição alterados</span>` : f ? `<span class="lbl info" title="Ordem e fotos de teste valem só na simulação">Fotos só na simulação</span>` : ''}
+    <button type="button" class="sm ${sim.painel ? 'on' : ''}" data-sim="painel">${ic('pencil')}Editar</button>
+    <button type="button" class="sm primary" data-sim="aplicar" ${n && !sim.aplicando ? '' : 'disabled'} title="Leva o título e a descrição para o produto">${sim.aplicando ? ic('loader', 'spin') + 'Aplicando…' : ic('check') + 'Aplicar ao produto'}</button>
+    <button type="button" class="sm ghost" data-sim="fechar" title="Fechar">${ic('x')}</button>`;
+}
+function simCliquePagina(e){
+  e.preventDefault();
+  const v = e.target.closest('[data-var]');
+  if (v){ sim.varSel = v.dataset.var; sim.foto = 0; simPagina(); simPainelFotos(); return; }
+  const t = e.target.closest('[data-thumb]'); if (t){ sim.foto = +t.dataset.thumb; return simPagina(); }
+  const ed = e.target.closest('[data-ed]'); if (!ed) return;
+  if (!sim.painel){ sim.painel = true; $('simPalco').parentElement.classList.remove('sempainel'); simBarra(); simEscala(); }
+  const alvo = { titulo: 'simTit', desc: 'simDesc', fotos: 'simFotos', preco: 'simPreco', frete: 'simFrete', vendas: 'simVendidos', vendedor: 'simVendedor', estoque: 'simEstoque' }[ed.dataset.ed];
+  const el = alvo && $(alvo); if (!el) return;
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  if (el.matches('input,textarea,select')) el.focus({ preventScroll: true });
+  el.closest('.spsec')?.classList.add('brilho'); setTimeout(() => el.closest('.spsec')?.classList.remove('brilho'), 1200);
+}
+function simRolagemGaleria(e){
+  const g = e.target; if (!g.classList?.contains('mgal')) return;
+  const i = Math.round(g.scrollLeft / g.clientWidth);
+  if (i !== sim.foto){ sim.foto = i; const c = g.parentElement.querySelector('.mcnt'); if (c) c.textContent = `${i + 1} / ${simFotosVis().length}`; }
+}
+
+// ---------- painel de edição ----------
+function simPainel(){
+  const p = simP(), x = sim.extras, el = $('simPainel'); if (!el) return;
+  const nT = sim.titulo.trim().length, us = units(p);
+  const chk = (id, campo, rot) => `<label class="spchk"><input type="checkbox" id="${id}" data-ex="${campo}" ${x[campo] ? 'checked' : ''}>${rot}</label>`;
+  el.innerHTML = `<div class="spsec"><h3>Título</h3>
+      <div class="muted ajuda">O Mercado Livre aceita até ${ML_TITULO_MAX} caracteres no título. Clique no título do anúncio para vir direto aqui.</div>
+      <input id="simTit" value="${esc(sim.titulo)}" placeholder="${esc(p.nome)}">
+      <div class="spcont"><span id="simTitN" class="${nT > ML_TITULO_MAX ? 'over' : ''}">${nT}/${ML_TITULO_MAX}</span>
+        ${sim.titulo !== sim.orig.titulo ? `<button type="button" class="sm ghost" data-sim="desfTit">${ic('undo')}Desfazer</button>` : ''}</div></div>
+    <div class="spsec"><h3>Descrição</h3>
+      <textarea id="simDesc" rows="9" placeholder="Este produto ainda não tem descrição do anúncio.">${esc(sim.descricao)}</textarea>
+      <div class="spcont"><span id="simDescN">${sim.descricao.trim().length} letras</span>
+        ${sim.descricao !== sim.orig.descricao ? `<button type="button" class="sm ghost" data-sim="desfDesc">${ic('undo')}Desfazer</button>` : ''}</div></div>
+    <div class="spsec" id="simFotos"><h3>Fotos</h3>
+      <div class="muted ajuda">Mude a ordem, esconda fotos ou teste uma foto nova do computador. Isso vale só na simulação: as fotos do produto não mudam.</div>
+      ${us.length > 1 ? `<div class="opts spvars">${us.map(u => `<button type="button" class="opt ${(u.id || '') === sim.varSel ? 'on' : ''}" data-sim="var" data-v="${esc(u.id || '')}">${esc(u.nome)}</button>`).join('')}</div>` : ''}
+      <div id="simFotosLista"></div>
+      <button type="button" class="sm" data-sim="addFoto">${ic('plus')}Testar foto do computador</button>
+      <input type="file" id="simFotoIn" accept="image/*" multiple class="hidden"></div>
+    <div class="spsec"><h3>Dados do anúncio</h3>
+      <div class="muted ajuda">Preço, frete, vendas e vendedor não existem no cadastro: valem só para a simulação e ficam guardados neste computador.</div>
+      <div class="spgrid">
+        <div><label class="f">Preço (R$)</label><input id="simPreco" data-ex="preco" inputmode="decimal" value="${esc(x.preco)}"></div>
+        <div><label class="f">Preço antigo (R$)</label><input data-ex="precoAntigo" inputmode="decimal" value="${esc(x.precoAntigo)}" placeholder="sem desconto"></div>
+        <div><label class="f">Parcelas</label><select data-ex="parcelas">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${+x.parcelas === i + 1 ? 'selected' : ''}>${i ? i + 1 + 'x' : 'À vista'}</option>`).join('')}</select></div>
+        <div><label class="f">Vendidos</label><select id="simVendidos" data-ex="vendidos">${SIM_VENDIDOS.map(v => `<option value="${v}" ${x.vendidos === v ? 'selected' : ''}>${v ? v + ' vendidos' : 'Nenhuma venda'}</option>`).join('')}</select></div>
+        <div><label class="f">Nota (0 a 5)</label><input data-ex="nota" inputmode="decimal" value="${esc(x.nota)}"></div>
+        <div><label class="f">Avaliações</label><input data-ex="avaliacoes" inputmode="numeric" value="${esc(x.avaliacoes)}"></div>
+        <div><label class="f">Vendedor</label><input id="simVendedor" data-ex="vendedor" value="${esc(x.vendedor)}"></div>
+        <div><label class="f">Estoque</label><input id="simEstoque" data-ex="estoque" inputmode="numeric" value="${esc(x.estoque)}"></div>
+      </div>
+      <div class="spchks" id="simFrete">${chk('', 'semJuros', 'Parcelas sem juros')}${chk('', 'freteGratis', 'Frete grátis')}${chk('', 'full', 'Enviado pelo FULL')}${chk('', 'maisVendido', 'Mais vendido')}${chk('', 'lojaOficial', 'Loja oficial')}</div></div>`;
+  simPainelFotos();
+  converterAjudas();
+}
+function simPainelFotos(){
+  const el = $('simFotosLista'); if (!el || !sim) return;
+  const l = sim.fotos[sim.varSel] || [];
+  if (sim.carregando){ el.innerHTML = `<div class="muted spvazio">${ic('loader', 'spin')} Carregando as fotos…</div>`; return; }
+  if (!l.length){ el.innerHTML = `<div class="muted spvazio">${ws ? 'Sem fotos.' : 'Conecte a pasta para ver as fotos.'}</div>`; return; }
+  el.innerHTML = `<div class="spfotos">${l.map((f, i) => `<div class="spft ${f.oculta ? 'oculta' : ''}" data-i="${i}" title="${esc(f.teste ? 'Foto de teste: ' + f.nome : f.rot)}">
+      <div class="img">${f.url ? `<img src="${f.url}" alt="">` : f.falhou ? ic('ban') : ic('loader', 'spin')}<span class="n">${i + 1}</span>${f.teste ? '<span class="tt">teste</span>' : ''}</div>
+      <div class="acts"><button type="button" class="ghost" data-sim="fEsq" ${i ? '' : 'disabled'} title="Antes">${ic('back')}</button>
+        <button type="button" class="ghost" data-sim="fOcultar" title="${f.teste ? 'Tirar foto de teste' : f.oculta ? 'Mostrar no anúncio' : 'Esconder do anúncio'}">${ic(f.teste ? 'trash' : f.oculta ? 'plus' : 'x')}</button>
+        <button type="button" class="ghost" data-sim="fDir" ${i < l.length - 1 ? '' : 'disabled'} title="Depois">${ic('arrow')}</button></div></div>`).join('')}</div>
+    ${simMudouFotos() ? `<button type="button" class="sm ghost" data-sim="fReset">${ic('undo')}Voltar às fotos do produto</button>` : ''}`;
+}
+$('dlgSim').addEventListener('cancel', e => { e.preventDefault(); fecharSim(); });
+$('dlgSim').addEventListener('input', e => {
+  if (!sim) return;
+  const t = e.target;
+  if (t.id === 'simTit'){ sim.titulo = t.value; const n = t.value.trim().length, c = $('simTitN'); c.textContent = `${n}/${ML_TITULO_MAX}`; c.classList.toggle('over', n > ML_TITULO_MAX); }
+  else if (t.id === 'simDesc'){ sim.descricao = t.value; $('simDescN').textContent = `${t.value.trim().length} letras`; }
+  else if (t.dataset.ex){ sim.extras[t.dataset.ex] = t.type === 'checkbox' ? t.checked : t.value; simExtrasGravar(); }
+  else return;
+  simPagina(); simBarra();
+});
+// o "Desfazer" aparece quando sai do campo (redesenhar enquanto digita tiraria o cursor do lugar)
+$('dlgSim').addEventListener('change', e => { if (sim && (e.target.id === 'simTit' || e.target.id === 'simDesc')) simPainel(); });
+$('dlgSim').addEventListener('change', e => {
+  if (e.target.id !== 'simFotoIn' || !sim) return;
+  const l = sim.fotos[sim.varSel] ||= [];
+  for (const f of e.target.files) if (f.type.startsWith('image/')) l.push({ k: 't' + uid(), nome: f.name, rot: 'Foto de teste', url: URL.createObjectURL(f), teste: true });
+  e.target.value = '';
+  sim.foto = Math.max(0, simFotosVis().length - 1);
+  simPagina(); simPainelFotos(); simBarra();
+});
+$('dlgSim').addEventListener('click', async e => {
+  if (!sim) return;
+  const b = e.target.closest('[data-sim]'); if (!b) return;
+  const a = b.dataset.sim, p = simP();
+  if (a === 'fechar') return fecharSim();
+  if (a === 'mk'){ sim.passo = 'ver'; return simMontar(); }
+  if (a === 'voltar'){ sim.passo = 'onde'; return simMontar(); }
+  if (a === 'tela' || a === 'vista'){
+    sim[a] = b.dataset.v; sim.foto = 0;
+    return a === 'vista' ? simMontar() : (simBarra(), simPagina(), simEscala());
+  }
+  if (a === 'painel'){ sim.painel = !sim.painel; b.closest('#simBody').querySelector('.simmain').classList.toggle('sempainel', !sim.painel); simBarra(); return simEscala(); }
+  if (a === 'desfTit'){ sim.titulo = sim.orig.titulo; simPainel(); return simPagina(), simBarra(); }
+  if (a === 'desfDesc'){ sim.descricao = sim.orig.descricao; simPainel(); return simPagina(), simBarra(); }
+  if (a === 'var'){ sim.varSel = b.dataset.v; sim.foto = 0; simPainel(); return simPagina(); }
+  if (a === 'addFoto') return $('simFotoIn').click();
+  const ft = b.closest('.spft'), l = sim.fotos[sim.varSel] || [], i = ft ? +ft.dataset.i : -1;
+  if (a === 'fEsq' || a === 'fDir'){ const j = a === 'fEsq' ? i - 1 : i + 1; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; }
+  else if (a === 'fOcultar'){ if (l[i].teste){ URL.revokeObjectURL(l[i].url); l.splice(i, 1); } else l[i].oculta = !l[i].oculta; }
+  else if (a === 'fReset'){
+    const ordem = (sim.ordemOrig?.[sim.varSel] || '').split('/');
+    l.filter(f => f.teste).forEach(f => URL.revokeObjectURL(f.url));
+    sim.fotos[sim.varSel] = l.filter(f => !f.teste).map(f => (f.oculta = false, f)).sort((x, y) => ordem.indexOf(x.k) - ordem.indexOf(y.k));
+  }
+  else if (a === 'aplicar') return simAplicar(p);
+  else return;
+  sim.foto = Math.min(sim.foto, Math.max(0, simFotosVis().length - 1));
+  simPagina(); simPainelFotos(); simBarra();
+});
+async function simAplicar(p){
+  if (!p || !simMudouProduto() || sim.aplicando) return;
+  const tit = sim.titulo.trim().replace(/\s+/g, ' '), desc = sim.descricao.trim();
+  if (!tit) return toast('O título não pode ficar vazio.');
+  const mt = tit !== (p.titulo || '').trim(), md = desc !== (p.descricao || '').trim();
+  const avisos = [];
+  if (mt) avisos.push(`Título novo: ${tit}`);
+  if (md) avisos.push('A descrição do anúncio muda para a da simulação.');
+  if (aprovValida(p)) avisos.push('O produto estava aprovado: vai precisar ser encaminhado para aprovação de novo.');
+  if (mt && tit.length > ML_TITULO_MAX) avisos.push(`Atenção: o título tem ${tit.length} caracteres (o Mercado Livre aceita ${ML_TITULO_MAX}).`);
+  if (!await confirmar('Aplicar ao produto?\n\n' + avisos.join('\n'), 'Aplicar', 'Cancelar')) return;
+  const meu = sim, antes = p.titulo || '';
+  meu.aplicando = true; simBarra();
+  try {
+    if (mt) p.titulo = tit;
+    if (md) p.descricao = desc;
+    mexeu(p); savePlan();
+    registrar('Simulação Mercado Livre', 'Aplicou mudanças feitas na simulação', p,
+      [mt && `Título: "${antes}" → "${tit}"`, md && `Descrição: ${desc}`].filter(Boolean).join('; '));
+    if (ws){ toast('Atualizando o descritivo do produto…', 60000); await comBarra(() => createFolders(p)); }
+    toast(mt && md ? 'Título e descrição aplicados ao produto.' : mt ? 'Título aplicado ao produto.' : 'Descrição aplicada ao produto.', 3500);
+  } catch (e2){ toast('Não consegui aplicar: ' + e2.message, 6000); }
+  meu.aplicando = false; meu.aplicou = true;
+  meu.orig = { titulo: p.titulo || '', descricao: p.descricao || '' };
+  try { renderAprov(); } catch {}
+  try { renderList(); if (current === p.id) renderDetail(); } catch {}
+  if (sim === meu){ sim.titulo = meu.orig.titulo; sim.descricao = meu.orig.descricao; simBarra(); simPainel(); simPagina(); }
+}
+
+// ---------- a página do Mercado Livre (desenhada dentro de uma "caixa" própria: o estilo do app não entra) ----------
+const simNum = v => { const n = parseFloat(String(v ?? '').trim().replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
+function simDinheiro(n, cls = ''){
+  const [i, c] = Math.max(0, n).toFixed(2).split('.');
+  return `<span class="mny ${cls}"><span class="sym">R$</span><span class="fr">${(+i).toLocaleString('pt-BR')}</span>${c !== '00' ? `<span class="ct">${c}</span>` : ''}</span>`;
+}
+const simReais = n => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+let simEstK = 0;
+function simEstrelas(nota, tam = 12){
+  const k = ++simEstK;
+  return `<span class="stars">${Array.from({ length: 5 }, (_, i) => { const f = Math.round(Math.max(0, Math.min(1, nota - i)) * 2) / 2 * 100;
+    return `<svg width="${tam}" height="${tam}" viewBox="0 0 10 10"><defs><linearGradient id="e${k}${i}"><stop offset="${f}%" stop-color="#3483fa"/><stop offset="${f}%" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><path d="M5 .6l1.33 2.82 3.07.4-2.25 2.14.57 3.05L5 7.53 2.28 9.01l.57-3.05L.6 3.82l3.07-.4z" fill="url(#e${k}${i})" stroke="#3483fa" stroke-width=".7"/></svg>`; }).join('')}</span>`;
+}
+const SIM_IC = {
+  lupa: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>',
+  carrinho: '<svg width="22" height="20" viewBox="0 0 24 22" fill="none" stroke="#333" stroke-width="1.4"><path d="M1 1.5h3.2l2.6 12.2h11.8l2.6-8.9H5.6"/><circle cx="8.8" cy="18.5" r="1.6"/><circle cx="17" cy="18.5" r="1.6"/></svg>',
+  pin: '<svg width="16" height="20" viewBox="0 0 16 20" fill="none" stroke="#333" stroke-width="1.3"><path d="M8 19s6.5-6.3 6.5-11A6.5 6.5 0 0 0 1.5 8C1.5 12.7 8 19 8 19z"/><circle cx="8" cy="8" r="2.4"/></svg>',
+  coracao: '<svg width="22" height="20" viewBox="0 0 24 22" fill="none" stroke="#3483fa" stroke-width="1.6"><path d="M12 20.3 3.4 11.9a5.2 5.2 0 0 1 7.3-7.4L12 5.8l1.3-1.3a5.2 5.2 0 0 1 7.3 7.4z"/></svg>',
+  seta: '<svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke="rgba(0,0,0,.55)" stroke-width="1.2"><path d="m1 1 5 5-5 5"/></svg>',
+  baixo: '<svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="#3483fa" stroke-width="1.5"><path d="m1 1.5 5 5 5-5"/></svg>',
+  devolucao: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,.55)" stroke-width="1.2"><path d="M5.5 3.5 2 7l3.5 3.5M2 7h8.5a3.5 3.5 0 0 1 0 7H8"/></svg>',
+  escudo: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,.55)" stroke-width="1.2"><path d="M8 1.5 2.5 3.5v4c0 3.3 2.3 6 5.5 7 3.2-1 5.5-3.7 5.5-7v-4z"/><path d="m5.5 8 1.8 1.8L10.8 6"/></svg>',
+  menu: '<svg width="20" height="16" viewBox="0 0 20 16" fill="none" stroke="#333" stroke-width="1.5"><path d="M1 2h18M1 8h18M1 14h18"/></svg>',
+  fogo: '<svg width="9" height="11" viewBox="0 0 9 11"><path d="M4.6 0C5 2.3 8.4 3.4 8.4 6.9A4 4 0 0 1 .6 7.4c0-1.6.9-2.6 1.6-3.3.1 1 .6 1.7 1.3 2C3.3 3.9 3.6 1.6 4.6 0z" fill="#e6540b"/></svg>',
+  raio: '<svg width="9" height="12" viewBox="0 0 9 12"><path d="M5.6 0 0 7h3.6L2.9 12 9 4.9H5.2z" fill="#00a650"/></svg>',
+  verif: '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="6" fill="#3483fa"/><path d="m3.4 6.1 1.8 1.7 3.4-3.5" stroke="#fff" stroke-width="1.3" fill="none"/></svg>',
+  compart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3483fa" stroke-width="1.6"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg>',
+};
+function simDados(){
+  const p = simP(), x = sim.extras, preco = simNum(x.preco), antigo = simNum(x.precoAntigo);
+  const u = units(p).find(v => (v.id || '') === sim.varSel) || units(p)[0];
+  const parc = Math.max(1, +x.parcelas || 1), nota = Math.min(5, Math.max(0, simNum(x.nota))), aval = Math.round(simNum(x.avaliacoes));
+  const titulo = sim.titulo.trim() || p.titulo || p.nome;
+  const kws = [...new Set([p.palavra, [p.tipo, p.material].filter(Boolean).join(' de '), [p.tipo, p.cor].filter(Boolean).join(' '), ...(p.estilo || []).map(s => [p.tipo, s].filter(Boolean).join(' ')), p.tipo]
+    .map(s => String(s || '').trim().toLowerCase()).filter(s => s && s !== titulo.toLowerCase()))].slice(0, 5);
+  const specs = [
+    ['Características principais', [['Marca', p.marca], ['Modelo', p.modelo], ['Tipo de produto', p.tipo]]],
+    ['Outros', [['Material', p.material], ['Cor', corOf(p, u)], ['Estilo', (p.estilo || []).join(', ')], ['Tamanho', fmtMedida(p)]]],
+  ].map(([t, l]) => [t, l.filter(r => String(r[1] || '').trim())]).filter(([, l]) => l.length);
+  return { p, x, u, us: units(p), preco, antigo, desc: antigo > preco ? Math.round((1 - preco / antigo) * 100) : 0, parc, nota, aval, titulo, kws, specs,
+    fotos: simFotosVis(), estoque: Math.max(0, Math.round(simNum(x.estoque))), vendidos: x.vendidos,
+    categoria: p.categoria || p.tipo || 'Enfeites e Decoração da Casa', marca: (p.marca || '').trim() };
+}
+function simPagina(){
+  const host = $('simHost'); if (!host?.shadowRoot || !sim) return;
+  const d = simDados(), cel = sim.vista === 'cel';
+  sim.foto = Math.min(sim.foto, Math.max(0, d.fotos.length - 1));
+  const corpo = sim.tela === 'busca' ? (cel ? simBuscaCel(d) : simBuscaDesk(d)) : (cel ? simAnuncioCel(d) : simAnuncioDesk(d));
+  const rol = cel ? $('simTela')?.scrollTop : null, gal = host.shadowRoot.querySelector('.mgal')?.scrollLeft;
+  host.shadowRoot.innerHTML = `<style>${ML_CSS}</style><div class="ml ${cel ? 'cel' : 'desk'} ${sim.painel ? 'ed' : ''}">${cel ? simTopoCel(d) : simTopoDesk(d)}${corpo}</div>`;
+  if (gal) host.shadowRoot.querySelector('.mgal')?.scrollTo({ left: gal });
+  if (rol != null) $('simTela').scrollTop = rol;
+}
+function simTopoDesk(d){
+  return `<header class="hd"><div class="hin">
+    <img class="logo" src="${ML_LOGO_G}" alt="Mercado Livre">
+    <div class="busca"><span class="ph ${sim.tela === 'busca' ? 'q' : ''}">${sim.tela === 'busca' ? esc(d.kws[0] || d.titulo.toLowerCase()) : 'Buscar produtos, marcas e muito mais…'}</span><span class="lupa">${SIM_IC.lupa}</span></div>
+    <div class="cp">${SIM_IC.pin}<span><small>Informe seu</small>CEP</span></div>
+    <nav class="nv"><span>Categorias <i>⌄</i></span><span>Ofertas</span><span>Cupons</span><span>Supermercado</span><span>Moda</span><span>Mercado Play</span><span>Vender</span><span>Contato</span></nav>
+    <nav class="nvr"><span>Crie a sua conta</span><span>Entre</span><span>Compras</span><span class="cart">${SIM_IC.carrinho}</span></nav>
+  </div></header>`;
+}
+function simTopoCel(d){
+  return `<header class="mhd"><div class="mrow"><img class="mlogo" src="${ML_LOGO_P}" alt="Mercado Livre">
+      <div class="mbusca">${SIM_IC.lupa}<span class="${sim.tela === 'busca' ? 'q' : ''}">${sim.tela === 'busca' ? esc(d.kws[0] || d.titulo.toLowerCase()) : 'Estou buscando...'}</span></div>
+      <span class="mic">${SIM_IC.menu}</span><span class="mic">${SIM_IC.carrinho}</span></div>
+    <div class="mcp">${SIM_IC.pin}<span>Enviar para</span><b>Informe seu CEP</b>${SIM_IC.seta}</div></header>`;
+}
+function simPrecoBloco(d, cel){
+  return `${d.antigo > d.preco ? `<s class="pold">${simReais(d.antigo).replace(/,00$/, '')}</s>` : ''}
+    <div class="prow" data-ed="preco">${simDinheiro(d.preco, 'big')}${d.desc ? `<span class="off">${d.desc}% OFF</span>` : ''}</div>
+    ${d.parc > 1 ? `<div class="parc ${d.x.semJuros ? 'verde' : ''}" data-ed="preco">${d.x.semJuros ? '' : 'em '}${d.parc}x ${simReais(d.preco / d.parc)}${d.x.semJuros ? ' sem juros' : ''}</div>` : ''}
+    <a class="lk mt8">Ver os meios de pagamento</a>`;
+}
+function simFreteBloco(d){
+  return `<div class="frete" data-ed="frete">${d.x.freteGratis
+    ? `<div class="ch"><span class="verde b">Chegará grátis</span> amanhã</div>`
+    : `<div class="ch"><span class="b">Chegará</span> amanhã por <span class="b">R$ 19,90</span></div>`}
+    <div class="g14">Comprando dentro das próximas 4 h 20 min</div><a class="lk">Mais formas de entrega</a>
+    ${d.x.full ? `<div class="full">Armazenado e enviado pelo <span class="fl">${SIM_IC.raio}<i>FULL</i></span></div>` : ''}</div>`;
+}
+function simVariacoes(d){
+  if (d.us.length < 2) return '';
+  const comFoto = d.us.some(u => simFotosVis(u.id || '').some(f => f.url));
+  return `<div class="vars"><div class="vl">${esc(d.p.tipoVariacao || 'Opção')}: <b>${esc(d.u.nome)}</b></div><div class="vi">${d.us.map(u => {
+    const on = (u.id || '') === sim.varSel, f = simFotosVis(u.id || '').find(y => y.url);
+    return comFoto && f ? `<a class="vt ${on ? 'on' : ''}" data-var="${esc(u.id || '')}" title="${esc(u.nome)}"><img src="${f.url}" alt=""></a>`
+      : `<a class="vb ${on ? 'on' : ''}" data-var="${esc(u.id || '')}">${esc(u.nome)}</a>`; }).join('')}</div></div>`;
+}
+function simCompraBloco(d){
+  return `<div class="est" data-ed="estoque"><div class="b16">${d.estoque ? 'Estoque disponível' : 'Sem estoque'}</div>
+      ${d.estoque ? `<div class="qtd">Quantidade: <b>1 unidade</b> ${SIM_IC.baixo} <span class="g14">(${d.estoque} disponíveis)</span></div>` : ''}</div>
+    <a class="btn azul">Comprar agora</a><a class="btn claro">Adicionar ao carrinho</a>
+    <div class="vend" data-ed="vendedor">Vendido por <a class="lk">${esc(d.x.vendedor || 'POLIVENDA')}</a>${d.x.lojaOficial ? ` ${SIM_IC.verif}` : ''}
+      ${d.vendidos ? `<div class="g12">${d.x.lojaOficial ? 'Loja oficial do Mercado Livre' : 'MercadoLíder'} | <b>${esc(d.vendidos)} vendas</b></div>` : ''}</div>
+    <div class="gar">${SIM_IC.devolucao}<span><a class="lk">Devolução grátis.</a> Você tem 30 dias a partir da data de recebimento.</span></div>
+    <div class="gar">${SIM_IC.escudo}<span><a class="lk">Compra Garantida.</a> Receba o produto que está esperando ou devolvemos o dinheiro.</span></div>`;
+}
+function simSpecs(d){
+  if (!d.specs.length) return '';
+  return `<section class="sec"><h2>Características do produto</h2><div class="specs">${d.specs.map(([t, l]) => `<div class="spc"><h3>${t}</h3><table>${l.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table></div>`).join('')}</div></section>`;
+}
+function simDescricao(d){
+  const t = sim.descricao.trim();
+  return `<section class="sec desc" data-ed="desc"><h2>Descrição</h2>${t ? `<p>${esc(t)}</p>` : '<p class="vazia">Este anúncio ainda não tem descrição.</p>'}</section>`;
+}
+function simTopoInfo(d){
+  return `<div class="sub" data-ed="vendas">Novo${d.vendidos ? `  |  ${esc(d.vendidos)} vendidos` : ''}</div>
+    ${d.x.maisVendido ? `<div class="mv"><span class="mvl">MAIS VENDIDO</span><a class="lk">1º em ${esc(d.categoria)}</a></div>` : ''}
+    <h1 class="tit" data-ed="titulo">${esc(d.titulo)}</h1>
+    ${d.aval ? `<div class="rev" data-ed="vendas"><span>${d.nota.toFixed(1)}</span>${simEstrelas(d.nota)}<span>(${d.aval})</span></div>` : ''}
+    ${d.estoque > 0 && d.estoque <= 5 ? `<div class="ult">${SIM_IC.fogo}${d.estoque === 1 ? 'ÚLTIMA UNIDADE' : `ÚLTIMAS ${d.estoque} UNIDADES`}</div>` : ''}`;
+}
+function simFotoImg(f){ return f?.url ? `<img src="${f.url}" alt="">` : `<span class="semft">${f ? '' : 'Sem fotos'}</span>`; }
+function simAnuncioDesk(d){
+  const f = d.fotos, atual = f[sim.foto];
+  const thumbs = f.slice(0, 7).map((y, i) => `<a class="th ${i === sim.foto ? 'on' : ''}" data-thumb="${i}">${y.url ? `<img src="${y.url}" alt="">` : ''}${i === 6 && f.length > 7 ? `<span class="mais">+${f.length - 6}</span>` : ''}</a>`).join('');
+  return `<div class="pg">
+    ${d.kws.length ? `<div class="rel"><b>Você também pode estar interessado:</b> ${d.kws.map(esc).join(' - ')}</div>` : ''}
+    <div class="bcrow"><div class="bc"><a>Voltar à lista</a><span class="pipe"></span><a>Casa, Móveis e Decoração</a>${SIM_IC.seta}<a>Enfeites e Decoração da Casa</a>${SIM_IC.seta}<a>${esc(d.categoria)}</a></div>
+      <div class="bcr"><a>Vender um igual</a><span class="pipe"></span><a>Compartilhar</a></div></div>
+    <div class="box"><div class="cl">
+        <div class="gal" data-ed="fotos"><div class="ths">${thumbs}</div><figure class="fig">${simFotoImg(atual)}</figure></div>
+        <div class="sep"></div>${simSpecs(d)}${d.specs.length ? '<div class="sep"></div>' : ''}${simDescricao(d)}
+        <div class="sep"></div><section class="sec"><h2>Perguntas</h2><div class="perg"><span class="inp">Digite sua pergunta...</span><a class="btn azul pq">Perguntar</a></div><a class="lk">Ver todas as perguntas</a></section>
+      </div>
+      <div class="cr"><div class="buy"><span class="fav">${SIM_IC.coracao}</span>
+        ${simTopoInfo(d)}
+        <div class="preco">${simPrecoBloco(d)}</div>
+        ${simFreteBloco(d)}
+        ${simVariacoes(d)}
+        ${simCompraBloco(d)}
+      </div></div>
+    </div></div>`;
+}
+function simAnuncioCel(d){
+  const f = d.fotos;
+  return `<div class="mpg">
+    <div class="mtop">${simTopoInfo(d).replace('class="rev"', 'class="rev mrev"')}</div>
+    <div class="mgw" data-ed="fotos"><div class="mgal">${f.length ? f.map(y => `<div class="mfig">${simFotoImg(y)}</div>`).join('') : `<div class="mfig">${simFotoImg(null)}</div>`}</div>
+      ${f.length ? `<span class="mcnt">${sim.foto + 1} / ${f.length}</span>` : ''}<span class="mfav">${SIM_IC.coracao}</span><span class="mshare">${SIM_IC.compart}</span></div>
+    <div class="mbl">${simVariacoes(d)}
+      <div class="preco">${simPrecoBloco(d, true)}</div>
+      ${simFreteBloco(d)}
+      ${simCompraBloco(d)}</div>
+    <div class="msep"></div>${simSpecs(d)}${d.specs.length ? '<div class="msep"></div>' : ''}${simDescricao(d)}
+  </div>`;
+}
+function simCartao(d, cel){
+  const f = d.fotos[0];
+  return `<div class="pc ${cel ? 'pcm' : ''}"><div class="pimg" data-ed="fotos">${f?.url ? `<img src="${f.url}" alt="">` : ''}<span class="ov"></span>
+      ${d.x.maisVendido ? '<span class="plbl">MAIS VENDIDO</span>' : ''}</div>
+    <div class="pct">
+      <a class="ptit" data-ed="titulo">${esc(d.titulo)}</a>
+      ${d.marca ? `<span class="psel"><b>${esc(d.marca.toUpperCase())}</b> por ${esc(d.x.vendedor || 'POLIVENDA')}${d.x.lojaOficial ? ' ' + SIM_IC.verif : ''}</span>` : `<span class="psel">Por ${esc(d.x.vendedor || 'POLIVENDA')}${d.x.lojaOficial ? ' ' + SIM_IC.verif : ''}</span>`}
+      ${d.aval || d.vendidos ? `<span class="prv" data-ed="vendas">${d.aval ? `<span class="pst">★</span> ${d.nota.toFixed(1)}` : ''}${d.aval && d.vendidos ? ' | ' : ''}${d.vendidos ? esc(d.vendidos) + ' vendidos' : ''}</span>` : ''}
+      <div class="ppr" data-ed="preco">${d.antigo > d.preco ? `<s class="pold">${simReais(d.antigo).replace(/,00$/, '')}</s>` : ''}
+        <div class="prow">${simDinheiro(d.preco, 'card')}${d.desc ? `<span class="off">${d.desc}% OFF</span>` : ''}</div>
+        ${d.parc > 1 ? `<span class="parc ${d.x.semJuros ? 'verde' : ''}">em ${d.parc}x ${simReais(d.preco / d.parc)}${d.x.semJuros ? ' sem juros' : ''}</span>` : ''}</div>
+      ${d.x.freteGratis || d.x.full ? `<span class="pfr" data-ed="frete">${d.x.freteGratis ? 'Frete grátis' : ''}${d.x.full ? ` <span class="fl">${SIM_IC.raio}<i>FULL</i></span>` : ''}</span>` : ''}
+    </div></div>`;
+}
+const simVazio = cel => `<div class="pc ${cel ? 'pcm' : ''} sk"><div class="pimg"></div><div class="pct"><i></i><i class="c"></i><i class="p"></i><i class="c"></i></div></div>`;
+function simBuscaDesk(d){
+  const q = d.kws[0] || d.titulo.toLowerCase();
+  return `<div class="srch"><aside class="side">
+      <div class="sbc">Casa, Móveis e Decoração ${SIM_IC.seta} ${esc(d.categoria)}</div>
+      <h1>${esc(q.charAt(0).toUpperCase() + q.slice(1))}</h1><div class="sq">+1.000 resultados</div>
+      ${['Chegará amanhã', 'FULL com frete grátis', 'Frete grátis', 'Internacional'].map(t => `<div class="fbox"><span>${t}</span><i class="tg"></i></div>`).join('')}
+      <div class="fcat"><b>Categorias</b>${[...new Set([d.categoria, 'Enfeites e Decoração da Casa', 'Plantas e Flores Artificiais'])].map(c => `<span>${esc(c)}</span>`).join('')}</div></aside>
+    <section class="res"><div class="sort">Ordenar por <a class="lk">Mais relevantes ${SIM_IC.baixo}</a></div>
+      <div class="grid">${simCartao(d)}${Array.from({ length: 7 }, () => simVazio()).join('')}</div></section></div>`;
+}
+function simBuscaCel(d){
+  return `<div class="mres"><div class="mfil"><span>+1.000 resultados</span><a class="lk">Filtrar (0)</a></div>
+    ${simCartao(d, true)}${Array.from({ length: 4 }, () => simVazio(true)).join('')}</div>`;
+}
 
 // =====================================================================
 // ATUALIZAÇÕES DO APP: cada versão instalada entra uma vez no registro de alterações
@@ -7995,6 +8712,12 @@ const ATUALIZACOES = [
     'Quem abre o link cai na janela de aprovação desse produto, depois do login se precisar; se ele não estiver mais pendente, um aviso conta a situação'] },
   { id: '2026-11-04-baixar-antes-da-aprovacao', em: '2026-11-04 11:24', titulo: 'Baixar fotos antes da aprovação', itens: [
     'O botão "Baixar fotos" (.zip) agora também aparece em produtos pendentes de aprovação ou reprovados, na janela de aprovação e na tela do produto, não só depois de aprovados'] },
+  { id: '2026-11-10-simulacao-ml', em: '2026-11-10 12:05', titulo: 'Simulação do anúncio no Mercado Livre', itens: [
+    'Botão "Simular" na janela do produto (aguardando aprovação e aprovados): escolha o marketplace; por enquanto só o Mercado Livre',
+    'O anúncio aparece como no Mercado Livre, no computador e no celular, e também o card do produto na busca',
+    'Dá para mudar título (com o limite de 60 caracteres), descrição e fotos (ordem, esconder, testar foto nova) e ver na hora',
+    'Preço, desconto, parcelas, frete, vendas, nota e vendedor só existem na simulação e ficam guardados no computador',
+    'Título e descrição só vão para o produto com "Aplicar ao produto" (produto aprovado volta a pedir aprovação)'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
