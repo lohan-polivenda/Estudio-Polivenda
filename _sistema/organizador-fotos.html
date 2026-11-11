@@ -7633,8 +7633,11 @@ function apSituacao(p){
   if (e === 'aprovacao'){ const av = Object.values(p.aprovacao?.av || {}), ok = av.filter(v => v.status === 'aprovada').length;
     return ok ? `Pendente · ${ok} de ${nFotos(p)} aprovadas` : 'Pendente de aprovação'; }
   if (e === 'reprovado') return 'Reprovado';
-  if (e === 'pronto') return 'Aprovado · falta enviar';
-  return 'Aprovado';
+  // data (e quem aprovou) no card dos aprovados
+  const em = p.aprovacao?.status === 'aprovado' ? p.aprovacao.em : p.arquivado?.aprovadoEm;
+  const quando = em ? ` em ${dtBR(em)}${p.aprovacao?.por ? ' por ' + p.aprovacao.por : ''}` : '';
+  if (e === 'pronto') return `Aprovado${quando} · falta enviar`;
+  return 'Aprovado' + quando;
 }
 function apCard(p){
   const cv = apCapas.get(p.id), ant = apVista === 'aguardando' ? reprovacaoAnterior(p) : null;
@@ -8866,6 +8869,8 @@ const ATUALIZACOES = [
   { id: '2026-11-10-revisao', em: '2026-11-10 16:30', titulo: 'Revisão: colagem e simulação', itens: [
     'Fechar a colagem enquanto ela ainda monta não dá mais erro escondido',
     'Fechar a simulação enquanto as fotos carregam não deixa mais fotos presas na memória'] },
+  { id: '2026-11-11-data-aprovacao', em: '2026-11-11 09:00', titulo: 'Data da aprovação nos aprovados', itens: [
+    'Na aba Resumo → Aprovados, cada card mostra quando o produto foi aprovado e por quem'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
