@@ -327,7 +327,8 @@ button.ia.solid{background:var(--ia);color:#fff;border-color:var(--ia)}
 dialog.view{width:min(1180px,calc(100vw - 32px))}
 .vwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px}
 .vimg{background:#14161b;display:flex;align-items:center;justify-content:center;min-height:min(70vh,640px);border-radius:14px 0 0 14px;position:relative}
-.vimg img{display:block;max-width:100%;max-height:calc(100vh - 120px);object-fit:contain}
+.vimg img,.vimg video{display:block;max-width:100%;max-height:calc(100vh - 120px);object-fit:contain}
+.fthumb .vid[data-vf]{cursor:pointer;color:var(--accent)}.fthumb .vid[data-vf]:hover{border-color:var(--accent)}
 .vimg .nav{position:absolute;top:50%;transform:translateY(-50%);background:#000a;color:#fff;border:0;border-radius:50%;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center}
 .vimg .nav .ic{margin:0;width:20px;height:20px}
 .vimg .nav.ant{left:10px}.vimg .nav.prx{right:10px}
@@ -1365,7 +1366,7 @@ _sistema/                          ← tudo que não é produto
 <!-- ======================= VISOR DE FOTOS ======================= -->
 <dialog id="dlgView" class="view">
   <div class="vwrap">
-    <div class="vimg"><img id="vwImg" alt="">
+    <div class="vimg"><img id="vwImg" alt=""><video id="vwVid" class="hidden" controls playsinline preload="metadata"></video>
       <button class="nav ant" id="vwAnt" title="Anterior (seta para a esquerda)"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
       <button class="nav prx" id="vwPrx" title="Próxima (seta para a direita)"><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
     <div class="vside">
@@ -2550,7 +2551,7 @@ function clLinha(p, u, it, i){
   return `<div class="clrow ${fs.length ? 'done' : ''} ${rep.length ? 'reprovada' : ''} ${it.id === focoIid ? 'foco' : ''} ${it.id === editDica ? 'editando' : ''} ${env ? 'subindo' : ''}" data-iid="${it.id}">
         <span class="box" title="${rep.length ? 'Reprovada: troque a foto' : fs.length ? 'Feito: arquivo enviado' : 'Envie um arquivo para marcar'}"></span>
         <div class="files">${fs.length ? fs.map(f => `<div class="fthumb ${repF.has(f) ? 'reprovada' : ''} ${removendo.has(`${p.id}|${u.id}|${f}`) ? 'removendo' : ''}" title="${esc(f)}">
-              ${isVideo(it) || VID_EXT.test(f) ? `<div class="vid">${ic('video', 'lg')}</div>` : `<img data-f="${esc(f)}" alt="" title="Clique para ver grande">`}
+              ${isVideo(it) || VID_EXT.test(f) ? `<div class="vid" data-vf="${esc(f)}" title="Clique para assistir">${ic('video', 'lg')}</div>` : `<img data-f="${esc(f)}" alt="" title="Clique para ver grande">`}
               ${removendo.has(`${p.id}|${u.id}|${f}`) ? `<div class="carrega">${ic('loader', 'spin')}</div>`
                 : `<button data-act="rmfile" data-f="${esc(f)}" title="Remover arquivo">${ic('x')}</button>`}<div class="dim" data-dim="${esc(f)}"></div></div>`).join('') + subindo
             : subindo || `<button class="slot" data-act="upload" title="Clique para escolher o arquivo, arraste para cá ou cole (Ctrl+V)">${ic(isVideo(it) ? 'video' : 'image', 'lg')}</button>`}</div>
@@ -2812,7 +2813,7 @@ document.addEventListener('paste', e => {
 // abre a foto grande, com as outras fotos da variação nas setas
 function verFotos(p, u, f){
   const lista = [];
-  for (const it of p.checklist) for (const nome of filesOf(u, it)) if (IMG_EXT.test(nome))
+  for (const it of p.checklist) for (const nome of filesOf(u, it)) if (IMG_EXT.test(nome) || VID_EXT.test(nome))
     lista.push({ titulo: it.nome + (u.nome ? ' · ' + u.nome : ''), nome, arquivo: async () => {
       const dir = await subIfExists(ws, ...ud(p, u)); if (!dir) throw new Error('pasta');
       return (await dir.getFileHandle(nome)).getFile(); } });
@@ -3052,6 +3053,8 @@ $('detail').addEventListener('click', async e => {
     if (ai) return acvVer(p, curU(p), ai.dataset.af);
     const img = e.target.closest('img[data-f]');
     if (img) return verFotos(p, curU(p), img.dataset.f);
+    const vid = e.target.closest('[data-vf]');
+    if (vid) return verFotos(p, curU(p), vid.dataset.vf);
     const row = e.target.closest('.clrow[data-iid]');
     if (row && !e.target.closest('textarea, input, a, code')) marcarFoco(row.dataset.iid);
     return;
@@ -6121,7 +6124,9 @@ function abrirVisor(lista, i){
   renderVisor();
 }
 async function renderVisor(){
-  const x = vw.lista[vw.i], tok = ++vw.tok, img = $('vwImg');
+  const x = vw.lista[vw.i], tok = ++vw.tok, img = $('vwImg'), vid = $('vwVid'), ehVideo = VID_EXT.test(x.nome);
+  vid.pause(); vid.removeAttribute('src'); vid.load(); img.removeAttribute('src');
+  img.classList.toggle('hidden', ehVideo); vid.classList.toggle('hidden', !ehVideo);
   $('vwPos').textContent = vw.lista.length > 1 ? `${vw.i + 1} de ${vw.lista.length} · setas do teclado mudam a foto` : '';
   $('vwTit').textContent = x.titulo; $('vwNome').textContent = x.nome; $('vwDim').textContent = ''; $('vwInfo').innerHTML = '';
   ['vwAnt', 'vwPrx'].forEach(id => $(id).classList.toggle('hidden', vw.lista.length < 2));
@@ -6130,6 +6135,19 @@ async function renderVisor(){
   if (!url){
     try { const f = await x.arquivo(); if (vw?.tok !== tok) return; size = f.size; url = vw.url = URL.createObjectURL(f); }
     catch { if (vw?.tok === tok){ img.removeAttribute('src'); $('vwInfo').innerHTML = '<div class="alert block">Não encontrei este arquivo na pasta.</div>'; } return; }
+  }
+  if (ehVideo){
+    // vídeo: toca aqui mesmo, com as medidas e a duração
+    vid.onloadedmetadata = () => {
+      if (vw?.tok !== tok) return;
+      const w = vid.videoWidth, h = vid.videoHeight, s = Math.round(vid.duration || 0);
+      $('vwDim').textContent = [w && h ? `${w}×${h} px · ${razaoNome(w, h)}` : '', s ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min` : '', size ? fmtMB(size) : ''].filter(Boolean).join(' · ');
+      $('vwInfo').innerHTML = x.info || '';
+    };
+    vid.onerror = () => { if (vw?.tok === tok) $('vwInfo').innerHTML = '<div class="alert block">O navegador não consegue tocar este formato de vídeo. Baixe o arquivo para assistir, ou envie em .mp4.</div>'; };
+    $('vwDim').innerHTML = ic('loader', 'spin') + ' Carregando o vídeo…';
+    vid.src = url;
+    return;
   }
   img.onload = () => {
     if (vw?.tok !== tok) return;
@@ -6144,9 +6162,9 @@ function moverVisor(d){ if (!vw || vw.lista.length < 2) return; vw.i = (vw.i + d
 $('vwAnt').onclick = () => moverVisor(-1);
 $('vwPrx').onclick = () => moverVisor(1);
 $('vwFechar').onclick = () => $('dlgView').close();
-$('dlgView').addEventListener('keydown', e => { if (e.key === 'ArrowLeft') moverVisor(-1); if (e.key === 'ArrowRight') moverVisor(1); });
+$('dlgView').addEventListener('keydown', e => { if (e.target.tagName === 'VIDEO') return; if (e.key === 'ArrowLeft') moverVisor(-1); if (e.key === 'ArrowRight') moverVisor(1); });
 $('dlgView').addEventListener('click', e => { if (e.target === $('dlgView')) $('dlgView').close(); }); // clique fora da foto fecha
-$('dlgView').addEventListener('close', () => { if (vw?.url) URL.revokeObjectURL(vw.url); vw = null; $('vwImg').removeAttribute('src'); });
+$('dlgView').addEventListener('close', () => { $('vwVid').pause(); $('vwVid').removeAttribute('src'); $('vwVid').load(); if (vw?.url) URL.revokeObjectURL(vw.url); vw = null; $('vwImg').removeAttribute('src'); });
 
 // =====================================================================
 // DEMANDAS: prioridades, demandas e afazeres da equipe + relatórios lidos pela IA
@@ -7819,7 +7837,7 @@ $('dlgAp').addEventListener('click', e => {
     if (!ft || !e.target.closest('.img')) return;
     if (am.selecionar){ am.sel.has(i) ? am.sel.delete(i) : am.sel.add(i); return renderAm(); }
     // o visor abre a foto inteira (a janela mostra só a miniatura)
-    const lista = am.jobs.filter(x => x.dir && IMG_EXT.test(x.local)).map(x => ({ titulo: rotFoto(x), nome: x.local,
+    const lista = am.jobs.filter(x => x.dir && (IMG_EXT.test(x.local) || VID_EXT.test(x.local))).map(x => ({ titulo: rotFoto(x), nome: x.local,
       arquivo: async () => x.file || (await x.dir.getFileHandle(x.local)).getFile() }));
     return abrirVisor(lista, lista.findIndex(x => x.nome === j?.local));
   }
@@ -8871,6 +8889,9 @@ const ATUALIZACOES = [
     'Fechar a simulação enquanto as fotos carregam não deixa mais fotos presas na memória'] },
   { id: '2026-11-11-data-aprovacao', em: '2026-11-11 09:00', titulo: 'Data da aprovação nos aprovados', itens: [
     'Na aba Resumo → Aprovados, cada card mostra quando o produto foi aprovado e por quem'] },
+  { id: '2026-11-17-assistir-videos', em: '2026-11-17 10:00', titulo: 'Vídeos tocam no app', itens: [
+    'Clicar no vídeo do checklist ou da janela de aprovação abre o player, com medidas e duração',
+    'As setas passam por fotos e vídeos da variação; formato que o navegador não toca avisa para enviar em .mp4'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
