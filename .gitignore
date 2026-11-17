@@ -13,3 +13,4 @@
 !/_sistema/_redirects
 !/_sistema/_headers
 !/functions/
+!/_sistema/vendor/

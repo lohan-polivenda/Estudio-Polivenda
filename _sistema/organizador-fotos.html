@@ -587,6 +587,23 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 #tab-produtos.lista-oculta #btnLista .ic{transform:scaleX(-1)}
 .folder.compacta{padding:7px 12px;margin-top:12px}
 .etapa .info-i{margin-left:0}
+/* ---------- packshots: ponte com o chat (links públicos temporários) ---------- */
+.psdrop{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:22px;margin:16px 20px 0;border:2px dashed var(--border);border-radius:12px;text-align:center}
+.psdrop.on{border-color:var(--accent);background:var(--accent-soft)}
+.psdrop .ic{width:22px;height:22px;color:var(--muted)}
+.pslista{display:flex;flex-direction:column;gap:8px;padding:16px 20px 0}
+.psitem{display:grid;grid-template-columns:auto 64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
+.psitem .num{font-weight:700;font-size:13px;min-width:70px}
+.psitem img{width:64px;height:64px;object-fit:contain;background:var(--soft);border-radius:6px}
+.psitem .pspapel{display:flex;gap:6px;flex-wrap:wrap}
+.psitem .pspapel select{width:auto;min-width:150px}.psitem .pspapel input{max-width:200px}
+.psitem .info{margin-top:4px}
+.psitem .acoes{display:flex;gap:2px}
+.psitem.erro{border-color:var(--danger)}.psitem.erro .info{color:var(--danger)}
+.psacoes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:16px 20px}
+.psprev{margin:0 20px 20px;padding:10px 12px;background:var(--soft);border-radius:8px;font:12px/1.6 Consolas,monospace;white-space:pre-wrap;word-break:break-all}
+.psprev:empty{display:none}
+@media (max-width:700px){.psitem{grid-template-columns:64px minmax(0,1fr)}.psitem .num{grid-column:1/-1}.psitem .acoes{grid-column:1/-1;justify-content:flex-end}}
 /* ---------- resumo (painel) e aprovação ---------- */
 .painel{padding:0;overflow:hidden}
 .pnhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--border)}
@@ -798,6 +815,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
     <button data-tab="resumo"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg>Resumo</button>
     <button data-tab="produtos" class="on">Produtos</button>
     <button data-tab="demandas"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Demandas</button>
+    <button data-tab="packshots"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>Packshots</button>
     <button data-tab="config"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>Configurações</button>
   </nav>
   <button id="wsChip"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Conectar pasta Estudio Polivenda</button>
@@ -880,6 +898,29 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
   </div>
 </section>
 
+<!-- ======================= PACKSHOTS (ponte com o chat: fotos com link público temporário) ======================= -->
+<section id="tab-packshots" class="hidden">
+  <div class="panel painel">
+    <div class="pnhead"><h2>Packshots · fotos para o chat</h2>
+      <span class="muted ajuda">Envie as fotos reais do produto. Cada uma ganha um link que abre sem login, só com a imagem, e vence sozinho no prazo escolhido em Configurações → Packshots. Escolha o papel de cada foto, acerte a ordem e use "Copiar lista" para colar no chat. Ao terminar, apague: o link deixa de abrir na hora.</span>
+    </div>
+    <div class="psdrop" id="psDrop">
+      <svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>
+      <span>Arraste as fotos aqui ou</span>
+      <button type="button" class="primary" id="psEscolher">Escolher fotos</button>
+      <div class="muted" id="psRegra" style="flex-basis:100%"></div>
+    </div>
+    <input type="file" id="psIn" multiple accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif" class="hidden">
+    <div class="pslista" id="psLista"></div>
+    <div class="psacoes">
+      <button type="button" class="primary" id="psCopiar"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>Copiar lista</button>
+      <button type="button" class="danger" id="psApagarTudo"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg>Apagar todas agora</button>
+      <span class="muted" id="psAviso"></span>
+    </div>
+    <pre class="psprev" id="psPrevia"></pre>
+  </div>
+</section>
+
 <!-- ======================= CONFIGURAÇÕES ======================= -->
 <section id="tab-config" class="hidden">
   <div class="cfgwrap">
@@ -891,6 +932,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
       <button type="button" data-sec="seo"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>SEO e nomes</span><i></i></button>
       <button type="button" data-sec="novidades"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span>Novidades de SEO</span><i></i></button>
       <button type="button" data-sec="registro"><svg class="ic" aria-hidden="true"><use href="#i-history"/></svg><span>Registro de alterações</span><i></i></button>
+      <button type="button" data-sec="packshots"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span>Packshots</span><i></i></button>
       <button type="button" data-sec="acessos"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Acessos</span><i></i></button>
       <button type="button" data-sec="aparencia"><svg class="ic" aria-hidden="true"><use href="#i-contrast"/></svg><span>Aparência</span><i></i></button>
     </nav>
@@ -1198,6 +1240,21 @@ _sistema/                          ← tudo que não é produto
         <div class="muted ajuda" data-em="#acUser">Usuário: letras minúsculas e números, sem espaço nem acento (pode ter ponto, hífen ou sublinhado).</div>
         <div style="margin-top:10px"><button class="primary" id="acCriar" type="button">Criar acesso</button></div>
       </div>
+    </div>
+    </div>
+
+    <div class="cfgsec" data-sec="packshots">
+      <div class="cfghead"><h2>Packshots</h2><div class="muted ajuda">Fotos enviadas na aba Packshots: quanto tempo o link público vale e quantas fotos de referência vão em cada pedido de imagem.</div></div>
+    <div class="panel">
+      <label class="f" for="psCfgHoras">Validade do link público</label>
+      <select id="psCfgHoras" style="max-width:260px">
+        <option value="1">1 hora</option><option value="6">6 horas</option><option value="12">12 horas</option>
+        <option value="24">24 horas (padrão)</option><option value="48">2 dias</option><option value="72">3 dias</option><option value="168">7 dias</option>
+      </select>
+      <label class="f" for="psCfgRefs">Máximo de referências por pedido</label>
+      <select id="psCfgRefs" style="max-width:260px">
+        <option value="1">1</option><option value="2">2</option><option value="3">3 (padrão)</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="8">8</option>
+      </select>
     </div>
     </div>
 
@@ -1572,6 +1629,8 @@ function normSettings(raw){
   if (!s.v6){ if ([OLD_TPL_PROD, V3_TPL_PROD, V4_TPL_PROD].includes(s.tplProd)) s.tplProd = DEFAULT_TPL_PROD; s.v6 = true; }
   // categorias da loja (Configurações → Categorias) e nomes da equipe (registro de alterações)
   s.categorias ||= []; s.equipe ||= [];
+  // aba Packshots: validade do link público (horas) e máximo de fotos de referência por pedido
+  s.packshot = { horas: 24, maxRefs: 3, ...s.packshot };
   // v7: pasta legível com categoria e data da coleção (antes era o nome SEO, ex.: vaso-marca-modelo)
   if (!s.v7){ s.tplFolder = PASTA_TPL; s.v7 = true; }
   // v8: a data sai do nome do produto e vira uma subpasta por envio
@@ -2021,10 +2080,11 @@ async function emParalelo(itens, n, fn){
 
 // ---------- abas ----------
 function showTab(t){
-  ['resumo','produtos','demandas','config'].forEach(k => $('tab-' + k).classList.toggle('hidden', k !== t));
+  ['resumo','produtos','demandas','packshots','config'].forEach(k => $('tab-' + k).classList.toggle('hidden', k !== t));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   store.set('tab', t);
-  if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); renderAcessos(); }
+  if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); renderAcessos(); psCfgRender(); }
+  if (t === 'packshots'){ psRender(); psAtualizar(); }
   if (t === 'demandas') renderDem();
   if (t === 'produtos'){ renderList(); renderDetail(); }
   if (t === 'resumo') renderResumo();
@@ -8915,6 +8975,10 @@ const ATUALIZACOES = [
   { id: '2026-11-17-filtro-variacao', em: '2026-11-17 11:40', titulo: 'Filtro por variação na aprovação', itens: [
     'A janela do produto (em revisão, aprovado ou reprovado) ganhou botões no topo para ver só uma variação, com a quantidade de fotos de cada uma',
     'Número em vermelho = a variação tem foto reprovada; "Selecionar todas" e as setas do visor ficam só na variação escolhida'] },
+  { id: '2026-11-17-packshots-ponte', em: '2026-11-17 18:30', titulo: 'Packshots: fotos com link para o chat', itens: [
+    'Aba nova "Packshots": envie fotos JPG, PNG, WebP ou HEIC; cada uma vira JPG de até 2048 px (sem dados de localização) e ganha um link que abre sem login',
+    'Escolha o papel de cada foto, acerte a ordem e use "Copiar lista" para colar no chat; o link vence sozinho (padrão 24 h) ou some na hora com "Apagar"',
+    'Validade do link e máximo de referências por pedido em Configurações → Packshots'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -8967,6 +9031,205 @@ try {
   setInterval(() => { canal.postMessage('aqui'); mostrar(); }, 20000);
   addEventListener('pagehide', () => canal.postMessage('tchau'));
 } catch {}
+// ---------- Packshots: ponte com o chat ----------
+// Cada foto vira JPG sRGB (qualidade 95, lado maior até 2048, sem EXIF/GPS) no navegador, sobe para o R2 privado
+// (functions/api/ponte) e ganha um link público temporário (/api/u/<id>). O HEIC é aberto pelo libheif (vendor/libheif).
+const PS_PAPEIS = ['frontal', 'vaso sozinho', 'macro', 'detalhe', 'lateral', 'costas', 'de cima', 'escala', 'embalagem', 'outro'];
+const PS_LADO = 2048, PS_QUALIDADE = 0.95;
+let psItens = store.get('packshots-ponte', []).filter(x => x.id && x.expira > Date.now()); // { id, url, papel, outro, nome, w, h, bytes, expira, mini }
+const psTemp = new Map(); // envios em andamento: chave local -> { nome, etapa, erro }
+const psGuardar = () => store.set('packshots-ponte', psItens.map(({ mini, ...x }) => x));
+const psPapelTxt = x => (x.papel === 'outro' ? (x.outro || '').trim() : x.papel) || 'sem papel';
+const psListaTxt = () => psItens.map((x, i) => `Imagem ${i + 1} (${psPapelTxt(x)}): ${x.url}`).join('\n');
+const psData = t => new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const psMB = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' MB';
+
+async function psApi(caminho, opcoes = {}){
+  let r;
+  try { r = await fetch('/api/ponte/' + caminho, { cache: 'no-store', ...opcoes }); }
+  catch { throw new Error('Sem conexão com o servidor. Confira a internet.'); }
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401){ toast('Entre no Estúdio de novo.'); setTimeout(() => location.reload(), 1500); }
+  if (!r.ok) throw new Error(d.erro || `O servidor respondeu ${r.status}.`);
+  return d;
+}
+
+// ---- abrir HEIC (libheif) com a rotação certa e o perfil de cor do arquivo ----
+let psHeif = null;
+function psLibheif(){
+  return psHeif ||= (async () => {
+    await new Promise((ok, falha) => { const s = document.createElement('script'); s.src = '/vendor/libheif/libheif.js'; s.onload = ok; s.onerror = () => falha(new Error('Não deu para carregar o leitor de HEIC.')); document.head.append(s); });
+    const r = await fetch('/vendor/libheif/libheif.wasm');
+    if (!r.ok) throw new Error('Não deu para carregar o leitor de HEIC.');
+    const wasmBinary = await r.arrayBuffer();
+    let m; await new Promise(ok => { m = window.libheif({ wasmBinary, onRuntimeInitialized: ok }); });
+    return m;
+  })().catch(e => { psHeif = null; throw e; });
+}
+const psEhHeif = u => u.length > 12 && String.fromCharCode(...u.subarray(4, 8)) === 'ftyp' && /^(heic|heix|hevc|hevx|heim|heis|mif1|msf1)$/.test(String.fromCharCode(...u.subarray(8, 12)));
+// perfil de cor do HEIC (caixa "colr"): o iPhone grava Display P3. Outros perfis são tratados como sRGB.
+function psPerfilHeif(u){
+  const txt = (i, k) => String.fromCharCode(...u.subarray(i, i + k)), lim = Math.min(u.length - 12, 1 << 20);
+  for (let i = 4; i < lim; i++){
+    if (u[i] !== 0x63 || txt(i, 4) !== 'colr') continue;
+    const tipo = txt(i + 4, 4);
+    if (tipo === 'nclx') return ((u[i + 8] << 8) | u[i + 9]) === 12 ? 'display-p3' : 'srgb';
+    if (tipo === 'prof' || tipo === 'rICC'){
+      const tam = new DataView(u.buffer, u.byteOffset).getUint32(i - 4), icc = u.subarray(i + 8, i - 4 + tam);
+      return /P3/.test(new TextDecoder('latin1').decode(icc).replace(/\0/g, '')) ? 'display-p3' : 'srgb';
+    }
+  }
+  return 'srgb';
+}
+async function psAbrirHeif(u){
+  const lib = await psLibheif();
+  const imgs = new lib.HeifDecoder().decode(u);
+  if (!imgs?.length) throw new Error('Não deu para ler este HEIC.');
+  const im = imgs.find(x => x.is_primary?.()) || imgs[0], w = im.get_width(), h = im.get_height();
+  const cor = psPerfilHeif(u);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { colorSpace: cor });
+  const dados = g.createImageData(w, h, { colorSpace: cor });
+  await new Promise((ok, falha) => im.display(dados, d => d ? ok() : falha(new Error('Não deu para ler este HEIC.'))));
+  g.putImageData(dados, 0, 0);
+  imgs.forEach(x => x.free?.());
+  return { fonte: c, w, h, cor };
+}
+// qualquer formato aceito -> JPG sRGB 95, lado maior até 2048 (nunca aumenta), orientação aplicada, sem metadados
+async function psConverter(file){
+  const u = new Uint8Array(await file.arrayBuffer());
+  let fonte, w, h, cor = 'srgb', heic = false;
+  if (psEhHeif(u) || /\.(heic|heif)$/i.test(file.name)){ heic = true; ({ fonte, w, h, cor } = await psAbrirHeif(u)); }
+  else {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) throw new Error('Formato não aceito: use JPG, PNG, WebP ou HEIC.');
+    try { fonte = await createImageBitmap(file, { imageOrientation: 'from-image', colorSpaceConversion: 'default' }); }
+    catch { throw new Error('Não deu para abrir esta imagem.'); }
+    w = fonte.width; h = fonte.height;
+  }
+  const k = Math.min(1, PS_LADO / Math.max(w, h)), W = Math.round(w * k), H = Math.round(h * k);
+  const img = k < 1 ? await createImageBitmap(fonte, { resizeWidth: W, resizeHeight: H, resizeQuality: 'high' }) : fonte;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d', { colorSpace: 'srgb' });
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); // PNG/WebP com transparência: o JPG não tem, fica branco
+  g.drawImage(img, 0, 0);
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', PS_QUALIDADE));
+  if (!blob) throw new Error('Não deu para converter a imagem.');
+  return { blob, w: W, h: H, origW: w, origH: h, cor, heic };
+}
+
+async function psEnviar(files){
+  const lista = [...files];
+  if (!lista.length) return;
+  await comBarra(async () => {
+    for (const f of lista){
+      const k = 'p' + Math.random().toString(36).slice(2);
+      psTemp.set(k, { nome: f.name, etapa: 'Convertendo…' }); psRender();
+      try {
+        const cv = await psConverter(f);
+        psTemp.get(k).etapa = 'Enviando…'; psRender();
+        const nome = f.name.replace(/\.[^.]+$/, '') + '.jpg';
+        const d = await psApi('enviar?' + new URLSearchParams({ horas: settings.packshot.horas, nome }), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: cv.blob });
+        psItens.push({ id: d.id, url: d.url, papel: psItens.length ? '' : 'frontal', outro: '', nome, w: d.w, h: d.h, bytes: d.bytes, expira: d.expira,
+          origem: `${cv.heic ? 'HEIC' : f.type.replace('image/', '').toUpperCase() || 'imagem'} ${cv.origW}×${cv.origH}${cv.cor === 'display-p3' ? ', Display P3' : ''}`,
+          mini: URL.createObjectURL(cv.blob) });
+        psTemp.delete(k); psGuardar();
+      } catch (e) { Object.assign(psTemp.get(k), { etapa: '', erro: e.message || String(e) }); }
+      psRender();
+    }
+  });
+}
+
+function psRender(){
+  $('psRegra').textContent = `JPG, PNG, WebP ou HEIC. Cada foto vira JPG de até ${PS_LADO} px no lado maior; o link vale ${settings.packshot.horas >= 48 ? settings.packshot.horas / 24 + ' dias' : settings.packshot.horas + ' h'}.`;
+  const agora = Date.now();
+  psItens = psItens.filter(x => x.expira > agora);
+  const linhas = psItens.map((x, i) => `<div class="psitem" data-id="${x.id}">
+    <div class="num">Imagem ${i + 1}</div>
+    <img src="${esc(x.mini || x.url)}" alt="" loading="lazy">
+    <div><div class="pspapel">
+      <select data-ps="papel" aria-label="Papel da imagem ${i + 1}"><option value="">Escolha o papel…</option>${PS_PAPEIS.map(p => `<option ${x.papel === p ? 'selected' : ''}>${p}</option>`).join('')}</select>
+      ${x.papel === 'outro' ? `<input data-ps="outro" maxlength="40" placeholder="Qual papel?" value="${esc(x.outro || '')}">` : ''}
+    </div>
+    <div class="muted info">${x.w}×${x.h} · ${psMB(x.bytes)} · vence ${psData(x.expira)}${x.origem ? ' · original: ' + esc(x.origem) : ''}</div></div>
+    <div class="acoes">
+      <button type="button" class="icon" data-ps="sobe" title="Subir" ${i ? '' : 'disabled'}>${ic('up')}</button>
+      <button type="button" class="icon" data-ps="desce" title="Descer" ${i < psItens.length - 1 ? '' : 'disabled'}>${ic('down')}</button>
+      <button type="button" class="icon" data-ps="copiar" title="Copiar só este link">${ic('copy')}</button>
+      <button type="button" class="icon" data-ps="abrir" title="Abrir o link numa aba nova">${ic('external')}</button>
+      <button type="button" class="icon danger" data-ps="apagar" title="Apagar agora (o link para de abrir)">${ic('trash')}</button>
+    </div></div>`);
+  const temp = [...psTemp.entries()].map(([k, t]) => `<div class="psitem ${t.erro ? 'erro' : ''}" data-temp="${k}">
+    <div class="num">${t.erro ? 'Erro' : ic('loader', 'spin')}</div><div></div>
+    <div><b>${esc(t.nome)}</b><div class="muted info">${esc(t.erro || t.etapa)}</div></div>
+    <div class="acoes">${t.erro ? `<button type="button" class="icon" data-ps="fechar" title="Fechar">${ic('x')}</button>` : ''}</div></div>`);
+  $('psLista').innerHTML = linhas.join('') + temp.join('') || '<div class="muted">Nenhuma foto enviada ainda.</div>';
+  const semPapel = psItens.filter(x => psPapelTxt(x) === 'sem papel').length, max = settings.packshot.maxRefs;
+  $('psAviso').textContent = !psItens.length ? '' : semPapel ? `Falta escolher o papel de ${semPapel} foto(s).` : psItens.length > max ? `São ${psItens.length} fotos; o padrão é até ${max} referências por pedido.` : '';
+  $('psCopiar').disabled = !psItens.length; $('psApagarTudo').disabled = !psItens.length;
+  $('psPrevia').textContent = psListaTxt();
+}
+// confere com o servidor: some da tela o que venceu ou foi apagado por outra janela
+async function psAtualizar(){
+  if (!psItens.length) return;
+  try {
+    const d = await psApi('lista'), vivos = new Map(d.itens.map(x => [x.id, x]));
+    const antes = psItens.length;
+    psItens = psItens.filter(x => vivos.has(x.id)).map(x => ({ ...x, expira: vivos.get(x.id).expira }));
+    if (psItens.length !== antes){ psGuardar(); psRender(); }
+  } catch (e) { $('psAviso').textContent = e.message; }
+}
+async function psCopiarTxt(txt, ok){
+  try { await navigator.clipboard.writeText(txt); toast(ok); }
+  catch {
+    // sem permissão de área de transferência: deixa a lista selecionada para o Ctrl+C
+    const sel = getSelection(), r = document.createRange(); r.selectNodeContents($('psPrevia')); sel.removeAllRanges(); sel.addRange(r);
+    toast('O navegador não deixou copiar sozinho. A lista ficou selecionada: aperte Ctrl+C.', 6000);
+  }
+}
+async function psApagar(ids){
+  await comBarra(async () => {
+    for (const id of ids){
+      try { await psApi('apagar?' + new URLSearchParams({ id }), { method: 'POST' }); psItens = psItens.filter(x => x.id !== id); }
+      catch (e) { toast(e.message, 5000); break; }
+    }
+  });
+  psGuardar(); psRender();
+}
+$('psEscolher').onclick = () => $('psIn').click();
+$('psIn').onchange = e => { psEnviar(e.target.files); e.target.value = ''; };
+$('psDrop').addEventListener('dragover', e => { e.preventDefault(); $('psDrop').classList.add('on'); });
+$('psDrop').addEventListener('dragleave', () => $('psDrop').classList.remove('on'));
+$('psDrop').addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); $('psDrop').classList.remove('on'); psEnviar(e.dataTransfer.files); });
+$('psLista').addEventListener('change', e => {
+  const el = e.target.closest('[data-ps]'), x = psItens.find(y => y.id === e.target.closest('.psitem')?.dataset.id);
+  if (!el || !x) return;
+  if (el.dataset.ps === 'papel'){ x.papel = el.value; psGuardar(); psRender(); if (x.papel === 'outro') document.querySelector(`.psitem[data-id="${x.id}"] [data-ps="outro"]`)?.focus(); }
+});
+$('psLista').addEventListener('input', e => {
+  const x = psItens.find(y => y.id === e.target.closest('.psitem')?.dataset.id);
+  if (x && e.target.dataset.ps === 'outro'){ x.outro = e.target.value; psGuardar(); $('psPrevia').textContent = psListaTxt(); }
+});
+$('psLista').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-ps]'); if (!b) return;
+  if (b.dataset.ps === 'fechar'){ psTemp.delete(b.closest('.psitem').dataset.temp); return psRender(); }
+  const i = psItens.findIndex(y => y.id === b.closest('.psitem')?.dataset.id), x = psItens[i]; if (!x) return;
+  const a = b.dataset.ps;
+  if (a === 'sobe' || a === 'desce'){ const j = a === 'sobe' ? i - 1 : i + 1; [psItens[i], psItens[j]] = [psItens[j], psItens[i]]; psGuardar(); return psRender(); }
+  if (a === 'copiar') return psCopiarTxt(x.url, 'Link copiado.');
+  if (a === 'abrir') return window.open(x.url, '_blank', 'noopener,noreferrer');
+  if (a === 'apagar' && await confirmar(`Apagar a Imagem ${i + 1} agora?\n\nO arquivo sai da nuvem e o link deixa de abrir na hora.`, 'Apagar', 'Cancelar')) psApagar([x.id]);
+});
+$('psCopiar').onclick = () => {
+  const falta = psItens.filter(x => psPapelTxt(x) === 'sem papel').length;
+  psCopiarTxt(psListaTxt(), falta ? `Copiado, mas falta o papel de ${falta} foto(s).` : `Lista copiada (${psItens.length} foto${psItens.length > 1 ? 's' : ''}).`);
+};
+$('psApagarTudo').onclick = async () => {
+  if (await confirmar(`Apagar as ${psItens.length} fotos agora?\n\nOs arquivos saem da nuvem e os links deixam de abrir na hora.`, 'Apagar todas', 'Cancelar')) psApagar(psItens.map(x => x.id));
+};
+function psCfgRender(){ $('psCfgHoras').value = String(settings.packshot.horas); $('psCfgRefs').value = String(settings.packshot.maxRefs); }
+$('psCfgHoras').onchange = e => { settings.packshot.horas = +e.target.value; saveSettings(); };
+$('psCfgRefs').onchange = e => { settings.packshot.maxRefs = +e.target.value; saveSettings(); };
+
 current = plan.produtos[0]?.id || null;
 renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); renderResumoCont(); renderOlist(); carregarConta();
 // primeira vez neste computador: pergunta quem está usando (vai para o registro de alterações)

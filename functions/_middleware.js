@@ -67,11 +67,15 @@ f.onsubmit = async e => {
 
 export async function onRequest(ctx){
   const { request, env } = ctx, caminho = new URL(request.url).pathname;
+  // único caminho público: o link temporário de uma foto (modo ponte com o chat); ele confere id e validade
+  if (caminho.startsWith('/api/u/')) return ctx.next();
   if (!env.OLIST) return ctx.next();
   // as rotas de conta, do Olist e do Google conferem o acesso elas mesmas (entrar, primeiro acesso, volta do login do Olist)
   if (/^\/(conta|olist|google|nuvem)\//.test(caminho)) return ctx.next();
   const u = await usuarioDaSessao(request, env);
   if (u){ ctx.data.usuario = u; return ctx.next(); }
+  // demais rotas /api (ex.: envio da ponte): sem sessão, recusa em JSON (o app mostra o aviso)
+  if (caminho.startsWith('/api/')) return new Response(JSON.stringify({ erro: 'Entre no Estúdio de novo.' }), { status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Entre no Estúdio primeiro.', { status: 401 });
   const primeiro = !(await env.OLIST.get('usuarios', 'json'))?.length;
   return new Response(telaDeEntrada(primeiro), { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
