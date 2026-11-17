@@ -603,6 +603,23 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 .psacoes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:16px 20px}
 .psprev{margin:0 20px 20px;padding:10px 12px;background:var(--soft);border-radius:8px;font:12px/1.6 Consolas,monospace;white-space:pre-wrap;word-break:break-all}
 .psprev:empty{display:none}
+.pgcorpo{padding:4px 20px 20px}
+.pgrefs{display:flex;flex-wrap:wrap;gap:8px}
+.pgrefs label{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer}
+.pgrefs label img{width:34px;height:34px;object-fit:contain;background:var(--soft);border-radius:5px}
+.pgrefs input{width:auto}
+.pgopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+.pgopts label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.pgres{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:10px}
+.pgres img{width:100%;border-radius:8px;background:var(--soft)}
+.pgres table{border-collapse:collapse;font-size:12px;width:100%}
+.pgres td,.pgres th{padding:3px 6px;border-bottom:1px solid var(--border);text-align:left}
+.pgres .sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--border);vertical-align:-2px;margin-right:4px}
+.pgselo{display:inline-block;padding:2px 10px;border-radius:12px;font-weight:700;font-size:12px;color:#fff;background:var(--ok)}
+.pgselo.rework{background:var(--danger)}
+.pgdados{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px;margin:8px 0}
+.pgdados b{font-weight:600;color:var(--muted)}
+@media (max-width:700px){.pgres{grid-template-columns:1fr}}
 @media (max-width:700px){.psitem{grid-template-columns:64px minmax(0,1fr)}.psitem .num{grid-column:1/-1}.psitem .acoes{grid-column:1/-1;justify-content:flex-end}}
 /* ---------- resumo (painel) e aprovação ---------- */
 .painel{padding:0;overflow:hidden}
@@ -918,6 +935,30 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
       <span class="muted" id="psAviso"></span>
     </div>
     <pre class="psprev" id="psPrevia"></pre>
+  </div>
+  <div class="panel painel" style="margin-top:16px">
+    <div class="pnhead"><h2>Gerar imagem</h2><span class="muted" id="pgEstado"></span>
+      <span class="muted ajuda">A OpenAI recebe o prompt e as fotos marcadas, na ordem da lista acima (a primeira marcada é a Imagem 1). A imagem volta em JPG, passa pela conferência automática do fundo e fica guardada com tudo o que foi enviado. A conferência só informa: quem aprova é a revisão.</span>
+    </div>
+    <div class="pgcorpo">
+      <label class="f">Referências deste pedido</label>
+      <div id="pgRefs" class="pgrefs"></div>
+      <label class="f" for="pgPrompt">Prompt (em inglês, um por imagem)</label>
+      <textarea id="pgPrompt" rows="7" maxlength="32000" placeholder="Image 1 is the real product photo (front view). Recreate it as a studio packshot…"></textarea>
+      <div class="pgopts">
+        <label>Tipo<select id="pgAlvo"><option value="F4F4F4">Packshot · fundo #F4F4F4</option><option value="FFFFFF">Hero Branca · fundo #FFFFFF</option></select></label>
+        <label>Tamanho<select id="pgTam"><option value="1600x2000">1600×2000 (4:5)</option><option value="2048x2560">2048×2560 (4:5)</option><option value="2560x3200">2560×3200 (4:5, maior possível)</option></select></label>
+        <label>Qualidade<select id="pgQual"><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option></select></label>
+        <label>Modelo<select id="pgModelo"><option value="gpt-image-2.6-sunburst">gpt-image-2.6-sunburst</option><option value="gpt-image-2.6-flare">gpt-image-2.6-flare</option></select></label>
+      </div>
+      <div class="psacoes" style="padding:14px 0 0">
+        <button type="button" class="primary" id="pgGerar"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg>Gerar</button>
+        <button type="button" id="pgFora"><svg class="ic" aria-hidden="true"><use href="#i-check-circle"/></svg>Conferir imagem feita fora</button>
+        <span class="muted" id="pgAviso"></span>
+      </div>
+      <input type="file" id="pgForaIn" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="hidden">
+      <div id="pgRes"></div>
+    </div>
   </div>
 </section>
 
@@ -1255,6 +1296,11 @@ _sistema/                          ← tudo que não é produto
       <select id="psCfgRefs" style="max-width:260px">
         <option value="1">1</option><option value="2">2</option><option value="3">3 (padrão)</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="8">8</option>
       </select>
+      <label class="f" for="psCfgTol">Tolerância da conferência do fundo</label>
+      <select id="psCfgTol" style="max-width:260px">
+        <option value="2">2 níveis (rígida)</option><option value="3">3 níveis</option><option value="4">4 níveis (padrão)</option><option value="6">6 níveis</option><option value="8">8 níveis (folgada)</option>
+      </select>
+      <div class="muted ajuda">Quanto a cor média de cada canto e faixa do fundo pode se afastar do alvo (#F4F4F4 ou #FFFFFF), em níveis de 0 a 255 por canal.</div>
     </div>
     </div>
 
@@ -1630,7 +1676,7 @@ function normSettings(raw){
   // categorias da loja (Configurações → Categorias) e nomes da equipe (registro de alterações)
   s.categorias ||= []; s.equipe ||= [];
   // aba Packshots: validade do link público (horas) e máximo de fotos de referência por pedido
-  s.packshot = { horas: 24, maxRefs: 3, ...s.packshot };
+  s.packshot = { horas: 24, maxRefs: 3, tol: 4, ...s.packshot };
   // v7: pasta legível com categoria e data da coleção (antes era o nome SEO, ex.: vaso-marca-modelo)
   if (!s.v7){ s.tplFolder = PASTA_TPL; s.v7 = true; }
   // v8: a data sai do nome do produto e vira uma subpasta por envio
@@ -2084,7 +2130,7 @@ function showTab(t){
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   store.set('tab', t);
   if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); renderAcessos(); psCfgRender(); }
-  if (t === 'packshots'){ psRender(); psAtualizar(); }
+  if (t === 'packshots'){ psRender(); psAtualizar(); pgCarregarEstado(); }
   if (t === 'demandas') renderDem();
   if (t === 'produtos'){ renderList(); renderDetail(); }
   if (t === 'resumo') renderResumo();
@@ -8979,6 +9025,11 @@ const ATUALIZACOES = [
     'Aba nova "Packshots": envie fotos JPG, PNG, WebP ou HEIC; cada uma vira JPG de até 2048 px (sem dados de localização) e ganha um link que abre sem login',
     'Escolha o papel de cada foto, acerte a ordem e use "Copiar lista" para colar no chat; o link vence sozinho (padrão 24 h) ou some na hora com "Apagar"',
     'Validade do link e máximo de referências por pedido em Configurações → Packshots'] },
+  { id: '2026-11-17-packshots-gerar', em: '2026-11-17 18:50', titulo: 'Packshots: gerar imagem com a OpenAI', itens: [
+    'Quadro "Gerar imagem" na aba Packshots: prompt, fotos de referência na ordem (Imagem 1, 2…), tipo de fundo, tamanho 4:5, qualidade e modelo',
+    'A imagem volta em JPG e passa pela conferência automática: tamanho, formato, cor dos 4 cantos e das faixas do fundo (#F4F4F4 ou #FFFFFF), aviso de vinheta e degradê',
+    'Cada pedido fica guardado com prompt, fotos, parâmetros, tamanho real, custo estimado e conferência; "Conferir imagem feita fora" roda a mesma conferência numa imagem do chat',
+    'Tolerância da conferência em Configurações → Packshots'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -9132,6 +9183,7 @@ async function psEnviar(files){
         psItens.push({ id: d.id, url: d.url, papel: psItens.length ? '' : 'frontal', outro: '', nome, w: d.w, h: d.h, bytes: d.bytes, expira: d.expira,
           origem: `${cv.heic ? 'HEIC' : f.type.replace('image/', '').toUpperCase() || 'imagem'} ${cv.origW}×${cv.origH}${cv.cor === 'display-p3' ? ', Display P3' : ''}`,
           mini: URL.createObjectURL(cv.blob) });
+        if (pgSel.size < settings.packshot.maxRefs){ pgSel.add(d.id); store.set('packshots-refs', [...pgSel]); }
         psTemp.delete(k); psGuardar();
       } catch (e) { Object.assign(psTemp.get(k), { etapa: '', erro: e.message || String(e) }); }
       psRender();
@@ -9167,6 +9219,7 @@ function psRender(){
   $('psAviso').textContent = !psItens.length ? '' : semPapel ? `Falta escolher o papel de ${semPapel} foto(s).` : psItens.length > max ? `São ${psItens.length} fotos; o padrão é até ${max} referências por pedido.` : '';
   $('psCopiar').disabled = !psItens.length; $('psApagarTudo').disabled = !psItens.length;
   $('psPrevia').textContent = psListaTxt();
+  pgRender();
 }
 // confere com o servidor: some da tela o que venceu ou foi apagado por outra janela
 async function psAtualizar(){
@@ -9226,7 +9279,184 @@ $('psCopiar').onclick = () => {
 $('psApagarTudo').onclick = async () => {
   if (await confirmar(`Apagar as ${psItens.length} fotos agora?\n\nOs arquivos saem da nuvem e os links deixam de abrir na hora.`, 'Apagar todas', 'Cancelar')) psApagar(psItens.map(x => x.id));
 };
-function psCfgRender(){ $('psCfgHoras').value = String(settings.packshot.horas); $('psCfgRefs').value = String(settings.packshot.maxRefs); }
+function psCfgRender(){ $('psCfgHoras').value = String(settings.packshot.horas); $('psCfgRefs').value = String(settings.packshot.maxRefs); $('psCfgTol').value = String(settings.packshot.tol); }
+$('psCfgTol').onchange = e => { settings.packshot.tol = +e.target.value; saveSettings(); };
+
+// ---- conferência automática de uma imagem gerada (só informa; não aprova nada) ----
+// Mede formato e dimensões; compara a cor média dos 4 cantos e de faixas do fundo (topo, esquerda, direita) com o alvo;
+// avisa sobre vinheta (cantos mais escuros que o meio das bordas) e degradê (um lado diferente do outro).
+function pgPerfilJpeg(u){
+  for (let i = 2; i + 4 < u.length && u[i] === 0xFF;){
+    const m = u[i + 1], tam = u[i + 2] << 8 | u[i + 3];
+    if (m === 0xDA) break;
+    if (m === 0xE2 && String.fromCharCode(...u.subarray(i + 4, i + 15)) === 'ICC_PROFILE'){
+      const t = new TextDecoder('latin1').decode(u.subarray(i + 18, i + 2 + tam)).replace(/\0/g, '');
+      return /sRGB/i.test(t) ? 'sRGB' : /P3/.test(t) ? 'Display P3' : 'outro';
+    }
+    i += 2 + tam;
+  }
+  return 'sem perfil (lido como sRGB)';
+}
+async function psConferir(blob, { alvo = 'F4F4F4', tol = settings.packshot.tol, pedido = null } = {}){
+  const u = new Uint8Array(await blob.arrayBuffer());
+  const tipo = u[0] === 0xFF && u[1] === 0xD8 ? 'image/jpeg' : u[0] === 0x89 && u[1] === 0x50 ? 'image/png' : String.fromCharCode(...u.subarray(8, 12)) === 'WEBP' ? 'image/webp' : 'desconhecido';
+  const bmp = await createImageBitmap(blob, { colorSpaceConversion: 'default' });
+  const w = bmp.width, h = bmp.height, c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { colorSpace: 'srgb', willReadFrequently: true }); g.drawImage(bmp, 0, 0);
+  const T = [0, 2, 4].map(i => parseInt(alvo.slice(i, i + 2), 16));
+  const lado = Math.min(w, h), s = Math.max(8, Math.round(lado * 0.03)), mg = Math.max(2, Math.round(lado * 0.01));
+  const amostra = (nome, x, y, ww, hh) => {
+    const d = g.getImageData(Math.round(x), Math.round(y), Math.round(ww), Math.round(hh)).data, soma = [0, 0, 0]; let fora = 0;
+    for (let i = 0; i < d.length; i += 4){
+      soma[0] += d[i]; soma[1] += d[i + 1]; soma[2] += d[i + 2];
+      if (Math.abs(d[i] - T[0]) > tol * 3 || Math.abs(d[i + 1] - T[1]) > tol * 3 || Math.abs(d[i + 2] - T[2]) > tol * 3) fora++;
+    }
+    const n = d.length / 4, rgb = soma.map(v => Math.round(v / n * 10) / 10);
+    return { nome, x: Math.round(x), y: Math.round(y), w: Math.round(ww), h: Math.round(hh), rgb, dif: Math.round(Math.max(...rgb.map((v, k) => Math.abs(v - T[k]))) * 10) / 10, foraPct: Math.round(fora / n * 1000) / 10 };
+  };
+  const am = [
+    amostra('canto sup. esq.', mg, mg, s, s), amostra('canto sup. dir.', w - mg - s, mg, s, s),
+    amostra('canto inf. esq.', mg, h - mg - s, s, s), amostra('canto inf. dir.', w - mg - s, h - mg - s, s, s),
+    amostra('faixa do topo', w * 0.15, mg, w * 0.7, s), amostra('faixa esquerda', mg, h * 0.15, s, h * 0.6), amostra('faixa direita', w - mg - s, h * 0.15, s, h * 0.6),
+  ];
+  const lum = a => 0.2126 * a.rgb[0] + 0.7152 * a.rgb[1] + 0.0722 * a.rgb[2];
+  const meio = ['faixa do topo', 'faixa esquerda', 'faixa direita'].map(n => lum(am.find(a => a.nome === n)));
+  const cantos = am.slice(0, 4).map(lum), media = v => v.reduce((x, y) => x + y, 0) / v.length;
+  const avisos = [], lim = Math.max(2, tol / 2);
+  const vin = media(meio) - media(cantos);
+  if (vin > lim) avisos.push(`Possível vinheta: os cantos estão ${vin.toFixed(1)} níveis mais escuros que o meio das bordas.`);
+  const topo = media(cantos.slice(0, 2)), baixo = media(cantos.slice(2));
+  if (Math.abs(topo - baixo) > lim) avisos.push(`Possível degradê vertical: ${Math.abs(topo - baixo).toFixed(1)} níveis entre o alto e o baixo.`);
+  const esq = media([cantos[0], cantos[2], meio[1]]), dir = media([cantos[1], cantos[3], meio[2]]);
+  if (Math.abs(esq - dir) > lim) avisos.push(`Possível degradê horizontal: ${Math.abs(esq - dir).toFixed(1)} níveis entre a esquerda e a direita.`);
+  const fundoOk = am.every(a => a.dif <= tol && a.foraPct <= 2);
+  const tamanhoOk = !pedido || (w === pedido.w && h === pedido.h);
+  return { versao: 1, alvo: '#' + alvo, tolerancia: tol, tipo, formatoOk: tipo === 'image/jpeg', perfilCor: tipo === 'image/jpeg' ? pgPerfilJpeg(u) : 'não conferido',
+    w, h, bytes: u.length, pedido, tamanhoOk, amostras: am, avisos, status: fundoOk ? 'PASS_SAMPLED_BG' : 'REWORK_BG' };
+}
+
+// ---- painel "Gerar imagem" ----
+let pgEst = null, pgOcupado = false;
+const pgSel = new Set(store.get('packshots-refs', []));
+async function pgApi(caminho, opcoes = {}){
+  let r;
+  try { r = await fetch('/api/gerar/' + caminho, { cache: 'no-store', ...opcoes }); }
+  catch { throw new Error('Sem conexão com o servidor. Confira a internet.'); }
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401){ toast('Entre no Estúdio de novo.'); setTimeout(() => location.reload(), 1500); }
+  if (!r.ok) throw new Error(d.erro || `O servidor respondeu ${r.status}.`);
+  return d;
+}
+const pgArquivo = (id, nome) => '/api/gerar/arquivo?' + new URLSearchParams({ id, nome });
+function pgRefsEscolhidas(){ return psItens.filter(x => pgSel.has(x.id)).slice(0, settings.packshot.maxRefs); }
+function pgRender(){
+  for (const id of [...pgSel]) if (!psItens.some(x => x.id === id)) pgSel.delete(id);
+  if (!pgSel.size) psItens.slice(0, settings.packshot.maxRefs).forEach(x => pgSel.add(x.id));
+  const escolhidas = pgRefsEscolhidas();
+  $('pgRefs').innerHTML = psItens.length ? psItens.map(x => {
+    const n = escolhidas.indexOf(x) + 1;
+    return `<label title="${esc(x.nome || '')}"><input type="checkbox" data-pg="${x.id}" ${pgSel.has(x.id) ? 'checked' : ''}><img src="${esc(x.mini || x.url)}" alt="">${n ? `<b>Imagem ${n}</b>` : '<span class="muted">fora</span>'} · ${esc(psPapelTxt(x))}</label>`;
+  }).join('') : '<span class="muted">Envie as fotos do produto no quadro acima.</span>';
+  const max = settings.packshot.maxRefs;
+  $('pgAviso').textContent = pgSel.size > max ? `Só as ${max} primeiras marcadas vão no pedido (máximo em Configurações → Packshots).` : '';
+  if (pgEst) $('pgEstado').textContent = !pgEst.chave ? 'Falta a chave da OpenAI na Cloudflare' : `${pgEst.feitasHoje} de ${pgEst.limiteDia} gerações hoje`;
+  $('pgGerar').disabled = pgOcupado || !escolhidas.length || !pgEst?.chave;
+  $('pgFora').disabled = pgOcupado;
+}
+async function pgCarregarEstado(){ try { pgEst = await pgApi('estado'); } catch (e) { $('pgEstado').textContent = e.message; } pgRender(); }
+const pgUSD = v => v == null ? '—' : 'US$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 4 });
+function pgConfHtml(c){
+  if (!c) return '<div class="muted">Conferência ainda não rodou.</div>';
+  const sw = rgb => `<span class="sw" style="background:rgb(${rgb.map(Math.round).join(',')})"></span>`;
+  return `<div style="margin:6px 0"><span class="pgselo ${c.status === 'REWORK_BG' ? 'rework' : ''}">${c.status}</span>
+    <span class="muted"> alvo ${c.alvo} · tolerância ${c.tolerancia} níveis</span></div>
+    <div class="pgdados"><b>Formato</b><span>${esc(c.tipo)} ${c.formatoOk ? '' : '(esperado JPG)'} · perfil de cor: ${esc(c.perfilCor)}</span>
+    <b>Dimensões</b><span>${c.w}×${c.h}${c.pedido ? (c.tamanhoOk ? ' (igual ao pedido)' : ` (pedido ${c.pedido.w}×${c.pedido.h})`) : ''}</span></div>
+    ${c.avisos.length ? c.avisos.map(a => `<div class="alert" style="margin:6px 0">${esc(a)}</div>`).join('') : '<div class="muted">Sem sinal de vinheta ou degradê nas amostras.</div>'}
+    <table><tr><th>Amostra</th><th>Cor média</th><th>Diferença</th><th>Pixels fora</th></tr>
+    ${c.amostras.map(a => `<tr><td>${esc(a.nome)}</td><td>${sw(a.rgb)}${a.rgb.join(', ')}</td><td>${a.dif <= c.tolerancia ? a.dif : `<b style="color:var(--danger)">${a.dif}</b>`}</td><td>${a.foraPct}%</td></tr>`).join('')}</table>`;
+}
+function pgResHtml(r, imgUrl){
+  const rec = r.recebido || {}, linkPub = rec.idLink ? location.origin + '/api/u/' + rec.idLink : '';
+  return `<div class="pgres">
+    <div><img src="${esc(imgUrl)}" alt="Imagem gerada">${linkPub ? `<button type="button" class="sm" data-pgcopia="${esc(linkPub)}" style="margin-top:6px">${ic('copy')}Copiar link público (24 h)</button>` : ''}</div>
+    <div><h3 style="margin:0">${r.origem === 'externa' ? 'Imagem feita fora' : 'Imagem gerada'} <span class="muted" style="font-weight:400">· ${psData(r.criado)}</span></h3>
+      <div class="pgdados">
+        ${r.origem === 'openai' ? `<b>Modelo</b><span>${esc(r.parametros.model)} · quality ${esc(r.parametros.quality)} · complexity ${esc(r.parametros.complexity)}</span>
+        <b>Pedido</b><span>${r.pedido.w}×${r.pedido.h} · JPG ${r.parametros.output_compression}</span>
+        <b>Recebido</b><span>${rec.w}×${rec.h} · ${esc(rec.tipo || '')} · ${psMB(rec.bytes || 0)}${rec.tamanhoIgualAoPedido === false ? ' · <b style="color:var(--danger)">tamanho diferente do pedido</b>' : ''}</span>
+        <b>Referências</b><span>${r.referencias.map(x => `Imagem ${x.ordem} (${esc(x.papel || 'sem papel')})`).join(', ')}</span>
+        <b>Tempo</b><span>${r.openai ? Math.round(r.openai.ms / 1000) + ' s' : '—'}</span>
+        <b>Custo</b><span>${pgUSD(r.custoEstimadoUSD)} (estimado pelo uso informado: ${r.uso ? `${r.uso.input_tokens} tokens de entrada, ${r.uso.output_tokens} de saída` : 'sem dados'})</span>`
+        : `<b>Arquivo</b><span>${esc(r.nomeOriginal || '')} · ${rec.w}×${rec.h} · ${psMB(rec.bytes || 0)}</span>`}
+      </div>
+      <div id="pgConf-${r.id}">${pgConfHtml(r.conferencia)}</div>
+    </div></div>`;
+}
+// confere a imagem guardada do registro e grava o resultado nele
+async function pgConferirRegistro(r){
+  const blob = await (await fetch(pgArquivo(r.id, r.recebido.arquivo), { cache: 'no-store' })).blob();
+  const conf = await psConferir(blob, { alvo: r.alvo, pedido: r.pedido || null });
+  r.conferencia = conf;
+  $('pgConf-' + r.id) && ($('pgConf-' + r.id).innerHTML = pgConfHtml(conf));
+  await pgApi('conferencia?' + new URLSearchParams({ id: r.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(conf) });
+  return conf;
+}
+async function pgGerar(){
+  const refs = pgRefsEscolhidas(), prompt = $('pgPrompt').value.trim();
+  if (!prompt) return toast('Escreva o prompt.');
+  if (!refs.length) return toast('Marque pelo menos uma foto de referência.');
+  const pedido = { prompt, refs: refs.map(x => ({ id: x.id, papel: psPapelTxt(x) })), alvo: $('pgAlvo').value, tamanho: $('pgTam').value, qualidade: $('pgQual').value, modelo: $('pgModelo').value, complexidade: 'high' };
+  pgOcupado = true; pgRender();
+  const ini = Date.now(), aviso = $('pgAviso');
+  const relogio = setInterval(() => { aviso.textContent = `Gerando… ${Math.round((Date.now() - ini) / 1000)} s (pode levar até uns 2 minutos)`; }, 1000);
+  try {
+    await comBarra(async () => {
+      let r;
+      try { r = await fetch('/api/gerar/criar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pedido) }); }
+      catch { throw new Error('Sem conexão com o servidor. Confira a internet.'); }
+      if (!r.ok){ const d = await r.json().catch(() => ({})); if (r.status === 401) setTimeout(() => location.reload(), 1500); throw new Error(d.erro || `O servidor respondeu ${r.status}.`); }
+      const leitor = r.body.getReader(), dec = new TextDecoder(); let resto = '', fim = null;
+      for (;;){
+        const { value, done } = await leitor.read();
+        resto += dec.decode(value || new Uint8Array(), { stream: !done });
+        let k; while ((k = resto.indexOf('\n')) >= 0){ const l = resto.slice(0, k).trim(); resto = resto.slice(k + 1); if (l) try { const o = JSON.parse(l); if (o.etapa !== 'gerando') fim = o; } catch {} }
+        if (done) break;
+      }
+      if (!fim) throw new Error('A conexão caiu antes do fim. Veja o resultado no histórico depois.');
+      if (fim.etapa === 'erro') throw new Error(fim.erro);
+      const reg = fim.registro;
+      $('pgRes').insertAdjacentHTML('afterbegin', pgResHtml(reg, pgArquivo(reg.id, reg.recebido.arquivo)));
+      aviso.textContent = 'Conferindo o fundo…';
+      await pgConferirRegistro(reg);
+      aviso.textContent = '';
+    });
+  } catch (e) { aviso.textContent = ''; toast(e.message || String(e), 8000); }
+  finally { clearInterval(relogio); pgOcupado = false; pgCarregarEstado(); }
+}
+async function pgConferirFora(f){
+  if (!f) return;
+  pgOcupado = true; pgRender(); $('pgAviso').textContent = 'Enviando e conferindo…';
+  try {
+    await comBarra(async () => {
+      const reg = await pgApi('externa?' + new URLSearchParams({ alvo: $('pgAlvo').value, nome: f.name }), { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
+      $('pgRes').insertAdjacentHTML('afterbegin', pgResHtml(reg, pgArquivo(reg.id, reg.recebido.arquivo)));
+      await pgConferirRegistro(reg);
+    });
+  } catch (e) { toast(e.message || String(e), 8000); }
+  finally { $('pgAviso').textContent = ''; pgOcupado = false; pgRender(); }
+}
+$('pgPrompt').value = store.get('packshots-prompt', '');
+$('pgPrompt').addEventListener('input', () => store.set('packshots-prompt', $('pgPrompt').value));
+$('pgRefs').addEventListener('change', e => {
+  const id = e.target.dataset.pg; if (!id) return;
+  e.target.checked ? pgSel.add(id) : pgSel.delete(id);
+  store.set('packshots-refs', [...pgSel]); pgRender();
+});
+$('pgGerar').onclick = pgGerar;
+$('pgFora').onclick = () => $('pgForaIn').click();
+$('pgForaIn').onchange = e => { pgConferirFora(e.target.files[0]); e.target.value = ''; };
+$('pgRes').addEventListener('click', e => { const b = e.target.closest('[data-pgcopia]'); if (b) psCopiarTxt(b.dataset.pgcopia, 'Link copiado.'); });
 $('psCfgHoras').onchange = e => { settings.packshot.horas = +e.target.value; saveSettings(); };
 $('psCfgRefs').onchange = e => { settings.packshot.maxRefs = +e.target.value; saveSettings(); };
 
