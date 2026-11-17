@@ -639,6 +639,9 @@ dialog.dlgap{width:min(1100px,calc(100vw - 32px));max-height:calc(100vh - 32px)}
 .amhead button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
 .amcorpo{flex:1;overflow:auto;padding:16px 20px}
 .amvazio{padding:30px 0;text-align:center}
+.amfiltro{padding:10px 20px;border-bottom:1px solid var(--border);overflow-x:auto}
+.amfiltro .apvista{flex-wrap:nowrap}
+.amfiltro button b.rep{color:var(--danger,#d64545)}
 .amvar{margin:14px 0 8px;font-weight:600;font-size:13px}
 .amvar:first-child{margin-top:0}
 .amgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
@@ -7742,7 +7745,7 @@ const amP = () => am && plan.produtos.find(x => x.id === am.pid);
 const amEdita = p => p?.aprovacao?.status === 'pendente' && etapa(p) === 'aprovacao';
 async function abrirAm(p){
   fecharAm();
-  const meu = am = { pid: p.id, jobs: [], us: units(p), carregando: true, selecionar: false, sel: new Set(), rep: null };
+  const meu = am = { pid: p.id, jobs: [], us: units(p), carregando: true, selecionar: false, sel: new Set(), rep: null, vr: null }; // vr = variação filtrada (id)
   $('dlgAp').showModal(); renderAm();
   if (!ws){ meu.carregando = false; return renderAm(); }
   // primeiro as miniaturas (rápido); a conferência completa (fotos fora da regra) chega depois
@@ -7786,11 +7789,20 @@ function renderAm(){
   const p = amP(); if (!p) return fecharAm();
   const edita = amEdita(p), jobs = am.jobs, st = j => avDe(p, j)?.status || '';
   const nOk = jobs.filter(j => st(j) === 'aprovada').length, nNo = jobs.filter(j => st(j) === 'reprovada').length, ant = edita ? reprovacaoAnterior(p) : null;
+  if (am.vr && !am.us.some(u => u.id === am.vr)) am.vr = null;
+  // filtro por variação: só quando há mais de uma com fotos
+  const comFotos = am.us.filter(u => jobs.some(j => j.u.id === u.id));
+  const filtro = !am.carregando && comFotos.length > 1 ? `<div class="amfiltro"><div class="yn apvista">
+      <button type="button" data-amvar="" class="${am.vr ? '' : 'on'}">Todas<b>${jobs.length}</b></button>
+      ${comFotos.map(u => { const uj = jobs.filter(j => j.u.id === u.id), no = uj.filter(j => st(j) === 'reprovada').length;
+        return `<button type="button" data-amvar="${esc(u.id)}" class="${am.vr === u.id ? 'on' : ''}" title="${no ? no + ' reprovada(s)' : ''}">${esc(u.nome || 'Sem variação')}<b class="${no ? 'rep' : ''}">${uj.length}</b></button>`; }).join('')}
+    </div></div>` : '';
   let corpo;
   if (!ws) corpo = '<div class="alert">Conecte a pasta (botão no topo) para ver as fotos.</div>';
   else if (am.carregando) corpo = `<div class="muted amvazio">${ic('loader', 'spin')} Carregando as fotos…</div>`;
   else if (!jobs.length) corpo = '<div class="muted amvazio">Este produto não tem fotos.</div>';
   else corpo = am.us.map(u => {
+    if (am.vr && u.id !== am.vr) return '';
     const uj = jobs.filter(j => j.u === u); if (!uj.length) return '';
     return (u.nome ? `<div class="amvar">${esc(p.tipoVariacao)}: ${esc(u.nome)}</div>` : '') + `<div class="amgrid">${uj.map(j => {
       const i = jobs.indexOf(j), s = st(j), v = avDe(p, j), sel = am.sel.has(i), bl = jobBlocked(j);
@@ -7809,7 +7821,7 @@ function renderAm(){
       <div class="opts">${AP_MOTIVOS.map(m => `<button type="button" class="opt ${r.motivos.has(m) ? 'on' : ''}" data-ammot="${esc(m)}">${esc(m)}</button>`).join('')}</div>
       <textarea id="amTexto" rows="2" placeholder="O que precisa ser feito? (vale para todas as fotos escolhidas)">${esc(r.texto)}</textarea>
       <div class="ambtns"><button type="button" data-am="cancrep">Cancelar</button><button type="button" class="reprovar solid" data-am="confrep">${ic('x')}Confirmar reprovação</button></div></div>`
-    : am.selecionar ? `<div class="ambar"><b>${k} selecionada(s)</b><button type="button" class="sm ghost" data-am="todas">${k === jobs.length ? 'Limpar' : 'Selecionar todas'}</button>
+    : am.selecionar ? `<div class="ambar"><b>${k} selecionada(s)</b><button type="button" class="sm ghost" data-am="todas">${jobs.every((x, n) => (am.vr && x.u.id !== am.vr) || am.sel.has(n)) ? 'Limpar' : am.vr ? 'Selecionar todas desta variação' : 'Selecionar todas'}</button>
       <div class="ambtns"><button type="button" class="aprovar" data-am="oksel" ${k ? '' : 'disabled'}>${ic('check')}Aprovar</button><button type="button" class="reprovar" data-am="nosel" ${k ? '' : 'disabled'}>${ic('x')}Reprovar</button></div></div>`
     : etapa(p) === 'pronto' ? `<div class="ambar"><span class="muted">Aprovado, ainda não subiu para o Drive.</span><div class="ambtns"><button type="button" class="primary" data-am="enviar">${ic('upload')}Enviar ao Drive</button></div></div>` : '';
   const rolagem = $('amBody').querySelector('.amcorpo')?.scrollTop || 0; // redesenhar não volta para o topo
@@ -7821,7 +7833,7 @@ function renderAm(){
       <button type="button" class="sm" data-am="compartilhar" title="Copiar o link que abre direto este produto">${ic('link')}Compartilhar</button>
       <button type="button" class="sm ghost" data-am="abrir" title="Abrir o produto">${ic('external')}</button>
       <button type="button" class="sm ghost" data-am="fechar" title="Fechar">${ic('x')}</button></div>
-    <div class="amcorpo">${ant?.motivo ? `<div class="alert" style="margin:0 0 12px">Reprovado antes (${esc(ant.por)}, ${esc(dtBR(ant.em))}): ${esc(ant.motivo)}</div>` : ''}
+    ${filtro}<div class="amcorpo">${ant?.motivo ? `<div class="alert" style="margin:0 0 12px">Reprovado antes (${esc(ant.por)}, ${esc(dtBR(ant.em))}): ${esc(ant.motivo)}</div>` : ''}
       ${reprovado(p) ? `<div class="alert block" style="margin:0 0 12px">Reprovado por ${esc(p.aprovacao.por)} em ${esc(dtBR(p.aprovacao.em))}${p.aprovacao.motivo ? ': ' + esc(p.aprovacao.motivo) : ''}. A equipe corrige e encaminha de novo.</div>` : ''}
       ${corpo}</div>${barra}`;
   if (rolagem) $('amBody').querySelector('.amcorpo').scrollTop = rolagem;
@@ -7833,12 +7845,14 @@ $('dlgAp').addEventListener('click', e => {
   const p = amP(); if (!p) return;
   const mot = e.target.closest('[data-ammot]');
   if (mot && am.rep){ const m = mot.dataset.ammot; am.rep.motivos.has(m) ? am.rep.motivos.delete(m) : am.rep.motivos.add(m); return renderAm(); }
+  const fv = e.target.closest('[data-amvar]');
+  if (fv){ am.vr = fv.dataset.amvar || null; renderAm(); return $('amBody').querySelector('.amcorpo').scrollTop = 0; }
   const b = e.target.closest('[data-am]'), ft = e.target.closest('.amft'), i = ft ? +ft.dataset.j : -1, j = am.jobs[i];
   if (!b){
     if (!ft || !e.target.closest('.img')) return;
     if (am.selecionar){ am.sel.has(i) ? am.sel.delete(i) : am.sel.add(i); return renderAm(); }
     // o visor abre a foto inteira (a janela mostra só a miniatura)
-    const lista = am.jobs.filter(x => x.dir && (IMG_EXT.test(x.local) || VID_EXT.test(x.local))).map(x => ({ titulo: rotFoto(x), nome: x.local,
+    const lista = am.jobs.filter(x => x.dir && (!am.vr || x.u.id === am.vr) && (IMG_EXT.test(x.local) || VID_EXT.test(x.local))).map(x => ({ titulo: rotFoto(x), nome: x.local,
       arquivo: async () => x.file || (await x.dir.getFileHandle(x.local)).getFile() }));
     return abrirVisor(lista, lista.findIndex(x => x.nome === j?.local));
   }
@@ -7855,7 +7869,9 @@ $('dlgAp').addEventListener('click', e => {
   }
   if (!amEdita(p)) return;
   if (a === 'sel'){ am.selecionar = !am.selecionar; am.sel.clear(); am.rep = null; return renderAm(); }
-  if (a === 'todas'){ am.sel.size === am.jobs.length ? am.sel.clear() : am.jobs.forEach((_, k) => am.sel.add(k)); return renderAm(); }
+  if (a === 'todas'){ // com filtro, "todas" = as da variação mostrada
+    const vis = am.jobs.map((x, k) => k).filter(k => !am.vr || am.jobs[k].u.id === am.vr);
+    vis.every(k => am.sel.has(k)) ? vis.forEach(k => am.sel.delete(k)) : vis.forEach(k => am.sel.add(k)); return renderAm(); }
   // clicar de novo na decisão já tomada desfaz (a foto volta a ficar pendente)
   if ((a === 'ok' || a === 'no') && avDe(p, j)?.status === (a === 'ok' ? 'aprovada' : 'reprovada')){
     delete p.aprovacao.av[fotoChave(j)]; savePlan(); renderAprov(); return renderAm();
@@ -8896,6 +8912,9 @@ const ATUALIZACOES = [
   { id: '2026-11-17-compartilhar-aprovados', em: '2026-11-17 11:00', titulo: 'Compartilhar produto aprovado', itens: [
     'O botão "Compartilhar" agora aparece também nos aprovados e reprovados (antes só nos pendentes)',
     'O link abre direto a janela do produto, com as fotos'] },
+  { id: '2026-11-17-filtro-variacao', em: '2026-11-17 11:40', titulo: 'Filtro por variação na aprovação', itens: [
+    'A janela do produto (em revisão, aprovado ou reprovado) ganhou botões no topo para ver só uma variação, com a quantidade de fotos de cada uma',
+    'Número em vermelho = a variação tem foto reprovada; "Selecionar todas" e as setas do visor ficam só na variação escolhida'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
