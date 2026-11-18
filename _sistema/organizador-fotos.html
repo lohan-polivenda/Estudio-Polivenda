@@ -601,6 +601,18 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 .psitem .acoes{display:flex;gap:2px}
 .psitem.erro{border-color:var(--danger)}.psitem.erro .info{color:var(--danger)}
 .psacoes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:16px 20px}
+.psprod{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:16px 20px 0}
+.psprod label{font-weight:600}.psprod select{flex:1;min-width:220px;max-width:520px}
+.psprod.falta select{border-color:var(--danger);box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 20%,transparent)}
+.psgrupo{border:1px solid var(--border);border-radius:12px;background:var(--soft)}
+.psgrupo>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;cursor:pointer;list-style:none}
+.psgrupo>summary::-webkit-details-marker{display:none}
+.psgrupo>summary .ic.seta{transition:transform .15s}.psgrupo[open]>summary .ic.seta{transform:rotate(90deg)}
+.psgrupo>summary .tit{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.psgrupo>summary .gacoes{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.psgrupo>summary select{width:auto;max-width:260px;font-size:12px}
+.psgrupo.ativo{border-color:var(--accent)}
+.psgrupo .itens{display:flex;flex-direction:column;gap:8px;padding:0 10px 10px}
 .psprev{margin:0 20px 20px;padding:10px 12px;background:var(--soft);border-radius:8px;font:12px/1.6 Consolas,monospace;white-space:pre-wrap;word-break:break-all}
 .psprev:empty{display:none}
 .pgcorpo{padding:4px 20px 20px}
@@ -838,6 +850,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
   <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.1 14c.2-1 .7-1.7 1.4-2.5A6 6 0 1 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 4H7l3-4z"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
@@ -950,6 +963,8 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
     <div class="pnhead"><h2>Packshots · fotos para o chat</h2>
       <span class="muted ajuda">Envie as fotos reais do produto. Cada uma ganha um link que abre sem login, só com a imagem, e vence sozinho no prazo escolhido em Configurações → Packshots. Escolha o papel de cada foto, acerte a ordem e use "Copiar lista" para colar no chat. Ao terminar, apague: o link deixa de abrir na hora.</span>
     </div>
+    <div class="psprod" id="psProdBox"><label for="psProd">Produto destas fotos</label><select id="psProd"></select>
+      <span class="muted ajuda">As fotos enviadas entram no grupo deste produto, logo abaixo. O pedido de imagem usa as fotos do produto escolhido.</span></div>
     <div class="psdrop" id="psDrop">
       <svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>
       <span>Arraste as fotos aqui ou</span>
@@ -2176,7 +2191,7 @@ function showTab(t){
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   store.set('tab', t);
   if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); renderAcessos(); psCfgRender(); }
-  if (t === 'packshots'){ psRender(); psAtualizar(); pgCarregarEstado(); pvProdSelect($('pgProd'), store.get('packshots-produto', '')); pvCarregar(); }
+  if (t === 'packshots'){ pvProdSelect($('pgProd'), store.get('packshots-produto', '')); pvProdSelect($('psProd'), store.get('packshots-ponte-produto', '')); psRender(); psAtualizar(); pgCarregarEstado(); pvCarregar(); }
   if (t === 'demandas') renderDem();
   if (t === 'produtos'){ renderList(); renderDetail(); }
   if (t === 'resumo') renderResumo();
@@ -9087,6 +9102,10 @@ const ATUALIZACOES = [
     'A imagem aprovada entra no produto em 1300×1540, com corte centralizado (sem esticar) e JPG 95',
     'Os tamanhos gerados pela OpenAI agora têm a mesma proporção: 1664×1968 (padrão), 1312×1552 ou 2496×2960',
     'Se a imagem for menor que a medida, o app pergunta antes de ampliar'] },
+  { id: '2026-11-18-packshots-grupos', em: '2026-11-18 19:00', titulo: 'Packshots: fotos agrupadas por produto', itens: [
+    'Antes de enviar fotos, escolha o produto (SKU): cada produto ganha seu próprio grupo na aba Packshots',
+    'Cada grupo tem "Usar no pedido", "Copiar", "Apagar" e a troca de produto de todas as fotos dele',
+    'O pedido de imagem mostra só as fotos do produto escolhido; fotos antigas sem produto ficam em "Sem produto"'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -9148,7 +9167,23 @@ let psItens = store.get('packshots-ponte', []).filter(x => x.id && x.expira > Da
 const psTemp = new Map(); // envios em andamento: chave local -> { nome, etapa, erro }
 const psGuardar = () => store.set('packshots-ponte', psItens.map(({ mini, ...x }) => x));
 const psPapelTxt = x => (x.papel === 'outro' ? (x.outro || '').trim() : x.papel) || 'sem papel';
-const psListaTxt = () => psItens.map((x, i) => `Imagem ${i + 1} (${psPapelTxt(x)}): ${x.url}`).join('\n');
+// grupos por produto: a chave é o id do produto + variação (ou o SKU); foto sem produto fica em "Sem produto"
+const psChave = prod => prod ? (prod.id || '') + '|' + (prod.variacao || prod.sku || '') : '';
+const psProdTxt = prod => prod ? [prod.sku || 'sem SKU', prod.nome, prod.variacao].filter(Boolean).join(' · ') : 'Sem produto';
+function psGrupos(){
+  const m = new Map();
+  for (const x of psItens){ const k = psChave(x.produto); if (!m.has(k)) m.set(k, { k, produto: x.produto || null, itens: [] }); m.get(k).itens.push(x); }
+  return [...m.values()];
+}
+const psDoGrupo = k => psItens.filter(x => psChave(x.produto) === k);
+// valor do seletor de produto ("idProduto|idVariação") a partir do produto guardado na foto
+function psValorDe(prod){ const a = pvAcharUnidade(prod); return a ? a.p.id + '|' + a.u.id : ''; }
+function psProdDoValor(v){
+  const [pid, vid] = (v || '|').split('|'), p = plan.produtos.find(x => x.id === pid);
+  return p ? pvProdDe(p, units(p).find(u => u.id === vid) || units(p)[0]) : null;
+}
+const psListaTxt = () => psGrupos().map(g => `${psProdTxt(g.produto)}\n` + g.itens.map((x, i) => `Imagem ${i + 1} (${psPapelTxt(x)}): ${x.url}`).join('\n')).join('\n\n');
+const psGrupoTxt = k => psDoGrupo(k).map((x, i) => `Imagem ${i + 1} (${psPapelTxt(x)}): ${x.url}`).join('\n');
 const psData = t => new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const psMB = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' MB';
 
@@ -9228,6 +9263,11 @@ async function psConverter(file){
 async function psEnviar(files){
   const lista = [...files];
   if (!lista.length) return;
+  const produto = psProdDoValor($('psProd').value);
+  if (!produto){
+    $('psProdBox').classList.add('falta'); $('psProd').focus();
+    return toast('Escolha primeiro o produto destas fotos.', 5000);
+  }
   await comBarra(async () => {
     for (const f of lista){
       const k = 'p' + Math.random().toString(36).slice(2);
@@ -9236,11 +9276,14 @@ async function psEnviar(files){
         const cv = await psConverter(f);
         psTemp.get(k).etapa = 'Enviando…'; psRender();
         const nome = f.name.replace(/\.[^.]+$/, '') + '.jpg';
-        const d = await psApi('enviar?' + new URLSearchParams({ horas: settings.packshot.horas, nome }), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: cv.blob });
-        psItens.push({ id: d.id, url: d.url, papel: psItens.length ? '' : 'frontal', outro: '', nome, w: d.w, h: d.h, bytes: d.bytes, expira: d.expira,
+        const d = await psApi('enviar?' + new URLSearchParams({ horas: settings.packshot.horas, nome, prod: JSON.stringify(produto) }), { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: cv.blob });
+        const k0 = psChave(produto);
+        psItens.push({ id: d.id, url: d.url, papel: psDoGrupo(k0).length ? '' : 'frontal', outro: '', nome, w: d.w, h: d.h, bytes: d.bytes, expira: d.expira, produto: d.produto || produto,
           origem: `${cv.heic ? 'HEIC' : f.type.replace('image/', '').toUpperCase() || 'imagem'} ${cv.origW}×${cv.origH}${cv.cor === 'display-p3' ? ', Display P3' : ''}`,
           mini: URL.createObjectURL(cv.blob) });
-        if (pgSel.size < settings.packshot.maxRefs){ pgSel.add(d.id); store.set('packshots-refs', [...pgSel]); }
+        // o pedido de imagem passa a ser deste produto; a foto entra marcada se couber
+        if ($('pgProd').value !== $('psProd').value){ $('pgProd').value = $('psProd').value; store.set('packshots-produto', $('pgProd').value); }
+        if (pgRefsDoProduto().filter(x => pgSel.has(x.id)).length < settings.packshot.maxRefs){ pgSel.add(d.id); store.set('packshots-refs', [...pgSel]); }
         psTemp.delete(k); psGuardar();
       } catch (e) { Object.assign(psTemp.get(k), { etapa: '', erro: e.message || String(e) }); }
       psRender();
@@ -9252,7 +9295,7 @@ function psRender(){
   $('psRegra').textContent = `JPG, PNG, WebP ou HEIC. Cada foto vira JPG de até ${PS_LADO} px no lado maior; o link vale ${settings.packshot.horas >= 48 ? settings.packshot.horas / 24 + ' dias' : settings.packshot.horas + ' h'}.`;
   const agora = Date.now();
   psItens = psItens.filter(x => x.expira > agora);
-  const linhas = psItens.map((x, i) => `<div class="psitem" data-id="${x.id}">
+  const item = (x, i, n) => `<div class="psitem" data-id="${x.id}">
     <div class="num">Imagem ${i + 1}</div>
     <img src="${esc(x.mini || x.url)}" alt="" loading="lazy">
     <div><div class="pspapel">
@@ -9262,11 +9305,26 @@ function psRender(){
     <div class="muted info">${x.w}×${x.h} · ${psMB(x.bytes)} · vence ${psData(x.expira)}${x.origem ? ' · original: ' + esc(x.origem) : ''}</div></div>
     <div class="acoes">
       <button type="button" class="icon" data-ps="sobe" title="Subir" ${i ? '' : 'disabled'}>${ic('up')}</button>
-      <button type="button" class="icon" data-ps="desce" title="Descer" ${i < psItens.length - 1 ? '' : 'disabled'}>${ic('down')}</button>
+      <button type="button" class="icon" data-ps="desce" title="Descer" ${i < n - 1 ? '' : 'disabled'}>${ic('down')}</button>
       <button type="button" class="icon" data-ps="copiar" title="Copiar só este link">${ic('copy')}</button>
       <button type="button" class="icon" data-ps="abrir" title="Abrir o link numa aba nova">${ic('external')}</button>
       <button type="button" class="icon danger" data-ps="apagar" title="Apagar agora (o link para de abrir)">${ic('trash')}</button>
-    </div></div>`);
+    </div></div>`;
+  const ativo = psChave(psProdDoValor($('pgProd').value)), fechados = new Set(store.get('packshots-grupos-fechados', []));
+  const opcoes = pvProdOpcoes();
+  const linhas = psGrupos().map(g => {
+    const atual = psValorDe(g.produto), achado = !g.produto || atual;
+    return `<details class="psgrupo ${g.k === ativo ? 'ativo' : ''}" data-grupo="${esc(g.k)}" ${fechados.has(g.k) ? '' : 'open'}>
+      <summary>${ic('chevron', 'seta')}<span class="tit">${esc(psProdTxt(g.produto))}</span>
+        <span class="muted">${g.itens.length} foto${g.itens.length > 1 ? 's' : ''}${achado ? '' : ' · produto não está mais no plano'}</span>
+        <span class="gacoes">
+          <select data-psg="mover" aria-label="Produto deste grupo" title="Trocar o produto de todas as fotos deste grupo"><option value="">${g.produto ? 'Trocar produto…' : 'Escolha o produto…'}</option>${opcoes.map(o => `<option value="${esc(o.v)}" ${o.v === atual ? 'disabled' : ''}>${esc(o.txt)}</option>`).join('')}</select>
+          <button type="button" class="sm" data-psg="usar" ${g.produto ? '' : 'disabled'} title="Usar estas fotos no pedido de imagem">${ic('sparkles')}Usar no pedido</button>
+          <button type="button" class="sm" data-psg="copiar" title="Copiar os links deste grupo">${ic('copy')}Copiar</button>
+          <button type="button" class="sm danger" data-psg="apagar" title="Apagar as fotos deste grupo agora">${ic('trash')}</button>
+        </span></summary>
+      <div class="itens">${g.itens.map((x, i) => item(x, i, g.itens.length)).join('')}</div></details>`;
+  });
   const temp = [...psTemp.entries()].map(([k, t]) => `<div class="psitem ${t.erro ? 'erro' : ''}" data-temp="${k}">
     <div class="num">${t.erro ? 'Erro' : ic('loader', 'spin')}</div><div></div>
     <div><b>${esc(t.nome)}</b><div class="muted info">${esc(t.erro || t.etapa)}</div></div>
@@ -9284,8 +9342,13 @@ async function psAtualizar(){
   try {
     const d = await psApi('lista'), vivos = new Map(d.itens.map(x => [x.id, x]));
     const antes = psItens.length;
-    psItens = psItens.filter(x => vivos.has(x.id)).map(x => ({ ...x, expira: vivos.get(x.id).expira }));
-    if (psItens.length !== antes){ psGuardar(); psRender(); }
+    let mudou = false;
+    psItens = psItens.filter(x => vivos.has(x.id)).map(x => {
+      const v = vivos.get(x.id), prod = v.produto || null;
+      if (psChave(prod) !== psChave(x.produto || null)) mudou = true;
+      return { ...x, expira: v.expira, produto: prod };
+    });
+    if (mudou || psItens.length !== antes){ psGuardar(); psRender(); }
   } catch (e) { $('psAviso').textContent = e.message; }
 }
 async function psCopiarTxt(txt, ok){
@@ -9324,11 +9387,58 @@ $('psLista').addEventListener('click', async e => {
   if (b.dataset.ps === 'fechar'){ psTemp.delete(b.closest('.psitem').dataset.temp); return psRender(); }
   const i = psItens.findIndex(y => y.id === b.closest('.psitem')?.dataset.id), x = psItens[i]; if (!x) return;
   const a = b.dataset.ps;
-  if (a === 'sobe' || a === 'desce'){ const j = a === 'sobe' ? i - 1 : i + 1; [psItens[i], psItens[j]] = [psItens[j], psItens[i]]; psGuardar(); return psRender(); }
+  if (a === 'sobe' || a === 'desce'){
+    const k = psChave(x.produto), passo = a === 'sobe' ? -1 : 1;
+    let j = i + passo; while (j >= 0 && j < psItens.length && psChave(psItens[j].produto) !== k) j += passo;
+    if (j < 0 || j >= psItens.length) return;
+    [psItens[i], psItens[j]] = [psItens[j], psItens[i]]; psGuardar(); return psRender();
+  }
   if (a === 'copiar') return psCopiarTxt(x.url, 'Link copiado.');
   if (a === 'abrir') return window.open(x.url, '_blank', 'noopener,noreferrer');
-  if (a === 'apagar' && await confirmar(`Apagar a Imagem ${i + 1} agora?\n\nO arquivo sai da nuvem e o link deixa de abrir na hora.`, 'Apagar', 'Cancelar')) psApagar([x.id]);
+  if (a === 'apagar' && await confirmar(`Apagar a Imagem ${psDoGrupo(psChave(x.produto)).indexOf(x) + 1} de ${psProdTxt(x.produto)} agora?\n\nO arquivo sai da nuvem e o link deixa de abrir na hora.`, 'Apagar', 'Cancelar')) psApagar([x.id]);
 });
+// trocar o produto de várias fotos (grava no servidor, foto por foto)
+async function psMoverGrupo(k, valor){
+  const produto = psProdDoValor(valor); if (!produto) return;
+  const fotos = psDoGrupo(k);
+  await comBarra(async () => {
+    for (const x of fotos){
+      try { await psApi('produto?' + new URLSearchParams({ id: x.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produto }) }); x.produto = produto; }
+      catch (e) { toast(e.message, 6000); break; }
+    }
+  });
+  psGuardar(); psRender(); toast(`Fotos movidas para ${psProdTxt(produto)}.`);
+}
+// usar as fotos do grupo no pedido: escolhe o produto e marca as primeiras fotos (até o máximo)
+function psUsarGrupo(k){
+  const fotos = psDoGrupo(k), v = psValorDe(fotos[0]?.produto);
+  if (!v) return toast('Este produto não está mais no plano.');
+  $('pgProd').value = v; store.set('packshots-produto', v);
+  for (const x of pgRefsDoProduto()) pgSel.delete(x.id);
+  fotos.slice(0, settings.packshot.maxRefs).forEach(x => pgSel.add(x.id));
+  store.set('packshots-refs', [...pgSel]); psRender();
+  $('pgRefs').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+$('psLista').addEventListener('click', async e => {
+  const b = e.target.closest('[data-psg]'); if (!b || b.tagName === 'SELECT') return;
+  e.preventDefault();
+  const k = b.closest('.psgrupo').dataset.grupo, fotos = psDoGrupo(k), nome = psProdTxt(fotos[0]?.produto);
+  if (b.dataset.psg === 'usar') return psUsarGrupo(k);
+  if (b.dataset.psg === 'copiar') return psCopiarTxt(psGrupoTxt(k), `Links de ${nome} copiados (${fotos.length}).`);
+  if (b.dataset.psg === 'apagar' && await confirmar(`Apagar as ${fotos.length} fotos de ${nome} agora?\n\nOs arquivos saem da nuvem e os links deixam de abrir na hora.`, 'Apagar', 'Cancelar')) psApagar(fotos.map(x => x.id));
+});
+$('psLista').addEventListener('change', async e => {
+  const sel = e.target.closest('[data-psg="mover"]'); if (!sel || !sel.value) return;
+  const k = sel.closest('.psgrupo').dataset.grupo, n = psDoGrupo(k).length, v = sel.value;
+  sel.value = '';
+  if (await confirmar(`Mover ${n} foto${n > 1 ? 's' : ''} para ${psProdTxt(psProdDoValor(v))}?`, 'Mover', 'Cancelar')) psMoverGrupo(k, v);
+});
+$('psLista').addEventListener('toggle', e => {
+  const d = e.target.closest?.('.psgrupo'); if (!d) return;
+  const f = new Set(store.get('packshots-grupos-fechados', [])); d.open ? f.delete(d.dataset.grupo) : f.add(d.dataset.grupo);
+  store.set('packshots-grupos-fechados', [...f]);
+}, true);
+$('psProd').onchange = e => { store.set('packshots-ponte-produto', e.target.value); $('psProdBox').classList.toggle('falta', !e.target.value && $('psProdBox').classList.contains('falta')); };
 $('psCopiar').onclick = () => {
   const falta = psItens.filter(x => psPapelTxt(x) === 'sem papel').length;
   psCopiarTxt(psListaTxt(), falta ? `Copiado, mas falta o papel de ${falta} foto(s).` : `Lista copiada (${psItens.length} foto${psItens.length > 1 ? 's' : ''}).`);
@@ -9405,17 +9515,20 @@ async function pgApi(caminho, opcoes = {}){
   return d;
 }
 const pgArquivo = (id, nome) => '/api/gerar/arquivo?' + new URLSearchParams({ id, nome });
-function pgRefsEscolhidas(){ return psItens.filter(x => pgSel.has(x.id)).slice(0, settings.packshot.maxRefs); }
+// fotos que podem ir no pedido: as do produto escolhido em "Produto (SKU)"; sem produto escolhido, todas
+function pgRefsDoProduto(){ const p = psProdDoValor($('pgProd').value); return p ? psDoGrupo(psChave(p)) : psItens; }
+function pgRefsEscolhidas(){ return pgRefsDoProduto().filter(x => pgSel.has(x.id)).slice(0, settings.packshot.maxRefs); }
 function pgRender(){
   for (const id of [...pgSel]) if (!psItens.some(x => x.id === id)) pgSel.delete(id);
-  if (!pgSel.size) psItens.slice(0, settings.packshot.maxRefs).forEach(x => pgSel.add(x.id));
+  const doProd = pgRefsDoProduto();
+  if (!doProd.some(x => pgSel.has(x.id))) doProd.slice(0, settings.packshot.maxRefs).forEach(x => pgSel.add(x.id));
   const escolhidas = pgRefsEscolhidas();
-  $('pgRefs').innerHTML = psItens.length ? psItens.map(x => {
+  $('pgRefs').innerHTML = doProd.length ? doProd.map(x => {
     const n = escolhidas.indexOf(x) + 1;
     return `<label title="${esc(x.nome || '')}"><input type="checkbox" data-pg="${x.id}" ${pgSel.has(x.id) ? 'checked' : ''}><img src="${esc(x.mini || x.url)}" alt="">${n ? `<b>Imagem ${n}</b>` : '<span class="muted">fora</span>'} · ${esc(psPapelTxt(x))}</label>`;
-  }).join('') : '<span class="muted">Envie as fotos do produto no quadro acima.</span>';
+  }).join('') : `<span class="muted">${psItens.length ? 'Nenhuma foto enviada para este produto. Envie no quadro acima ou escolha outro produto.' : 'Envie as fotos do produto no quadro acima.'}</span>`;
   const max = settings.packshot.maxRefs;
-  $('pgAviso').textContent = pgSel.size > max ? `Só as ${max} primeiras marcadas vão no pedido (máximo em Configurações → Packshots).` : '';
+  $('pgAviso').textContent = doProd.filter(x => pgSel.has(x.id)).length > max ? `Só as ${max} primeiras marcadas vão no pedido (máximo em Configurações → Packshots).` : '';
   if (pgEst) $('pgEstado').textContent = !pgEst.chave ? 'Falta a chave da OpenAI na Cloudflare' : `${pgEst.feitasHoje} de ${pgEst.limiteDia} gerações hoje`;
   $('pgGerar').disabled = pgOcupado || !escolhidas.length || !pgEst?.chave;
   $('pgFora').disabled = pgOcupado;
@@ -9548,7 +9661,7 @@ function pgProdutoEscolhido(){
   if (!p) return null;
   return pvProdDe(p, units(p).find(u => u.id === vid) || units(p)[0]);
 }
-$('pgProd').onchange = e => store.set('packshots-produto', e.target.value);
+$('pgProd').onchange = e => { store.set('packshots-produto', e.target.value); psRender(); };
 
 let pvItens = [], pvVisiveis = [], pvAberto = null, pvRefIdx = 0, pvMotivos = new Set(), pvDetalhe = '', pvItemSel = '', pvOcupado = false;
 const PV_MOTIVOS = [['cor', 'Cor diferente da real'], ['forma', 'Forma mudou'], ['quantidade', 'Quantidade de flores ou peças mudou'], ['material', 'Material ou textura diferente'],
