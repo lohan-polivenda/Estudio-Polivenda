@@ -874,7 +874,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
     <button data-tab="resumo"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg>Resumo</button>
     <button data-tab="produtos" class="on">Produtos</button>
     <button data-tab="demandas"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg>Demandas</button>
-    <button data-tab="packshots"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>Packshots</button>
+    <button data-tab="packshots"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg>Imagens</button>
     <button data-tab="config"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>Configurações</button>
   </nav>
   <button id="wsChip"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg>Conectar pasta Estudio Polivenda</button>
@@ -960,8 +960,8 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
 <!-- ======================= PACKSHOTS (ponte com o chat: fotos com link público temporário) ======================= -->
 <section id="tab-packshots" class="hidden">
   <div class="panel painel">
-    <div class="pnhead"><h2>Packshots · fotos para o chat</h2>
-      <span class="muted ajuda">Envie as fotos reais do produto. Cada uma ganha um link que abre sem login, só com a imagem, e vence sozinho no prazo escolhido em Configurações → Packshots. Escolha o papel de cada foto, acerte a ordem e use "Copiar lista" para colar no chat. Ao terminar, apague: o link deixa de abrir na hora.</span>
+    <div class="pnhead"><h2>Imagens · fotos para o chat</h2>
+      <span class="muted ajuda">Envie as fotos reais do produto. Cada uma ganha um link que abre sem login, só com a imagem, e vence sozinho no prazo escolhido em Configurações → Imagens. Escolha o papel de cada foto, acerte a ordem e use "Copiar lista" para colar no chat. Ao terminar, apague: o link deixa de abrir na hora.</span>
     </div>
     <div class="psprod" id="psProdBox"><label for="psProd">Produto destas fotos</label><select id="psProd"></select>
       <span class="muted ajuda">As fotos enviadas entram no grupo deste produto, logo abaixo. O pedido de imagem usa as fotos do produto escolhido.</span></div>
@@ -1012,7 +1012,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
     </div>
     <div class="pvfiltros">
       <select id="pvStatus" aria-label="Situação"><option value="pendente">Pendentes</option><option value="aprovado">Aprovadas</option><option value="reprovado">Reprovadas</option><option value="erro">Com erro</option><option value="">Todas</option></select>
-      <select id="pvTipo" aria-label="Tipo"><option value="">Packshot e Hero</option><option value="F4F4F4">Só Packshot (#F4F4F4)</option><option value="FFFFFF">Só Hero Branca (#FFFFFF)</option></select>
+      <select id="pvTipo" aria-label="Tipo"><option value="">Todos os tipos</option><option value="F4F4F4">Só Packshot (#F4F4F4)</option><option value="FFFFFF">Só Hero Branca (#FFFFFF)</option></select>
       <select id="pvProduto" aria-label="Produto"></select>
     </div>
     <div class="pvlista" id="pvLista"></div>
@@ -1030,7 +1030,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
       <button type="button" data-sec="seo"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>SEO e nomes</span><i></i></button>
       <button type="button" data-sec="novidades"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span>Novidades de SEO</span><i></i></button>
       <button type="button" data-sec="registro"><svg class="ic" aria-hidden="true"><use href="#i-history"/></svg><span>Registro de alterações</span><i></i></button>
-      <button type="button" data-sec="packshots"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span>Packshots</span><i></i></button>
+      <button type="button" data-sec="packshots"><svg class="ic" aria-hidden="true"><use href="#i-image"/></svg><span>Imagens</span><i></i></button>
       <button type="button" data-sec="acessos"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>Acessos</span><i></i></button>
       <button type="button" data-sec="aparencia"><svg class="ic" aria-hidden="true"><use href="#i-contrast"/></svg><span>Aparência</span><i></i></button>
     </nav>
@@ -1342,7 +1342,7 @@ _sistema/                          ← tudo que não é produto
     </div>
 
     <div class="cfgsec" data-sec="packshots">
-      <div class="cfghead"><h2>Packshots</h2><div class="muted ajuda">Fotos enviadas na aba Packshots: quanto tempo o link público vale e quantas fotos de referência vão em cada pedido de imagem.</div></div>
+      <div class="cfghead"><h2>Imagens</h2><div class="muted ajuda">Fotos enviadas na aba Imagens: quanto tempo o link público vale e quantas fotos de referência vão em cada pedido de imagem.</div></div>
     <div class="panel">
       <label class="f" for="psCfgHoras">Validade do link público</label>
       <select id="psCfgHoras" style="max-width:260px">
@@ -2186,7 +2186,10 @@ async function emParalelo(itens, n, fn){
 }
 
 // ---------- abas ----------
+// aba Demandas escondida por enquanto: o código e os dados continuam intactos; mude para true para voltar
+const DEMANDAS_NA_ABA = false;
 function showTab(t){
+  if (t === 'demandas' && !DEMANDAS_NA_ABA) t = 'produtos';
   ['resumo','produtos','demandas','packshots','config'].forEach(k => $('tab-' + k).classList.toggle('hidden', k !== t));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   store.set('tab', t);
@@ -6413,6 +6416,7 @@ async function carregarDem(){
 function renderDemCont(){
   const n = dem.demandas.filter(d => d.status !== 'feita' && (prioridadeDe(d) === 'urgente' || atrasada(d))).length;
   const b = document.querySelector('.tabs button[data-tab="demandas"]');
+  if (b) b.classList.toggle('hidden', !DEMANDAS_NA_ABA);
   if (b) b.innerHTML = ic('list') + 'Demandas' + (n ? `<span class="cnt" title="${n} urgente(s) ou atrasada(s)">${n}</span>` : '');
 }
 const prodNome = id => plan.produtos.find(p => p.id === id)?.nome || '';
@@ -9106,6 +9110,10 @@ const ATUALIZACOES = [
     'Antes de enviar fotos, escolha o produto (SKU): cada produto ganha seu próprio grupo na aba Packshots',
     'Cada grupo tem "Usar no pedido", "Copiar", "Apagar" e a troca de produto de todas as fotos dele',
     'O pedido de imagem mostra só as fotos do produto escolhido; fotos antigas sem produto ficam em "Sem produto"'] },
+  { id: '2026-11-18-demandas-escondida', em: '2026-11-18 20:30', titulo: 'Aba Demandas escondida por enquanto', itens: [
+    'A aba some do menu; as demandas já cadastradas e os relatórios continuam guardados e voltam quando a aba for reativada'] },
+  { id: '2026-11-18-aba-imagens', em: '2026-11-18 20:00', titulo: 'Aba "Packshots" agora se chama "Imagens"', itens: [
+    'O nome vale para a aba e para Configurações; "Packshot" continua só como um dos tipos de foto (fundo #F4F4F4), ao lado da Hero Branca e dos próximos estilos'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -9528,7 +9536,7 @@ function pgRender(){
     return `<label title="${esc(x.nome || '')}"><input type="checkbox" data-pg="${x.id}" ${pgSel.has(x.id) ? 'checked' : ''}><img src="${esc(x.mini || x.url)}" alt="">${n ? `<b>Imagem ${n}</b>` : '<span class="muted">fora</span>'} · ${esc(psPapelTxt(x))}</label>`;
   }).join('') : `<span class="muted">${psItens.length ? 'Nenhuma foto enviada para este produto. Envie no quadro acima ou escolha outro produto.' : 'Envie as fotos do produto no quadro acima.'}</span>`;
   const max = settings.packshot.maxRefs;
-  $('pgAviso').textContent = doProd.filter(x => pgSel.has(x.id)).length > max ? `Só as ${max} primeiras marcadas vão no pedido (máximo em Configurações → Packshots).` : '';
+  $('pgAviso').textContent = doProd.filter(x => pgSel.has(x.id)).length > max ? `Só as ${max} primeiras marcadas vão no pedido (máximo em Configurações → Imagens).` : '';
   if (pgEst) $('pgEstado').textContent = !pgEst.chave ? 'Falta a chave da OpenAI na Cloudflare' : `${pgEst.feitasHoje} de ${pgEst.limiteDia} gerações hoje`;
   $('pgGerar').disabled = pgOcupado || !escolhidas.length || !pgEst?.chave;
   $('pgFora').disabled = pgOcupado;
@@ -9809,7 +9817,7 @@ async function pvPorNoProduto(itemId){
   if (lista.length <= antes) throw new Error('A imagem não entrou no produto (veja o aviso acima). A aprovação ficou guardada: tente "Pôr no produto" de novo.');
   pvAberto = await pgApi('colocado?' + new URLSearchParams({ id: r.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ produto: pvProdDe(alvo.p, alvo.u), item: item.nome, arquivo: lista.at(-1), medida: `${PS_MEDIDA.w}x${PS_MEDIDA.h} de ${pad.de.w}x${pad.de.h} corte ${pad.corte.x},${pad.corte.y},${pad.corte.w},${pad.corte.h}${pad.amplia ? ' ampliada' : ''}` }) });
-  registrar('Packshots', 'Imagem aprovada entrou no produto', alvo.p, `${item.nome}${alvo.u.nome ? ' · ' + alvo.u.nome : ''}: ${lista.at(-1)}`);
+  registrar('Imagens', 'Imagem aprovada entrou no produto', alvo.p, `${item.nome}${alvo.u.nome ? ' · ' + alvo.u.nome : ''}: ${lista.at(-1)}`);
   pvAtualizarItem(pvAberto);
 }
 async function pvAcao(fn){
