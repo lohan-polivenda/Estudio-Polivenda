@@ -967,7 +967,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
   </div>
   <div class="panel painel" style="margin-top:16px">
     <div class="pnhead"><h2>Gerar imagem</h2><span class="muted" id="pgEstado"></span>
-      <span class="muted ajuda">A OpenAI recebe o prompt e as fotos marcadas, na ordem da lista acima (a primeira marcada é a Imagem 1). A imagem volta em JPG, passa pela conferência automática do fundo e fica guardada com tudo o que foi enviado. A conferência só informa: quem aprova é a revisão.</span>
+      <span class="muted ajuda">Os tamanhos gerados têm a mesma proporção da medida padrão (1300×1540); a OpenAI só aceita lados múltiplos de 16, por isso a imagem é gerada um pouco maior e ajustada ao entrar no produto. A OpenAI recebe o prompt e as fotos marcadas, na ordem da lista acima (a primeira marcada é a Imagem 1). A imagem volta em JPG, passa pela conferência automática do fundo e fica guardada com tudo o que foi enviado. A conferência só informa: quem aprova é a revisão.</span>
     </div>
     <div class="pgcorpo">
       <label class="f">Referências deste pedido</label>
@@ -977,7 +977,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
       <div class="pgopts">
         <label>Produto (SKU)<select id="pgProd"></select></label>
         <label>Tipo<select id="pgAlvo"><option value="F4F4F4">Packshot · fundo #F4F4F4</option><option value="FFFFFF">Hero Branca · fundo #FFFFFF</option></select></label>
-        <label>Tamanho<select id="pgTam"><option value="1600x2000">1600×2000 (4:5)</option><option value="2048x2560">2048×2560 (4:5)</option><option value="2560x3200">2560×3200 (4:5, maior possível)</option></select></label>
+        <label>Tamanho gerado<select id="pgTam"><option value="1664x1968">1664×1968 (padrão)</option><option value="1312x1552">1312×1552 (mais rápido)</option><option value="2496x2960">2496×2960 (maior; a OpenAI chama de experimental)</option></select></label>
         <label>Qualidade<select id="pgQual"><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option></select></label>
         <label>Modelo<select id="pgModelo"><option value="gpt-image-2.6-sunburst">gpt-image-2.6-sunburst</option><option value="gpt-image-2.6-flare">gpt-image-2.6-flare</option></select></label>
       </div>
@@ -9083,6 +9083,10 @@ const ATUALIZACOES = [
     'Aprovar coloca a imagem no item escolhido do checklist do produto, com nome SEO, e ela segue a aprovação e o envio ao Drive de sempre',
     'Reprovar pede o motivo (cor, forma, quantidade, material, detalhe inventado, corte, fundo, luz, proporção ou outro)',
     'Hero Branca gerada pela IA aparece como CANDIDATO; a imagem feita fora leva junto as fotos reais marcadas, para comparar'] },
+  { id: '2026-11-18-packshots-medida', em: '2026-11-18 17:00', titulo: 'Packshots: medida padrão 1300×1540', itens: [
+    'A imagem aprovada entra no produto em 1300×1540, com corte centralizado (sem esticar) e JPG 95',
+    'Os tamanhos gerados pela OpenAI agora têm a mesma proporção: 1664×1968 (padrão), 1312×1552 ou 2496×2960',
+    'Se a imagem for menor que a medida, o app pergunta antes de ampliar'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -9634,7 +9638,7 @@ function pvDesenhar(){
       ${!dec ? `
         <div class="pvacao"><label class="f" style="margin:0">Entra no item</label><select id="pvItem" ${ocup || (alvoU ? '' : 'disabled')}>${alvoU ? itens.map(c => `<option value="${c.id}" ${c.id === pvItemSel ? 'selected' : ''}>${esc(c.nome)}${filesOf(alvoU.u, c).length ? ` (já tem ${filesOf(alvoU.u, c).length})` : ''}</option>`).join('') : '<option>Escolha o produto antes</option>'}</select>
           <button type="button" class="primary" data-pvacao="aprovar" ${ocup || (alvoU ? '' : 'disabled')}>${ic('check')}Aprovar e pôr no produto</button></div>
-        <div class="muted" style="margin-top:4px">${alvoU ? (ws ? 'A imagem entra no checklist com o nome SEO, como se fosse colada com Ctrl+V.' : 'Conecte a pasta de trabalho (botão no topo) para a imagem entrar no produto.') : 'Escolha o produto para aprovar.'}</div>
+        <div class="muted" style="margin-top:4px">${alvoU ? (ws ? 'A imagem entra no checklist com o nome SEO, como se fosse colada com Ctrl+V. ' + psMedidaTxt(rec.w, rec.h) : 'Conecte a pasta de trabalho (botão no topo) para a imagem entrar no produto.') : 'Escolha o produto para aprovar.'}</div>
         <div style="margin-top:14px;font-weight:600">Reprovar: o que está errado?</div>
         <div class="opts" style="margin-top:6px">${PV_MOTIVOS.map(([k, t]) => `<button type="button" class="opt ${pvMotivos.has(k) ? 'on' : ''}" data-pvmot="${k}">${t}</button>`).join('')}</div>
         ${pvMotivos.has('outro') ? `<input id="pvDetalhe" maxlength="500" placeholder="Qual é o outro motivo?" style="margin-top:8px" value="${esc(pvDetalhe)}" ${ocup}>` : ''}
@@ -9658,18 +9662,40 @@ async function pvDecidir(status, extra = {}){
   pvAtualizarItem(pvAberto);
 }
 // a imagem aprovada vira uma foto comum do checklist (mesmo caminho do Ctrl+V: nome SEO, nuvem, aprovação e Drive)
+// medida padrão das imagens que entram no produto: corte centralizado na proporção 1300:1540 e depois o tamanho exato
+const PS_MEDIDA = { w: 1300, h: 1540 };
+async function psPadronizar(blob){
+  const bmp = await createImageBitmap(blob), W = bmp.width, H = bmp.height, alvo = PS_MEDIDA.w / PS_MEDIDA.h;
+  let sw = W, sh = H;
+  if (W / H > alvo) sw = Math.round(H * alvo); else sh = Math.round(W / alvo);
+  const sx = Math.round((W - sw) / 2), sy = Math.round((H - sh) / 2);
+  const c = document.createElement('canvas'); c.width = PS_MEDIDA.w; c.height = PS_MEDIDA.h;
+  const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
+  x.drawImage(bmp, sx, sy, sw, sh, 0, 0, PS_MEDIDA.w, PS_MEDIDA.h);
+  const saida = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.95));
+  return { blob: saida, de: { w: W, h: H }, corte: { x: sx, y: sy, w: sw, h: sh }, amplia: sw < PS_MEDIDA.w };
+}
+// texto do que o ajuste faz com uma imagem de L×A
+function psMedidaTxt(W, H){
+  const alvo = PS_MEDIDA.w / PS_MEDIDA.h; let sw = W, sh = H;
+  if (W / H > alvo) sw = Math.round(H * alvo); else sh = Math.round(W / alvo);
+  const corta = W - sw ? `corta ${W - sw} px de largura, metade de cada lado` : H - sh ? `corta ${H - sh} px de altura, metade em cima e metade embaixo` : 'sem corte';
+  return `Entra no produto em ${PS_MEDIDA.w}×${PS_MEDIDA.h} (${corta}, centralizado${sw < PS_MEDIDA.w ? '; a imagem é menor e será ampliada' : ''}).`;
+}
 async function pvPorNoProduto(itemId){
   const r = pvAberto, alvo = pvAcharUnidade(r.produto), item = alvo?.p.checklist.find(c => c.id === itemId);
   if (!alvo || !item) throw new Error('Escolha o produto e o item do checklist.');
   if (!ws) throw new Error('Conecte a pasta de trabalho (botão no topo) para pôr a imagem no produto.');
-  const blob = await (await fetch(pgArquivo(r.id, r.recebido.arquivo), { cache: 'no-store' })).blob();
-  const arq = new File([blob], `packshot-${r.id.slice(0, 6)}.${r.recebido.arquivo.split('.').pop()}`, { type: blob.type });
+  const original = await (await fetch(pgArquivo(r.id, r.recebido.arquivo), { cache: 'no-store' })).blob();
+  const pad = await psPadronizar(original);
+  if (pad.amplia && !await confirmar(`A imagem tem ${pad.corte.w}×${pad.corte.h} na proporção certa, menor que ${PS_MEDIDA.w}×${PS_MEDIDA.h}. Ampliar para pôr no produto? Pode perder nitidez.`)) throw new Error('Não entrou no produto: a imagem é menor que a medida padrão.');
+  const arq = new File([pad.blob], `packshot-${r.id.slice(0, 6)}.jpg`, { type: 'image/jpeg' });
   const antes = filesOf(alvo.u, item).length;
   await uploadFiles(alvo.p, alvo.u, item, [arq]);
   const lista = filesOf(alvo.u, item);
   if (lista.length <= antes) throw new Error('A imagem não entrou no produto (veja o aviso acima). A aprovação ficou guardada: tente "Pôr no produto" de novo.');
   pvAberto = await pgApi('colocado?' + new URLSearchParams({ id: r.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ produto: pvProdDe(alvo.p, alvo.u), item: item.nome, arquivo: lista.at(-1) }) });
+    body: JSON.stringify({ produto: pvProdDe(alvo.p, alvo.u), item: item.nome, arquivo: lista.at(-1), medida: `${PS_MEDIDA.w}x${PS_MEDIDA.h} de ${pad.de.w}x${pad.de.h} corte ${pad.corte.x},${pad.corte.y},${pad.corte.w},${pad.corte.h}${pad.amplia ? ' ampliada' : ''}` }) });
   registrar('Packshots', 'Imagem aprovada entrou no produto', alvo.p, `${item.nome}${alvo.u.nome ? ' · ' + alvo.u.nome : ''}: ${lista.at(-1)}`);
   pvAtualizarItem(pvAberto);
 }

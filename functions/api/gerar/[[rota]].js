@@ -184,7 +184,7 @@ async function rotas(ctx){
     const c = await corpoJson(request), p = lerProduto(c?.produto);
     if (!p) return erro('Falta o produto.');
     r.produto = p;
-    r.noProduto = { item: corta(c.item, 80), arquivo: corta(c.arquivo, 160), variacao: p.variacao, por: eu.usuario, em: Date.now() };
+    r.noProduto = { item: corta(c.item, 80), arquivo: corta(c.arquivo, 160), medida: corta(c.medida, 80), variacao: p.variacao, por: eu.usuario, em: Date.now() };
     await gravarRegistro(b, r);
     return json(r);
   }
@@ -205,7 +205,7 @@ async function criar({ request, env, waitUntil }, eu, limiteDia, chaveDia){
   const modelo = MODELOS.includes(p.modelo) ? p.modelo : MODELOS[0];
   const qualidade = QUALIDADES.includes(p.qualidade) ? p.qualidade : 'high';
   const complexidade = COMPLEXIDADES.includes(p.complexidade) ? p.complexidade : 'high';
-  const tam = tamanhoOk(p.tamanho || '1600x2000');
+  const tam = tamanhoOk(p.tamanho || '1664x1968'); // mesma proporção da medida padrão 1300×1540
   if (!tam) return erro('Tamanho fora das regras da OpenAI (múltiplos de 16, lado até 3840, proporção até 3:1).');
   const alvo = p.alvo === 'FFFFFF' ? 'FFFFFF' : 'F4F4F4';
   const feitas = +(await env.OLIST.get(chaveDia) || 0);
