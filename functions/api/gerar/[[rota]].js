@@ -5,6 +5,8 @@
 // A imagem gerada também ganha um link público temporário (_ponte/), igual às fotos enviadas, para levar ao chat.
 // Rotas: GET estado · POST criar (resposta em linhas JSON, com sinal de vida enquanto a OpenAI trabalha)
 //        POST conferencia?id= · POST externa?alvo=&nome= (imagem feita fora do Estúdio) · GET registro?id= · GET lista
+//        POST referencias?id= (fotos reais para comparar, nas imagens feitas fora) · POST produto?id= (liga ao SKU)
+//        POST decidir?id= (aprovar / reprovar com motivo; liberado a todos que entraram) · POST colocado?id= (foi para o checklist)
 import { usuarioDaSessao } from '../../_middleware.js';
 import { novoId, lerImagem, ID, EXT } from '../../_lib/imagem.js';
 
@@ -36,8 +38,26 @@ function custo(u){
 }
 const b64Bytes = b64 => { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
 const hoje = () => new Date().toISOString().slice(0, 10);
-async function gravarRegistro(b, r){ await b.put(PASTA + r.id + '.json', JSON.stringify(r, null, 2), { httpMetadata: { contentType: 'application/json; charset=utf-8' } }); }
-async function lerRegistro(b, id){ const o = await b.get(PASTA + id + '.json'); return o ? o.json() : null; }
+// resumo guardado junto do registro (metadados do R2): a lista do histórico sai sem abrir cada arquivo
+const corta = (v, n = 80) => String(v ?? '').replace(/[^\p{L}\p{N} .,_()\/#-]/gu, '').slice(0, n);
+function resumo(r){
+  return { origem: r.origem || '', criado: String(r.criado || 0), por: corta(r.por, 40), alvo: r.alvo || '',
+    status: r.erro ? 'erro' : !r.recebido ? 'gerando' : (r.decisao?.status || 'pendente'), conf: r.conferencia?.status || '',
+    sku: corta(r.produto?.sku, 40), produto: corta(r.produto?.nome, 80), pid: corta(r.produto?.id, 40),
+    arquivo: r.recebido?.arquivo || '', ref: r.referencias?.[0]?.arquivo || '', noProduto: r.noProduto ? '1' : '' };
+}
+// metadados do R2 só em ASCII (nome do produto pode ter acento): o resumo vai como JSON codificado, num campo só
+async function gravarRegistro(b, r){ await b.put(PASTA + r.id + '.json', JSON.stringify(r, null, 2), { httpMetadata: { contentType: 'application/json; charset=utf-8' }, customMetadata: { v: '2', j: encodeURIComponent(JSON.stringify(resumo(r))) } }); }
+const lerResumo = c => { try { return c?.v === '2' ? JSON.parse(decodeURIComponent(c.j)) : null; } catch { return null; } };
+async function lerRegistro(b, id){ if (!ID.test(id)) return null; const o = await b.get(PASTA + id + '.json'); return o ? o.json() : null; }
+// produto do cadastro do app (id interno, SKU, nome e variação); null tira a ligação
+function lerProduto(o){
+  if (!o || typeof o !== 'object') return null;
+  const p = { id: corta(o.id, 40), sku: corta(o.sku, 40), nome: corta(o.nome, 80), variacao: corta(o.variacao, 60) };
+  return p.id || p.sku ? p : null;
+}
+const MOTIVOS = ['cor', 'forma', 'quantidade', 'material', 'inventou', 'cortou', 'fundo', 'luz', 'tamanho', 'outro'];
+async function corpoJson(request){ const t = await request.text(); if (t.length > 20000) return null; try { return JSON.parse(t); } catch { return null; } }
 
 export async function onRequest(ctx){
   try { return await rotas(ctx); }
@@ -55,14 +75,21 @@ async function rotas(ctx){
     const feitas = +(await env.OLIST.get(chaveDia) || 0);
     return json({ chave: !!env.OPENAI_API_KEY, modelos: MODELOS, qualidades: QUALIDADES, maxRefs: MAX_REFS, limiteDia, feitasHoje: feitas });
   }
+  // histórico: um resumo por pedido (registro antigo, sem resumo, é aberto uma vez e ganha o resumo)
   if (rota === 'lista' && m === 'GET'){
     const itens = []; let cursor;
     do {
-      const l = await b.list({ prefix: PASTA, delimiter: '/', cursor, limit: 1000 });
-      for (const o of l.objects) if (o.key.endsWith('.json')) itens.push({ id: o.key.slice(PASTA.length, -5), mod: o.uploaded.getTime() });
+      const l = await b.list({ prefix: PASTA, delimiter: '/', cursor, limit: 1000, include: ['customMetadata'] });
+      for (const o of l.objects){
+        if (!o.key.endsWith('.json')) continue;
+        const id = o.key.slice(PASTA.length, -5);
+        let c = lerResumo(o.customMetadata);
+        if (!c){ const r = await lerRegistro(b, id); if (!r) continue; await gravarRegistro(b, r); c = resumo(r); }
+        itens.push({ id, ...c, criado: +c.criado || o.uploaded.getTime(), noProduto: c.noProduto === '1' });
+      }
       cursor = l.truncated ? l.cursor : null;
     } while (cursor);
-    return json({ itens: itens.sort((a, z) => z.mod - a.mod) });
+    return json({ itens: itens.sort((a, z) => z.criado - a.criado) });
   }
   if (rota === 'registro' && m === 'GET'){
     const id = q.get('id') || '';
@@ -99,7 +126,65 @@ async function rotas(ctx){
     await b.put(PASTA + id + '/' + nome, corpo, { httpMetadata: { contentType: img.tipo } });
     const r = { id, versao: 1, origem: 'externa', criado: Date.now(), por: eu.usuario,
       nomeOriginal: String(q.get('nome') || '').slice(0, 120), alvo: q.get('alvo') === 'FFFFFF' ? 'FFFFFF' : 'F4F4F4',
-      recebido: { arquivo: nome, tipo: img.tipo, w: img.w, h: img.h, bytes: corpo.length }, referencias: [], conferencia: null, decisao: null };
+      recebido: { arquivo: nome, tipo: img.tipo, w: img.w, h: img.h, bytes: corpo.length }, referencias: [], conferencia: null, decisao: null,
+      produto: lerProduto({ id: q.get('pid'), sku: q.get('sku'), nome: q.get('pnome'), variacao: q.get('var') }) };
+    await gravarRegistro(b, r);
+    return json(r);
+  }
+  // fotos reais para comparar na revisão (imagem feita fora): copiadas da ponte para o registro, como na geração
+  if (rota === 'referencias' && m === 'POST'){
+    const r = await lerRegistro(b, q.get('id') || ''); if (!r) return erro('Não existe.', 404);
+    const c = await corpoJson(request), refs = Array.isArray(c?.refs) ? c.refs.slice(0, MAX_REFS) : null;
+    if (!refs) return erro('Pedido inválido.');
+    const lista = [];
+    for (let i = 0; i < refs.length; i++){
+      const id = String(refs[i]?.id || '');
+      if (!ID.test(id)) return erro(`Referência ${i + 1} inválida.`);
+      const o = await b.get(PONTE + id);
+      if (!o || !(+o.customMetadata?.expira > Date.now())) return erro(`A foto da Imagem ${i + 1} venceu ou foi apagada.`, 410);
+      const bytes = new Uint8Array(await o.arrayBuffer()), img = lerImagem(bytes);
+      if (!img) return erro(`A foto da Imagem ${i + 1} não é JPG, PNG ou WebP.`, 415);
+      const arquivo = `ref-${i + 1}.${EXT[img.tipo]}`;
+      await b.put(PASTA + r.id + '/' + arquivo, bytes, { httpMetadata: { contentType: img.tipo } });
+      lista.push({ ordem: i + 1, papel: String(refs[i]?.papel || '').slice(0, 40), idLink: id, arquivo, tipo: img.tipo, w: img.w, h: img.h, bytes: bytes.length });
+    }
+    r.referencias = lista;
+    await gravarRegistro(b, r);
+    return json(r);
+  }
+  // liga (ou desliga, com produto null) o pedido a um produto do cadastro, pelo SKU
+  if (rota === 'produto' && m === 'POST'){
+    const r = await lerRegistro(b, q.get('id') || ''); if (!r) return erro('Não existe.', 404);
+    const c = await corpoJson(request); if (!c || typeof c !== 'object') return erro('Pedido inválido.');
+    r.produto = lerProduto(c.produto);
+    await gravarRegistro(b, r);
+    return json(r);
+  }
+  // decisão da revisão: aprovado, reprovado (com pelo menos um motivo) ou de volta a pendente. Toda decisão fica guardada.
+  if (rota === 'decidir' && m === 'POST'){
+    const r = await lerRegistro(b, q.get('id') || ''); if (!r) return erro('Não existe.', 404);
+    if (!r.recebido) return erro('Este pedido não tem imagem para revisar.', 409);
+    const c = await corpoJson(request); if (!c) return erro('Pedido inválido.');
+    const status = ['aprovado', 'reprovado', 'pendente'].includes(c.status) ? c.status : null;
+    if (!status) return erro('Decisão inválida.');
+    const motivos = [...new Set((Array.isArray(c.motivos) ? c.motivos : []).filter(x => MOTIVOS.includes(x)))];
+    const detalhe = String(c.detalhe || '').trim().slice(0, 500);
+    if (status === 'reprovado' && !motivos.length) return erro('Escolha pelo menos um motivo para reprovar.');
+    if (status === 'reprovado' && motivos.includes('outro') && !detalhe) return erro('Escreva qual é o outro motivo.');
+    const d = { status, motivos: status === 'reprovado' ? motivos : [], detalhe: status === 'reprovado' ? detalhe : '', por: eu.usuario, em: Date.now() };
+    r.decisoes = [...(r.decisoes || []), d];
+    r.decisao = status === 'pendente' ? null : d;
+    await gravarRegistro(b, r);
+    return json(r);
+  }
+  // a imagem aprovada entrou no checklist do produto (o app grava o arquivo; aqui fica onde ela foi parar)
+  if (rota === 'colocado' && m === 'POST'){
+    const r = await lerRegistro(b, q.get('id') || ''); if (!r) return erro('Não existe.', 404);
+    if (r.decisao?.status !== 'aprovado') return erro('Só imagem aprovada vai para o produto.', 409);
+    const c = await corpoJson(request), p = lerProduto(c?.produto);
+    if (!p) return erro('Falta o produto.');
+    r.produto = p;
+    r.noProduto = { item: corta(c.item, 80), arquivo: corta(c.arquivo, 160), variacao: p.variacao, por: eu.usuario, em: Date.now() };
     await gravarRegistro(b, r);
     return json(r);
   }
@@ -143,7 +228,8 @@ async function criar({ request, env, waitUntil }, eu, limiteDia, chaveDia){
   const parametros = { model: modelo, size: `${tam.w}x${tam.h}`, quality: qualidade, complexity: complexidade, output_format: 'jpeg', output_compression: JPEG_QUALIDADE, background: 'opaque', n: 1 };
   const registro = { id: gid, versao: 1, origem: 'openai', criado: inicio, por: eu.usuario, alvo, prompt, parametros,
     referencias: anexos.map(a => ({ ordem: a.ordem, papel: a.papel, idLink: a.id, arquivo: `ref-${a.ordem}.${EXT[a.img.tipo]}`, tipo: a.img.tipo, w: a.img.w, h: a.img.h, bytes: a.bytes.length })),
-    pedido: { w: tam.w, h: tam.h }, recebido: null, uso: null, custoEstimadoUSD: null, conferencia: null, decisao: null, erro: null };
+    pedido: { w: tam.w, h: tam.h }, recebido: null, uso: null, custoEstimadoUSD: null, conferencia: null, decisao: null, erro: null,
+    produto: lerProduto(p.produto) };
   for (const a of anexos) await b.put(PASTA + gid + '/' + `ref-${a.ordem}.${EXT[a.img.tipo]}`, a.bytes, { httpMetadata: { contentType: a.img.tipo } });
   await gravarRegistro(b, registro);
 

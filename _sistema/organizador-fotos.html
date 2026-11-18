@@ -620,6 +620,35 @@ h1 .muted,h2 .muted,h3 .muted,h2 .lbl,h3 .lbl,.dmgrupo .n,.dmgrupo .muted,h3 .n,
 .pgdados{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px;margin:8px 0}
 .pgdados b{font-weight:600;color:var(--muted)}
 @media (max-width:700px){.pgres{grid-template-columns:1fr}}
+/* revisão e histórico dos packshots */
+.pvfiltros{display:flex;flex-wrap:wrap;gap:10px;padding:0 20px 12px}
+.pvfiltros select{width:auto}
+.pvlista{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:0 20px 20px}
+.pvcard{display:flex;flex-direction:column;gap:4px;padding:8px;min-width:0;overflow-wrap:anywhere;border:1px solid var(--border);border-radius:10px;background:var(--panel);text-align:left;font-size:12px;cursor:pointer;color:var(--text)}
+.pvcard:hover{border-color:var(--accent)}
+.pvcard .im{position:relative;aspect-ratio:4/5;background:var(--soft);border-radius:6px;overflow:hidden}
+.pvcard .im img{width:100%;height:100%;object-fit:contain}
+.pvcard .im .tag{position:absolute;left:6px;top:6px}
+.pvcard b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvst{display:inline-block;padding:1px 8px;border-radius:10px;font-weight:700;font-size:11px;background:var(--soft);color:var(--muted)}
+.pvst.aprovado{background:var(--ok-soft);color:var(--ok)}
+.pvst.reprovado{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.pvst.cand{background:#b45309;color:#fff}
+.pvlado{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pvlado figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.pvlado figcaption{font-size:12px;font-weight:600;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pvlado .im{aspect-ratio:4/5;background:var(--soft);border-radius:8px;overflow:hidden;cursor:zoom-in}
+.pvlado .im img{width:100%;height:100%;object-fit:contain}
+.pvlado .refs{display:flex;gap:4px;flex-wrap:wrap}
+.pvlado .refs button{padding:2px 8px;font-size:11px}
+.pvlado .refs button.on{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+.pvsec{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.pvsec h3{margin:0 0 8px;font-size:14px}
+.pvsec pre{margin:0;padding:8px 10px;background:var(--soft);border-radius:8px;font:12px/1.5 Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
+.pvdec{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.pvacao{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.pvacao select{width:auto;max-width:100%}
+@media (max-width:700px){.pvlado{gap:6px}.pvlado .refs button{font-size:10px}.pvlista{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 12px 16px}}
 @media (max-width:700px){.psitem{grid-template-columns:64px minmax(0,1fr)}.psitem .num{grid-column:1/-1}.psitem .acoes{grid-column:1/-1;justify-content:flex-end}}
 /* ---------- resumo (painel) e aprovação ---------- */
 .painel{padding:0;overflow:hidden}
@@ -946,6 +975,7 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
       <label class="f" for="pgPrompt">Prompt (em inglês, um por imagem)</label>
       <textarea id="pgPrompt" rows="7" maxlength="32000" placeholder="Image 1 is the real product photo (front view). Recreate it as a studio packshot…"></textarea>
       <div class="pgopts">
+        <label>Produto (SKU)<select id="pgProd"></select></label>
         <label>Tipo<select id="pgAlvo"><option value="F4F4F4">Packshot · fundo #F4F4F4</option><option value="FFFFFF">Hero Branca · fundo #FFFFFF</option></select></label>
         <label>Tamanho<select id="pgTam"><option value="1600x2000">1600×2000 (4:5)</option><option value="2048x2560">2048×2560 (4:5)</option><option value="2560x3200">2560×3200 (4:5, maior possível)</option></select></label>
         <label>Qualidade<select id="pgQual"><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option></select></label>
@@ -959,6 +989,18 @@ dialog.dlgsim.onde{width:min(760px,calc(100vw - 32px));height:auto}
       <input type="file" id="pgForaIn" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="hidden">
       <div id="pgRes"></div>
     </div>
+  </div>
+  <div class="panel painel" style="margin-top:16px">
+    <div class="pnhead"><h2>Revisão e histórico</h2><span class="muted" id="pvConta"></span>
+      <span class="muted ajuda">Cada imagem gerada ou conferida fica aqui com tudo o que foi usado. Abra uma para comparar com a foto real, lado a lado. Aprovada, ela entra no checklist do produto (pelo SKU) como uma foto comum e segue o caminho de sempre: aprovação na aba Resumo e envio ao Drive. Reprovada, fica guardada com o motivo.</span>
+      <button type="button" class="sm ghost" id="pvRecarregar" style="margin-left:auto"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>Atualizar</button>
+    </div>
+    <div class="pvfiltros">
+      <select id="pvStatus" aria-label="Situação"><option value="pendente">Pendentes</option><option value="aprovado">Aprovadas</option><option value="reprovado">Reprovadas</option><option value="erro">Com erro</option><option value="">Todas</option></select>
+      <select id="pvTipo" aria-label="Tipo"><option value="">Packshot e Hero</option><option value="F4F4F4">Só Packshot (#F4F4F4)</option><option value="FFFFFF">Só Hero Branca (#FFFFFF)</option></select>
+      <select id="pvProduto" aria-label="Produto"></select>
+    </div>
+    <div class="pvlista" id="pvLista"></div>
   </div>
 </section>
 
@@ -1455,6 +1497,10 @@ _sistema/                          ← tudo que não é produto
     <div id="colPrevia"></div>
   </div>
   <div class="dlg-foot"><span class="muted" id="colInfo" style="margin-right:auto"></span><button id="colFechar">Fechar</button><button id="colBaixar" class="primary" disabled>Baixar colagem</button></div>
+</dialog>
+<dialog id="dlgRev" class="wide">
+  <div class="dlg-body" id="rvCorpo"></div>
+  <div class="dlg-foot"><button id="rvFechar">Fechar</button><button id="rvProx" class="ghost">Próxima da lista</button></div>
 </dialog>
 <dialog id="dlgRec" class="wide">
   <div class="dlg-body">
@@ -2130,7 +2176,7 @@ function showTab(t){
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   store.set('tab', t);
   if (t === 'config'){ renderConfig(); renderCfgHome(); showCfg('inicio', false); renderAcessos(); psCfgRender(); }
-  if (t === 'packshots'){ psRender(); psAtualizar(); pgCarregarEstado(); }
+  if (t === 'packshots'){ psRender(); psAtualizar(); pgCarregarEstado(); pvProdSelect($('pgProd'), store.get('packshots-produto', '')); pvCarregar(); }
   if (t === 'demandas') renderDem();
   if (t === 'produtos'){ renderList(); renderDetail(); }
   if (t === 'resumo') renderResumo();
@@ -9030,6 +9076,13 @@ const ATUALIZACOES = [
     'A imagem volta em JPG e passa pela conferência automática: tamanho, formato, cor dos 4 cantos e das faixas do fundo (#F4F4F4 ou #FFFFFF), aviso de vinheta e degradê',
     'Cada pedido fica guardado com prompt, fotos, parâmetros, tamanho real, custo estimado e conferência; "Conferir imagem feita fora" roda a mesma conferência numa imagem do chat',
     'Tolerância da conferência em Configurações → Packshots'] },
+  { id: '2026-11-18-packshots-revisao', em: '2026-11-18 12:00', titulo: 'Packshots: revisão, histórico e ligação ao produto', itens: [
+    'Escolha o produto (SKU) no quadro "Gerar imagem": o pedido fica ligado a ele',
+    'Quadro "Revisão e histórico": filtros por situação, tipo (Packshot ou Hero Branca) e produto',
+    'Revisão com a foto real e a imagem gerada lado a lado, conferência, prompt, parâmetros, custo e todas as decisões',
+    'Aprovar coloca a imagem no item escolhido do checklist do produto, com nome SEO, e ela segue a aprovação e o envio ao Drive de sempre',
+    'Reprovar pede o motivo (cor, forma, quantidade, material, detalhe inventado, corte, fundo, luz, proporção ou outro)',
+    'Hero Branca gerada pela IA aparece como CANDIDATO; a imagem feita fora leva junto as fotos reais marcadas, para comparar'] },
 ];
 const ATU_FILE = 'dados/atualizacoes.json';
 const ATU_QUEM = 'Claude (atualização do app)';
@@ -9379,7 +9432,8 @@ function pgConfHtml(c){
 function pgResHtml(r, imgUrl){
   const rec = r.recebido || {}, linkPub = rec.idLink ? location.origin + '/api/u/' + rec.idLink : '';
   return `<div class="pgres">
-    <div><img src="${esc(imgUrl)}" alt="Imagem gerada">${linkPub ? `<button type="button" class="sm" data-pgcopia="${esc(linkPub)}" style="margin-top:6px">${ic('copy')}Copiar link público (24 h)</button>` : ''}</div>
+    <div><img src="${esc(imgUrl)}" alt="Imagem gerada">${linkPub ? `<button type="button" class="sm" data-pgcopia="${esc(linkPub)}" style="margin-top:6px">${ic('copy')}Copiar link público (24 h)</button>` : ''}
+      <button type="button" class="sm primary" data-pvabrir="${r.id}" style="margin-top:6px">${ic('check-circle')}Revisar</button></div>
     <div><h3 style="margin:0">${r.origem === 'externa' ? 'Imagem feita fora' : 'Imagem gerada'} <span class="muted" style="font-weight:400">· ${psData(r.criado)}</span></h3>
       <div class="pgdados">
         ${r.origem === 'openai' ? `<b>Modelo</b><span>${esc(r.parametros.model)} · quality ${esc(r.parametros.quality)} · complexity ${esc(r.parametros.complexity)}</span>
@@ -9406,7 +9460,7 @@ async function pgGerar(){
   const refs = pgRefsEscolhidas(), prompt = $('pgPrompt').value.trim();
   if (!prompt) return toast('Escreva o prompt.');
   if (!refs.length) return toast('Marque pelo menos uma foto de referência.');
-  const pedido = { prompt, refs: refs.map(x => ({ id: x.id, papel: psPapelTxt(x) })), alvo: $('pgAlvo').value, tamanho: $('pgTam').value, qualidade: $('pgQual').value, modelo: $('pgModelo').value, complexidade: 'high' };
+  const pedido = { prompt, refs: refs.map(x => ({ id: x.id, papel: psPapelTxt(x) })), alvo: $('pgAlvo').value, tamanho: $('pgTam').value, qualidade: $('pgQual').value, modelo: $('pgModelo').value, complexidade: 'high', produto: pgProdutoEscolhido() };
   pgOcupado = true; pgRender();
   const ini = Date.now(), aviso = $('pgAviso');
   const relogio = setInterval(() => { aviso.textContent = `Gerando… ${Math.round((Date.now() - ini) / 1000)} s (pode levar até uns 2 minutos)`; }, 1000);
@@ -9430,6 +9484,7 @@ async function pgGerar(){
       aviso.textContent = 'Conferindo o fundo…';
       await pgConferirRegistro(reg);
       aviso.textContent = '';
+      await pvCarregar();
     });
   } catch (e) { aviso.textContent = ''; toast(e.message || String(e), 8000); }
   finally { clearInterval(relogio); pgOcupado = false; pgCarregarEstado(); }
@@ -9439,9 +9494,13 @@ async function pgConferirFora(f){
   pgOcupado = true; pgRender(); $('pgAviso').textContent = 'Enviando e conferindo…';
   try {
     await comBarra(async () => {
-      const reg = await pgApi('externa?' + new URLSearchParams({ alvo: $('pgAlvo').value, nome: f.name }), { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
+      const prod = pgProdutoEscolhido() || {}, refs = pgRefsEscolhidas();
+      let reg = await pgApi('externa?' + new URLSearchParams({ alvo: $('pgAlvo').value, nome: f.name, pid: prod.id || '', sku: prod.sku || '', pnome: prod.nome || '', var: prod.variacao || '' }), { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
+      // as fotos reais marcadas vão junto, para a revisão comparar lado a lado
+      if (refs.length) reg = await pgApi('referencias?' + new URLSearchParams({ id: reg.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refs: refs.map(x => ({ id: x.id, papel: psPapelTxt(x) })) }) });
       $('pgRes').insertAdjacentHTML('afterbegin', pgResHtml(reg, pgArquivo(reg.id, reg.recebido.arquivo)));
       await pgConferirRegistro(reg);
+      await pvCarregar();
     });
   } catch (e) { toast(e.message || String(e), 8000); }
   finally { $('pgAviso').textContent = ''; pgOcupado = false; pgRender(); }
@@ -9456,9 +9515,204 @@ $('pgRefs').addEventListener('change', e => {
 $('pgGerar').onclick = pgGerar;
 $('pgFora').onclick = () => $('pgForaIn').click();
 $('pgForaIn').onchange = e => { pgConferirFora(e.target.files[0]); e.target.value = ''; };
-$('pgRes').addEventListener('click', e => { const b = e.target.closest('[data-pgcopia]'); if (b) psCopiarTxt(b.dataset.pgcopia, 'Link copiado.'); });
+$('pgRes').addEventListener('click', e => {
+  const b = e.target.closest('[data-pgcopia]'); if (b) psCopiarTxt(b.dataset.pgcopia, 'Link copiado.');
+  const v = e.target.closest('[data-pvabrir]'); if (v) pvAbrir(v.dataset.pvabrir);
+});
 $('psCfgHoras').onchange = e => { settings.packshot.horas = +e.target.value; saveSettings(); };
 $('psCfgRefs').onchange = e => { settings.packshot.maxRefs = +e.target.value; saveSettings(); };
+
+// ---------- Packshots · produto (SKU), revisão e histórico ----------
+// produto escolhido para o pedido: "idProduto|idVariação" (variação vazia = produto sem variação)
+const pvProdOpcoes = () => plan.produtos.flatMap(p => units(p).map(u => ({ v: p.id + '|' + u.id, p, u,
+  txt: [u.sku || p.sku || 'sem SKU', p.nome, u.nome].filter(Boolean).join(' · ') })))
+  .sort((a, z) => a.txt.localeCompare(z.txt, 'pt-BR'));
+function pvAcharUnidade(prod){
+  if (!prod) return null;
+  const p = plan.produtos.find(x => x.id === prod.id) || (prod.sku && plan.produtos.find(x => sameTxt(x.sku, prod.sku) || (x.variacoes || []).some(v => sameTxt(v.sku, prod.sku))));
+  if (!p) return null;
+  const us = units(p), u = us.find(v => prod.variacao && sameTxt(v.nome, prod.variacao)) || us.find(v => prod.sku && sameTxt(v.sku, prod.sku)) || us[0];
+  return { p, u };
+}
+const pvProdDe = (p, u) => ({ id: p.id, sku: u.sku || p.sku || '', nome: p.nome, variacao: u.nome || '' });
+function pvProdSelect(sel, valor){
+  sel.innerHTML = '<option value="">Escolha o produto</option>' + pvProdOpcoes().map(o => `<option value="${esc(o.v)}">${esc(o.txt)}</option>`).join('');
+  sel.value = valor || '';
+}
+function pgProdutoEscolhido(){
+  const [pid, vid] = ($('pgProd').value || '|').split('|'), p = plan.produtos.find(x => x.id === pid);
+  if (!p) return null;
+  return pvProdDe(p, units(p).find(u => u.id === vid) || units(p)[0]);
+}
+$('pgProd').onchange = e => store.set('packshots-produto', e.target.value);
+
+let pvItens = [], pvVisiveis = [], pvAberto = null, pvRefIdx = 0, pvMotivos = new Set(), pvDetalhe = '', pvItemSel = '', pvOcupado = false;
+const PV_MOTIVOS = [['cor', 'Cor diferente da real'], ['forma', 'Forma mudou'], ['quantidade', 'Quantidade de flores ou peças mudou'], ['material', 'Material ou textura diferente'],
+  ['inventou', 'Inventou detalhe que não existe'], ['cortou', 'Cortou ou escondeu parte do produto'], ['fundo', 'Fundo fora do padrão'], ['luz', 'Luz ou sombra ruim'], ['tamanho', 'Proporção ou tamanho errado'], ['outro', 'Outro']];
+const pvMotivoTxt = k => PV_MOTIVOS.find(x => x[0] === k)?.[1] || k;
+const PV_STATUS = { pendente: 'Pendente', aprovado: 'Aprovada', reprovado: 'Reprovada', erro: 'Erro', gerando: 'Gerando' };
+// Hero Branca gerada pela IA (não recortada da foto real) é só candidata: a rota de recorte vem na fase 4
+const pvCandidato = r => r.alvo === 'FFFFFF' && r.origem !== 'recorte';
+const pvTipoTxt = alvo => alvo === 'FFFFFF' ? 'Hero Branca' : 'Packshot';
+
+async function pvCarregar(){
+  $('pvConta').textContent = 'Carregando…';
+  try { pvItens = (await pgApi('lista')).itens; }
+  catch (e) { $('pvConta').textContent = e.message; return; }
+  pvRender();
+}
+function pvRender(){
+  const sel = $('pvProduto'), antes = sel.value, skus = new Map();
+  // um filtro por produto (as variações entram juntas); o nome vem do cadastro quando o produto ainda existe
+  for (const x of pvItens) if (x.sku || x.pid){ const p = plan.produtos.find(q => q.id === x.pid);
+    skus.set(x.pid || x.sku, p ? `${p.sku || 'sem SKU'} · ${p.nome}` : (x.sku || 'sem SKU') + (x.produto ? ' · ' + x.produto : '')); }
+  sel.innerHTML = '<option value="">Todos os produtos</option><option value="-">Sem produto</option>' + [...skus].sort((a, z) => a[1].localeCompare(z[1], 'pt-BR')).map(([k, t]) => `<option value="${esc(k)}">${esc(t)}</option>`).join('');
+  sel.value = [...sel.options].some(o => o.value === antes) ? antes : '';
+  const st = $('pvStatus').value, tipo = $('pvTipo').value, prod = sel.value;
+  pvVisiveis = pvItens.filter(x => (!st || x.status === st) && (!tipo || x.alvo === tipo)
+    && (!prod || (prod === '-' ? !(x.pid || x.sku) : (x.pid || x.sku) === prod)));
+  const n = s => pvItens.filter(x => x.status === s).length;
+  $('pvConta').textContent = `${pvItens.length} no histórico · ${n('pendente')} pendentes · ${n('aprovado')} aprovadas · ${n('reprovado')} reprovadas`;
+  $('pvLista').innerHTML = pvVisiveis.length ? pvVisiveis.map(x => `<button type="button" class="pvcard" data-pv="${x.id}">
+      <div class="im">${x.arquivo ? `<img src="${esc(pgArquivo(x.id, x.arquivo))}" alt="" loading="lazy">` : ''}${pvCandidato(x) && x.arquivo ? '<span class="pvst cand tag">CANDIDATO</span>' : ''}</div>
+      <b>${esc(x.sku || 'Sem produto')}</b><span class="muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.produto || (x.origem === 'externa' ? 'Imagem feita fora' : 'Imagem gerada'))}</span>
+      <span><span class="pvst ${x.status}">${PV_STATUS[x.status] || x.status}</span> ${x.conf ? `<span class="pvst ${x.conf === 'REWORK_BG' ? 'reprovado' : 'aprovado'}" title="Conferência do fundo">${x.conf === 'REWORK_BG' ? 'Fundo: refazer' : 'Fundo ok'}</span>` : ''}</span>
+      <span class="muted">${pvTipoTxt(x.alvo)} · ${psData(x.criado)}${x.noProduto ? ' · no produto' : ''}</span></button>`).join('')
+    : `<span class="muted">${pvItens.length ? 'Nada com esses filtros.' : 'Nenhuma imagem gerada ou conferida ainda.'}</span>`;
+}
+['pvStatus', 'pvTipo', 'pvProduto'].forEach(id => $(id).onchange = pvRender);
+$('pvRecarregar').onclick = () => comBarra(pvCarregar);
+$('pvLista').addEventListener('click', e => { const b = e.target.closest('[data-pv]'); if (b) pvAbrir(b.dataset.pv); });
+
+async function pvAbrir(id){
+  try { pvAberto = await comBarra(() => pgApi('registro?' + new URLSearchParams({ id }))); }
+  catch (e) { return toast(e.message, 6000); }
+  pvRefIdx = 0; pvMotivos = new Set(); pvDetalhe = ''; pvItemSel = '';
+  if (!$('dlgRev').open) $('dlgRev').showModal();
+  pvDesenhar();
+  // conferência que ainda não rodou (ex.: a página fechou no meio) roda agora
+  if (pvAberto.recebido && !pvAberto.conferencia) pgConferirRegistro(pvAberto).then(() => pvDesenhar()).catch(() => {});
+}
+function pvAtualizarItem(r){
+  const x = pvItens.find(i => i.id === r.id); if (!x) return;
+  Object.assign(x, { status: r.erro ? 'erro' : r.decisao?.status || 'pendente', sku: r.produto?.sku || '', produto: r.produto?.nome || '', pid: r.produto?.id || '', noProduto: !!r.noProduto, conf: r.conferencia?.status || x.conf });
+  pvRender();
+}
+function pvDesenhar(){
+  const r = pvAberto, rec = r.recebido, refs = r.referencias || [], ref = refs[pvRefIdx];
+  const alvoU = pvAcharUnidade(r.produto), valorProd = alvoU ? alvoU.p.id + '|' + alvoU.u.id : '';
+  const itens = alvoU ? alvoU.p.checklist.filter(c => !isVideo(c)) : [];
+  const dec = r.decisao, ocup = pvOcupado ? 'disabled' : '';
+  const dados = [
+    ['Tipo', pvTipoTxt(r.alvo) + ` · fundo #${r.alvo}` + (pvCandidato(r) ? ' · CANDIDATO (gerada, não recortada da foto real)' : '')],
+    ['Origem', r.origem === 'externa' ? `Imagem feita fora${r.nomeOriginal ? ' · ' + r.nomeOriginal : ''}` : 'OpenAI'],
+    ['Pedido por', `${r.por || '—'} · ${psData(r.criado)}`],
+    ...(r.origem === 'openai' ? [
+      ['Modelo', `${r.parametros.model} · quality ${r.parametros.quality} · complexity ${r.parametros.complexity}`],
+      ['Tamanho', `pedido ${r.pedido.w}×${r.pedido.h} · recebido ${rec ? `${rec.w}×${rec.h}` : '—'}${rec?.tamanhoIgualAoPedido === false ? ' (diferente do pedido)' : ''}`],
+      ['Tempo', r.openai ? Math.round(r.openai.ms / 1000) + ' s' : '—'],
+      ['Custo', `${pgUSD(r.custoEstimadoUSD)}${r.uso ? ` · ${r.uso.input_tokens} tokens de entrada, ${r.uso.output_tokens} de saída` : ''}`],
+      ['Parâmetros', Object.entries(r.parametros).map(([k, v]) => `${k}=${v}`).join(' · ')]]
+      : [['Tamanho', rec ? `${rec.w}×${rec.h} · ${psMB(rec.bytes)}` : '—']]),
+    ['Referências', refs.length ? refs.map(x => `Imagem ${x.ordem} (${x.papel || 'sem papel'}) ${x.w}×${x.h}`).join(' · ') : 'nenhuma'],
+  ];
+  const fig = (titulo, url, extra = '') => `<figure><figcaption>${titulo}</figcaption><div class="im" data-pvver="${esc(url || '')}">${url ? `<img src="${esc(url)}" alt="">` : '<div class="muted" style="padding:20px">Sem imagem</div>'}</div>${extra}</figure>`;
+  $('rvCorpo').innerHTML = `
+    <h2 style="margin:0 0 4px">Revisão ${dec ? `<span class="pvst ${dec.status}">${PV_STATUS[dec.status]}</span>` : '<span class="pvst">Pendente</span>'} ${pvCandidato(r) ? '<span class="pvst cand">CANDIDATO</span>' : ''}</h2>
+    <div class="muted" style="margin-bottom:10px">${esc(r.produto ? `${r.produto.sku || 'sem SKU'} · ${r.produto.nome}${r.produto.variacao ? ' · ' + r.produto.variacao : ''}` : 'Ainda sem produto ligado')}</div>
+    ${r.erro ? `<div class="alert">${ic('alert')} A geração falhou: ${esc(r.erro)}</div>` : ''}
+    <div class="pvlado">
+      ${fig('Foto real', ref ? pgArquivo(r.id, ref.arquivo) : '', refs.length ? `<span class="refs">${refs.map((x, i) => `<button type="button" class="sm ${i === pvRefIdx ? 'on' : ''}" data-pvref="${i}">Imagem ${x.ordem} · ${esc(x.papel || 'sem papel')}</button>`).join('')}</span>` : '<span class="muted" style="font-size:12px">Nenhuma foto real neste pedido.</span>')}
+      ${fig(r.origem === 'externa' ? 'Imagem feita fora' : 'Imagem gerada', rec ? pgArquivo(r.id, rec.arquivo) : '')}
+    </div>
+    <div class="pvsec"><h3>Conferência automática (só informa)</h3><div id="pgConf-${r.id}">${pgConfHtml(r.conferencia)}</div></div>
+    <div class="pvsec"><h3>Dados do pedido</h3><div class="pgdados">${dados.map(([k, v]) => `<b>${k}</b><span>${esc(v)}</span>`).join('')}</div>
+      ${r.prompt ? `<details><summary>Prompt enviado</summary><pre>${esc(r.prompt)}</pre></details>` : ''}
+      ${r.revisedPrompt ? `<details><summary>Prompt reescrito pela OpenAI</summary><pre>${esc(r.revisedPrompt)}</pre></details>` : ''}</div>
+    ${rec ? `<div class="pvsec"><h3>Produto e decisão</h3>
+      <div class="pvacao"><label class="f" style="margin:0">Produto (SKU)</label><select id="pvProdSel" ${ocup}></select></div>
+      ${!dec ? `
+        <div class="pvacao"><label class="f" style="margin:0">Entra no item</label><select id="pvItem" ${ocup || (alvoU ? '' : 'disabled')}>${alvoU ? itens.map(c => `<option value="${c.id}" ${c.id === pvItemSel ? 'selected' : ''}>${esc(c.nome)}${filesOf(alvoU.u, c).length ? ` (já tem ${filesOf(alvoU.u, c).length})` : ''}</option>`).join('') : '<option>Escolha o produto antes</option>'}</select>
+          <button type="button" class="primary" data-pvacao="aprovar" ${ocup || (alvoU ? '' : 'disabled')}>${ic('check')}Aprovar e pôr no produto</button></div>
+        <div class="muted" style="margin-top:4px">${alvoU ? (ws ? 'A imagem entra no checklist com o nome SEO, como se fosse colada com Ctrl+V.' : 'Conecte a pasta de trabalho (botão no topo) para a imagem entrar no produto.') : 'Escolha o produto para aprovar.'}</div>
+        <div style="margin-top:14px;font-weight:600">Reprovar: o que está errado?</div>
+        <div class="opts" style="margin-top:6px">${PV_MOTIVOS.map(([k, t]) => `<button type="button" class="opt ${pvMotivos.has(k) ? 'on' : ''}" data-pvmot="${k}">${t}</button>`).join('')}</div>
+        ${pvMotivos.has('outro') ? `<input id="pvDetalhe" maxlength="500" placeholder="Qual é o outro motivo?" style="margin-top:8px" value="${esc(pvDetalhe)}" ${ocup}>` : ''}
+        <div class="pvacao"><button type="button" class="danger" data-pvacao="reprovar" ${ocup || (pvMotivos.size ? '' : 'disabled')}>${ic('ban')}Reprovar</button></div>`
+      : `<div class="pvacao">${dec.status === 'aprovado' && !r.noProduto && alvoU ? `<select id="pvItem" ${ocup}>${itens.map(c => `<option value="${c.id}" ${c.id === pvItemSel ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select><button type="button" class="primary" data-pvacao="por" ${ocup}>${ic('upload')}Pôr no produto</button>` : ''}
+          <button type="button" class="ghost" data-pvacao="desfazer" ${ocup}>${ic('undo')}Voltar para pendente</button></div>
+        ${r.noProduto ? `<div class="muted" style="margin-top:6px">${ic('check-circle')} No checklist do produto: ${esc(r.noProduto.item)}${r.noProduto.variacao ? ' · ' + esc(r.noProduto.variacao) : ''} · ${esc(r.noProduto.arquivo)} (${esc(r.noProduto.por)}, ${psData(r.noProduto.em)}). Voltar para pendente não tira a foto do produto.</div>` : ''}`}
+    </div>` : ''}
+    ${(r.decisoes || []).length ? `<div class="pvsec"><h3>Histórico de decisões</h3><div class="pvdec">${r.decisoes.slice().reverse().map(d => `<div><span class="pvst ${d.status}">${PV_STATUS[d.status]}</span> ${esc(d.por)} · ${psData(d.em)}${d.motivos?.length ? ' · ' + esc(d.motivos.map(pvMotivoTxt).join(', ')) : ''}${d.detalhe ? ' · “' + esc(d.detalhe) + '”' : ''}</div>`).join('')}</div></div>` : ''}`;
+  if ($('pvProdSel')) pvProdSelect($('pvProdSel'), valorProd);
+  $('rvProx').disabled = pvVisiveis.filter(x => x.id !== r.id).length === 0;
+}
+async function pvLigarProduto(valor){
+  const [pid, vid] = (valor || '|').split('|'), p = plan.produtos.find(x => x.id === pid);
+  const produto = p ? pvProdDe(p, units(p).find(u => u.id === vid) || units(p)[0]) : null;
+  pvAberto = await pgApi('produto?' + new URLSearchParams({ id: pvAberto.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produto }) });
+  pvAtualizarItem(pvAberto);
+}
+async function pvDecidir(status, extra = {}){
+  pvAberto = await pgApi('decidir?' + new URLSearchParams({ id: pvAberto.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, ...extra }) });
+  pvAtualizarItem(pvAberto);
+}
+// a imagem aprovada vira uma foto comum do checklist (mesmo caminho do Ctrl+V: nome SEO, nuvem, aprovação e Drive)
+async function pvPorNoProduto(itemId){
+  const r = pvAberto, alvo = pvAcharUnidade(r.produto), item = alvo?.p.checklist.find(c => c.id === itemId);
+  if (!alvo || !item) throw new Error('Escolha o produto e o item do checklist.');
+  if (!ws) throw new Error('Conecte a pasta de trabalho (botão no topo) para pôr a imagem no produto.');
+  const blob = await (await fetch(pgArquivo(r.id, r.recebido.arquivo), { cache: 'no-store' })).blob();
+  const arq = new File([blob], `packshot-${r.id.slice(0, 6)}.${r.recebido.arquivo.split('.').pop()}`, { type: blob.type });
+  const antes = filesOf(alvo.u, item).length;
+  await uploadFiles(alvo.p, alvo.u, item, [arq]);
+  const lista = filesOf(alvo.u, item);
+  if (lista.length <= antes) throw new Error('A imagem não entrou no produto (veja o aviso acima). A aprovação ficou guardada: tente "Pôr no produto" de novo.');
+  pvAberto = await pgApi('colocado?' + new URLSearchParams({ id: r.id }), { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ produto: pvProdDe(alvo.p, alvo.u), item: item.nome, arquivo: lista.at(-1) }) });
+  registrar('Packshots', 'Imagem aprovada entrou no produto', alvo.p, `${item.nome}${alvo.u.nome ? ' · ' + alvo.u.nome : ''}: ${lista.at(-1)}`);
+  pvAtualizarItem(pvAberto);
+}
+async function pvAcao(fn){
+  if (pvOcupado) return;
+  pvOcupado = true; pvDesenhar();
+  try { await comBarra(fn); }
+  catch (e) { toast(e.message || String(e), 8000); }
+  finally { pvOcupado = false; if ($('dlgRev').open) pvDesenhar(); }
+}
+$('rvCorpo').addEventListener('click', e => {
+  const t = e.target.closest('[data-pvref],[data-pvmot],[data-pvacao],[data-pvver]'); if (!t || pvOcupado) return;
+  if (t.dataset.pvref){ pvRefIdx = +t.dataset.pvref; return pvDesenhar(); }
+  if (t.dataset.pvmot){ const k = t.dataset.pvmot; pvMotivos.has(k) ? pvMotivos.delete(k) : pvMotivos.add(k); pvDesenhar(); if (k === 'outro' && pvMotivos.has(k)) $('pvDetalhe')?.focus(); return; }
+  if (t.dataset.pvver){ const r = pvAberto, ref = r.referencias?.[pvRefIdx];
+    const lista = [ref && { titulo: `Foto real · Imagem ${ref.ordem}`, nome: ref.arquivo, url: pgArquivo(r.id, ref.arquivo) }, r.recebido && { titulo: 'Imagem gerada', nome: r.recebido.arquivo, url: pgArquivo(r.id, r.recebido.arquivo) }].filter(Boolean);
+    return abrirVisor(lista, Math.max(0, lista.findIndex(x => x.url === t.dataset.pvver))); }
+  // lido antes de a janela se redesenhar (o redesenho troca a lista)
+  const a = t.dataset.pvacao, itemId = $('pvItem')?.value;
+  if (a === 'aprovar') pvAcao(async () => {
+    if (!ws) throw new Error('Conecte a pasta de trabalho (botão no topo) antes de aprovar: a imagem aprovada entra no produto.');
+    await pvDecidir('aprovado'); await pvPorNoProduto(itemId); toast('Aprovada e colocada no produto.');
+  });
+  if (a === 'por') pvAcao(async () => { await pvPorNoProduto(itemId); toast('Imagem colocada no produto.'); });
+  if (a === 'reprovar'){
+    // o texto é lido antes de a janela se redesenhar (o redesenho troca o campo)
+    const motivos = [...pvMotivos], detalhe = pvMotivos.has('outro') ? pvDetalhe.trim() : '';
+    if (pvMotivos.has('outro') && !detalhe){ $('pvDetalhe')?.focus(); return toast('Escreva qual é o outro motivo.'); }
+    pvAcao(async () => { await pvDecidir('reprovado', { motivos, detalhe }); pvMotivos = new Set(); pvDetalhe = ''; toast('Reprovada. O motivo ficou no histórico.'); });
+  }
+  if (a === 'desfazer') pvAcao(async () => {
+    if (!await confirmar('Voltar esta imagem para pendente? A decisão anterior continua no histórico.' + (pvAberto.noProduto ? ' A foto que já entrou no produto continua lá.' : ''))) return;
+    await pvDecidir('pendente');
+  });
+});
+$('rvCorpo').addEventListener('change', e => { if (e.target.id === 'pvProdSel') pvAcao(() => pvLigarProduto(e.target.value)); });
+$('rvCorpo').addEventListener('input', e => { if (e.target.id === 'pvDetalhe') pvDetalhe = e.target.value; if (e.target.id === 'pvItem') pvItemSel = e.target.value; });
+$('rvFechar').onclick = () => $('dlgRev').close();
+$('rvProx').onclick = () => {
+  const outros = pvVisiveis.filter(x => x.id !== pvAberto?.id); if (!outros.length) return;
+  const i = pvVisiveis.findIndex(x => x.id === pvAberto?.id);
+  pvAbrir((pvVisiveis.slice(i + 1).find(x => x.id !== pvAberto.id) || outros[0]).id);
+};
 
 current = plan.produtos[0]?.id || null;
 renderList(); renderDetail(); renderDrive(); renderUser(); renderDemCont(); renderResumoCont(); renderOlist(); carregarConta();
